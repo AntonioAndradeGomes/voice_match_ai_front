@@ -11,7 +11,12 @@ export default async function VagaDetalhePage({
 
     return (
         <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-10">
-            <Button variant="ghost" size="sm" render={<Link href="/vagas" />}>
+            <Button
+                variant="ghost"
+                size="sm"
+                nativeButton={false}
+                render={<Link href="/vagas" />}
+            >
                 Voltar para vagas
             </Button>
 

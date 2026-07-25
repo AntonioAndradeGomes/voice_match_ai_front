@@ -105,7 +105,10 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    <Button render={<Link href="/vagas" />}>
+                    <Button
+                        nativeButton={false}
+                        render={<Link href="/vagas" />}
+                    >
                         <Briefcase data-icon="inline-start" />
                         Ver vagas
                     </Button>
@@ -143,6 +146,7 @@ export default function DashboardPage() {
                             <Button
                                 variant="ghost"
                                 size="sm"
+                                nativeButton={false}
                                 render={<Link href="/vagas" />}
                             >
                                 Ver todas
@@ -164,7 +168,10 @@ export default function DashboardPage() {
                                     receber e avaliar candidatos.
                                 </p>
                             </div>
-                            <Button render={<Link href="/vagas" />}>
+                            <Button
+                                nativeButton={false}
+                                render={<Link href="/vagas" />}
+                            >
                                 Ir para vagas
                             </Button>
                         </div>

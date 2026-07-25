@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, LayoutDashboard, Mic } from "lucide-react";
+import { Briefcase, ChartColumn, LayoutDashboard, Mic } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
     { href: "/", label: "Dashboard", icone: LayoutDashboard },
     { href: "/vagas", label: "Vagas", icone: Briefcase },
+    { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
 
 // Rotas fora do app: renderizam sem navegação.
