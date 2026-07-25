@@ -1,0 +1,17 @@
+{
+    // A extensão EditorConfig (editorconfig.editorconfig) aplica o .editorconfig
+    // ao abrir e ao salvar. `detectIndentation` precisa ficar desligado: ligado
+    // — que é o padrão do VSCode — o editor adivinha o recuo a partir do
+    // conteúdo do arquivo e sobrepõe o `indent_size` do .editorconfig.
+    "editor.detectIndentation": false,
+
+    // O Prettier (formatador padrão deste usuário) lê o .editorconfig por conta
+    // própria. O default já é true; explícito aqui para o comportamento do
+    // projeto não depender do settings.json pessoal de quem abrir o repo.
+    "prettier.useEditorConfig": true,
+
+    // Sem isso, o Prettier formata mesmo sem nenhuma config no projeto, usando
+    // os próprios defaults. Como aqui a fonte da verdade é o .editorconfig,
+    // deixamos explícito que não exigimos um .prettierrc.
+    "prettier.requireConfig": false
+}

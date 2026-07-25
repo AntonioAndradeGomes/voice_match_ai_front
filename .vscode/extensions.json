@@ -1,0 +1,4 @@
+{
+    // O VSCode não lê .editorconfig nativamente — quem faz isso é esta extensão.
+    "recommendations": ["editorconfig.editorconfig", "esbenp.prettier-vscode"]
+}
