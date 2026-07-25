@@ -33,15 +33,31 @@ export function criarPerfilNeutro(): PerfilComportamental {
     ) as PerfilComportamental;
 }
 
+export interface SkillComPeso {
+    nome: string;
+    peso: number;
+}
+
+export const MODALIDADES = ["presencial", "hibrido", "remoto"] as const;
+
+export type Modalidade = (typeof MODALIDADES)[number];
+
+export const MODALIDADE_LABEL: Record<Modalidade, string> = {
+    presencial: "Presencial",
+    hibrido: "Híbrido",
+    remoto: "Remoto",
+};
+
 export interface Vaga {
     id: string;
     titulo: string;
-    area: string;
-    funcao: string;
-    descricaoFuncao: string;
-    hardSkills: string[];
-    softSkills: string[];
+    descricao: string;
+    hardSkills: SkillComPeso[];
+    softSkills: SkillComPeso[];
     experienciaPrevia: string;
+    modalidade: Modalidade;
+    // Só faz sentido quando `modalidade` é "presencial" ou "hibrido"; vazia em "remoto".
+    localizacao: string;
     perfilIdeal: PerfilComportamental;
     createdAt: string;
 }
