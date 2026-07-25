@@ -13,13 +13,18 @@ const NAV = [
     { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
 
-// Rotas fora do app: renderizam sem navegação.
-const ROUTES_WITHOUT_NAV = ["/login"];
+// Rotas fora do app: renderizam sem navegação. Cada entrada cobre a própria
+// rota e tudo abaixo dela — /candidatura é pública e tem id na URL, então
+// comparar por igualdade não bastaria.
+const ROUTES_WITHOUT_NAV = ["/login", "/candidatura"];
 
 export function Sidebar() {
     const pathname = usePathname();
 
-    if (ROUTES_WITHOUT_NAV.includes(pathname)) return null;
+    const rotaSemNav = ROUTES_WITHOUT_NAV.some(
+        (rota) => pathname === rota || pathname.startsWith(`${rota}/`),
+    );
+    if (rotaSemNav) return null;
 
     return (
         <aside className="flex h-svh w-60 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground">
