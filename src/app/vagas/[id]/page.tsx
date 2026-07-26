@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, LayoutGrid, List, MapPin, Sparkles } from "lucide-react";
+import { ArrowLeft, ExternalLink, LayoutGrid, List, MapPin, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 
@@ -179,7 +179,24 @@ export default function VagaDetalhePage({
                         Voltar para vagas
                     </Button>
 
-                    <DivulgarVaga vagaId={vaga.id} titulo={vaga.titulo} />
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            nativeButton={false}
+                            render={
+                                <Link
+                                    href={`/candidatura/${vaga.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                />
+                            }
+                        >
+                            <ExternalLink data-icon="inline-start" />
+                            Ver vaga
+                        </Button>
+                        <DivulgarVaga vagaId={vaga.id} titulo={vaga.titulo} />
+                    </div>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">

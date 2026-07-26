@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Plus } from "lucide-react";
+import { Briefcase, ExternalLink, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -196,15 +196,30 @@ export default function VagasPage() {
                                                 )}
                                             </div>
 
-                                            {/* `relative z-10` põe os ícones
+                                            {/* `relative z-10` põe os ícones e o botão
                                                     acima do link em overlay, senão
-                                                    o clique cairia na navegação. */}
-                                            <div className="relative z-10 w-fit">
+                                                    o clique cairia na navegação do card. */}
+                                            <div className="relative z-10 flex items-center justify-between gap-2">
                                                 <DivulgarVaga
                                                     vagaId={vaga.id}
                                                     titulo={vaga.titulo}
                                                     compacto
                                                 />
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    nativeButton={false}
+                                                    render={
+                                                        <Link
+                                                            href={`/candidatura/${vaga.id}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        />
+                                                    }
+                                                >
+                                                    <ExternalLink data-icon="inline-end" />
+                                                    Ver vaga
+                                                </Button>
                                             </div>
                                         </CardContent>
                                     </Card>
