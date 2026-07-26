@@ -105,7 +105,7 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
         if (tentouEnviar) setErros(validarCandidatura(proximos));
     }
 
-    function handleSubmit(evento: React.FormEvent) {
+    async function handleSubmit(evento: React.FormEvent) {
         evento.preventDefault();
         setTentouEnviar(true);
 
@@ -139,7 +139,7 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
             },
         };
 
-        saveCandidato(candidato);
+        await saveCandidato(candidato);
         setEnviado(true);
     }
 

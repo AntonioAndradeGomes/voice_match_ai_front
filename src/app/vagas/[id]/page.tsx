@@ -125,14 +125,15 @@ export default function VagaDetalhePage({
         useState<Candidato | null>(null);
 
     useEffect(() => {
-        // localStorage não existe no SSR; a leitura real só é possível depois
-        // do mount no cliente, por isso o estado inicial é preenchido aqui.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setEstado({
-            vaga: getVagaById(id),
-            candidatos: getCandidatosByVaga(id),
-            carregado: true,
-        });
+        Promise.all([getVagaById(id), getCandidatosByVaga(id)]).then(
+            ([vaga, candidatos]) => {
+                setEstado({
+                    vaga,
+                    candidatos,
+                    carregado: true,
+                });
+            },
+        );
     }, [id]);
 
     const candidatosOrdenados = useMemo(

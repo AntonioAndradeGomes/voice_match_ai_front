@@ -2,7 +2,7 @@ import { MOCK_CANDIDATO, MOCK_MENSAGENS, MOCK_VAGA } from "@/lib/chat-mock";
 import {
     getCandidatoById,
     getMensagensByCandidato,
-    getVagaById,
+    getVagaByIdLocal,
 } from "@/lib/storage";
 import type { Candidato, MensagemChat, Vaga } from "@/types";
 
@@ -31,7 +31,7 @@ export function carregarConversa(
 
     return {
         candidato,
-        vaga: getVagaById(vagaId),
+        vaga: getVagaByIdLocal(vagaId),
         mensagens: getMensagensByCandidato(candidato.id),
     };
 }

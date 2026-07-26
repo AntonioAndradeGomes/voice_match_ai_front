@@ -40,7 +40,7 @@ export default function RootLayout({
             )}
             suppressHydrationWarning
         >
-            <body className="h-full font-sans">
+            <body className="h-full font-sans" suppressHydrationWarning>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="system"

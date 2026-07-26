@@ -33,8 +33,8 @@ interface DadosRelatorio {
     semNota: number;
 }
 
-function carregarRelatorios(): DadosRelatorio {
-    const vagas = getVagas();
+async function carregarRelatorios(): Promise<DadosRelatorio> {
+    const vagas = await getVagas();
     const candidatos = getCandidatos();
 
     return {
@@ -53,11 +53,11 @@ function carregarRelatorios(): DadosRelatorio {
 function Indicador({ label, valor }: { label: string; valor: string }) {
     return (
         <Card size="sm">
-            <CardContent className="flex flex-col gap-0.5">
+            <CardContent className="flex flex-col gap-1 p-4">
                 <span className="font-heading text-2xl font-semibold tracking-tight">
                     {valor}
                 </span>
-                <span className="text-sm text-muted-foreground">{label}</span>
+                <span className="text-xs text-muted-foreground">{label}</span>
             </CardContent>
         </Card>
     );
@@ -80,10 +80,7 @@ export default function RelatoriosPage() {
     const [dados, setDados] = useState<DadosRelatorio | null>(null);
 
     useEffect(() => {
-        // localStorage não existe no SSR; a leitura real só é possível depois do
-        // mount no cliente, por isso o estado inicial é preenchido aqui.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setDados(carregarRelatorios());
+        carregarRelatorios().then(setDados);
     }, []);
 
     // `null` enquanto não montou: evita piscar "0 vagas" antes de ler o storage.

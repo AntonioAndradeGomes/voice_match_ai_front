@@ -27,23 +27,23 @@ import { getCandidatosByVaga, getVagas } from "@/lib/storage";
 import { getResumoVagaBadge } from "@/lib/vaga-status";
 import type { Candidato, Vaga } from "@/types";
 
-function carregarVagasComCandidatos(): {
+async function carregarVagasComCandidatos(): Promise<{
     vagas: Vaga[];
     candidatosPorVaga: Record<string, Candidato[]>;
-} {
-    // Primeira visita com storage vazio já vem com vagas/candidatos de teste
-    // (ver src/lib/seed.ts) — sem precisar cadastrar nada na mão. Como o
-    // storage é local a cada navegador, isso não afeta outras pessoas.
-    if (getVagas().length === 0) {
+}> {
+    let vagasSalvas = await getVagas();
+    if (vagasSalvas.length === 0) {
         seedDadosTeste();
+        vagasSalvas = await getVagas();
     }
 
-    const vagasSalvas = getVagas();
+    const candidatosEntries = await Promise.all(
+        vagasSalvas.map(async (vaga) => [vaga.id, await getCandidatosByVaga(vaga.id)] as const)
+    );
+
     return {
         vagas: vagasSalvas,
-        candidatosPorVaga: Object.fromEntries(
-            vagasSalvas.map((vaga) => [vaga.id, getCandidatosByVaga(vaga.id)]),
-        ),
+        candidatosPorVaga: Object.fromEntries(candidatosEntries),
     };
 }
 
@@ -55,10 +55,7 @@ export default function VagasPage() {
     const [novaVagaOpen, setNovaVagaOpen] = useState(false);
 
     useEffect(() => {
-        // localStorage não existe no SSR; a leitura real só é possível depois do
-        // mount no cliente, por isso o estado inicial é preenchido aqui.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setDados(carregarVagasComCandidatos());
+        carregarVagasComCandidatos().then(setDados);
     }, []);
 
     const { vagas, candidatosPorVaga } = dados;
@@ -203,7 +200,7 @@ export default function VagasPage() {
             <NovaVagaDialog
                 open={novaVagaOpen}
                 onOpenChange={setNovaVagaOpen}
-                onVagaCriada={() => setDados(carregarVagasComCandidatos())}
+                onVagaCriada={() => carregarVagasComCandidatos().then(setDados)}
             />
         </>
     );
