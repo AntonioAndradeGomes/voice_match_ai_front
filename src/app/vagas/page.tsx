@@ -31,9 +31,10 @@ function carregarVagasComCandidatos(): {
     vagas: Vaga[];
     candidatosPorVaga: Record<string, Candidato[]>;
 } {
-    // DEV: primeira visita com storage vazio já vem com vagas/candidatos de
-    // teste (ver src/lib/seed.ts) — sem precisar cadastrar nada na mão.
-    if (process.env.NODE_ENV !== "production" && getVagas().length === 0) {
+    // Primeira visita com storage vazio já vem com vagas/candidatos de teste
+    // (ver src/lib/seed.ts) — sem precisar cadastrar nada na mão. Como o
+    // storage é local a cada navegador, isso não afeta outras pessoas.
+    if (getVagas().length === 0) {
         seedDadosTeste();
     }
 

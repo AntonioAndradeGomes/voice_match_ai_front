@@ -1,8 +1,9 @@
-// DEV: popula o storage com uma vaga e 3 candidatos (um em cada status —
+// Popula o storage com uma vaga e 3 candidatos (um em cada status —
 // aguardando, em entrevista e finalizado), pra dar pra clicar em algo de
 // verdade sem precisar cadastrar tudo na mão. Roda sozinho (ver
 // carregarVagasComCandidatos em src/app/vagas/page.tsx) só quando o storage
-// está vazio e fora de produção.
+// está vazio — não depende de ambiente, já que o storage é local a cada
+// navegador (localStorage), não um banco compartilhado.
 
 import { saveCandidato, saveMensagem, saveVaga } from "@/lib/storage";
 import { criarPerfilNeutro } from "@/types";
