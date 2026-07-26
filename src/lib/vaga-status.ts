@@ -35,13 +35,19 @@ export function getResumoVagaBadge(candidatos: Candidato[]): ResumoVagaBadge {
     return { label: "Entrevistas concluídas", variant: "outline" };
 }
 
-const STATUS_CANDIDATO_BADGE: Record<StatusCandidato, ResumoVagaBadge> = {
-    aguardando: { label: "Aguardando", variant: "outline" },
-    em_entrevista: { label: "Em entrevista", variant: "default" },
-    finalizado: { label: "Finalizado", variant: "secondary" },
-};
+// Badge por candidato individual (usado na página de detalhe da vaga). A nota
+// só existe quando `finalizado`, então ela é o que mais se destaca (variant
+// "default"); os demais estados são só informativos.
+export function getCandidatoBadge(candidato: Candidato): ResumoVagaBadge {
+    if (candidato.status === "finalizado") {
+        return candidato.notaFinal !== null
+            ? { label: `Nota ${candidato.notaFinal}/100`, variant: "default" }
+            : { label: "Finalizado", variant: "outline" };
+    }
 
-// Badge de status de um único candidato (usado na lista de conversas do chat).
-export function getCandidatoStatusBadge(candidato: Candidato): ResumoVagaBadge {
-    return STATUS_CANDIDATO_BADGE[candidato.status];
+    if (candidato.status === "em_entrevista") {
+        return { label: "Em entrevista", variant: "secondary" };
+    }
+
+    return { label: "Aguardando", variant: "outline" };
 }

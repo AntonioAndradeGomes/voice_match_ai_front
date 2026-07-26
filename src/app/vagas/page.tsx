@@ -113,8 +113,9 @@ export default function VagasPage() {
                                                 <CardTitle>
                                                     {vaga.titulo}
                                                 </CardTitle>
-                                                <CardDescription>
-                                                    {vaga.area} • {vaga.funcao}
+                                                <CardDescription className="line-clamp-1">
+                                                    {vaga.descricao ||
+                                                        "Sem descrição"}
                                                 </CardDescription>
                                             </CardHeader>
 
