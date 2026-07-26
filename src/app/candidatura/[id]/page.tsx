@@ -1,13 +1,13 @@
 "use client";
 
-import { Briefcase, Mic } from "lucide-react";
+import { Briefcase, MapPin, Mic } from "lucide-react";
 import { use, useEffect, useState } from "react";
 
 import { CompartilharVaga } from "@/_components/candidatura/compartilhar-vaga";
 import { FormularioCandidatura } from "@/_components/candidatura/formulario-candidatura";
 import { Badge } from "@/_components/ui/badge";
 import { getVagaById } from "@/lib/storage";
-import type { Vaga } from "@/types";
+import { MODALIDADE_LABEL, type SkillComPeso, type Vaga } from "@/types";
 
 function Secao({ titulo, children }: { titulo: string; children: string }) {
     return (
@@ -27,7 +27,7 @@ function ListaDeSkills({
     skills,
 }: {
     titulo: string;
-    skills: string[];
+    skills: SkillComPeso[];
 }) {
     if (skills.length === 0) return null;
 
@@ -35,9 +35,12 @@ function ListaDeSkills({
         <section className="flex flex-col gap-2.5">
             <h2 className="font-heading text-base font-semibold">{titulo}</h2>
             <ul className="flex flex-wrap gap-2">
+                {/* Só o nome da skill. O `peso` é critério interno de avaliação
+                    — mostrá-lo aqui entregaria ao candidato o gabarito de como
+                    a vaga é pontuada. Ele fica na tela interna da vaga. */}
                 {skills.map((skill) => (
-                    <li key={skill}>
-                        <Badge variant="secondary">{skill}</Badge>
+                    <li key={skill.nome}>
+                        <Badge variant="secondary">{skill.nome}</Badge>
                     </li>
                 ))}
             </ul>
@@ -102,22 +105,28 @@ export default function CandidaturaPage({
 
                             <div className="flex w-fit items-center gap-3 rounded-2xl bg-card px-4 py-2.5 text-sm shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10">
                                 <span className="flex items-center gap-1.5 text-muted-foreground">
-                                    <Briefcase className="size-4" />
-                                    {vaga.area}
+                                    <MapPin className="size-4" />
+                                    {MODALIDADE_LABEL[vaga.modalidade]}
                                 </span>
-                                <span
-                                    aria-hidden
-                                    className="h-4 w-px bg-border"
-                                />
-                                <span className="text-muted-foreground">
-                                    {vaga.funcao}
-                                </span>
+                                {/* Vaga remota não tem localização: sem ela, o
+                                    separador ficaria pendurado sozinho. */}
+                                {vaga.localizacao.trim() !== "" && (
+                                    <>
+                                        <span
+                                            aria-hidden
+                                            className="h-4 w-px bg-border"
+                                        />
+                                        <span className="text-muted-foreground">
+                                            {vaga.localizacao}
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         </div>
 
-                        {vaga.descricaoFuncao.trim() !== "" && (
+                        {vaga.descricao.trim() !== "" && (
                             <Secao titulo="Descrição do cargo">
-                                {vaga.descricaoFuncao}
+                                {vaga.descricao}
                             </Secao>
                         )}
 
