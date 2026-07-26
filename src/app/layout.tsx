@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/context/theme-provider";
@@ -8,15 +8,19 @@ import { Toaster } from "@/_components/ui/sonner";
 import { FloatingThemeToggle } from "@/_components/layout/floating-theme-toggle";
 import { Sidebar } from "@/_components/layout/sidebar";
 
-const bodyFont = Plus_Jakarta_Sans({
+// Família única do projeto. O token `--font-heading` continua existindo, mas
+// aponta para esta mesma pilha em `globals.css` — assim as 29 ocorrências do
+// utilitário `font-heading` seguem válidas sem precisar tocar nos componentes.
+const inter = Inter({
     subsets: ["latin"],
-    variable: "--font-sans",
-});
-
-const headingFont = Fraunces({
-    subsets: ["latin"],
-    variable: "--font-heading",
-    axes: ["opsz", "SOFT", "WONK"],
+    // Nome próprio, e não `--font-sans`: os tokens `--font-sans` e
+    // `--font-heading` do Tailwind apontam para cá. Reaproveitar `--font-sans`
+    // aqui criaria referência circular no `@theme` e o token seria descartado.
+    variable: "--font-inter",
+    // Inter é fonte variável: sem `weight`, vêm os pesos 100–900 num arquivo só.
+    // `opsz` deixa o desenho se ajustar entre corpo de texto e os títulos
+    // grandes (4xl/5xl da página de candidatura).
+    axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -32,12 +36,7 @@ export default function RootLayout({
     return (
         <html
             lang="pt-BR"
-            className={cn(
-                "h-full",
-                "antialiased",
-                bodyFont.variable,
-                headingFont.variable,
-            )}
+            className={cn("h-full", "antialiased", inter.variable)}
             suppressHydrationWarning
         >
             <body className="h-full font-sans" suppressHydrationWarning>

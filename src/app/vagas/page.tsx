@@ -21,6 +21,7 @@ import {
     CardTitle,
 } from "@/_components/ui/card";
 import { ScrollArea } from "@/_components/ui/scroll-area";
+import { DivulgarVaga } from "@/_components/vagas/divulgar-vaga";
 import { NovaVagaDialog } from "@/_components/vagas/nova-vaga-dialog";
 import { seedDadosTeste } from "@/lib/seed";
 import { getCandidatosByVaga, getVagas } from "@/lib/storage";
@@ -108,88 +109,105 @@ export default function VagasPage() {
                                 const badge = getResumoVagaBadge(candidatos);
 
                                 return (
-                                    <Link
+                                    <Card
                                         key={vaga.id}
-                                        href={`/vagas/${vaga.id}`}
-                                        className="block rounded-[min(var(--radius-4xl),24px)] outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-ring/30"
+                                        className="relative h-full transition-shadow hover:shadow-md"
                                     >
-                                        <Card className="h-full transition-shadow hover:shadow-md">
-                                            <CardHeader>
-                                                <CardTitle>
-                                                    {vaga.titulo}
-                                                </CardTitle>
-                                                <CardDescription className="line-clamp-1">
-                                                    {vaga.descricao ||
-                                                        "Sem descrição"}
-                                                </CardDescription>
-                                            </CardHeader>
+                                        {/* O link cobre o card em overlay em vez de
+                                            envolvê-lo: os ícones de divulgação são
+                                            <a> de verdade, e <a> dentro de <a> é
+                                            HTML inválido — o navegador desfaz o
+                                            aninhamento e o card para de navegar.
+                                            Assim o card segue todo clicável e os
+                                            ícones continuam funcionando. */}
+                                        <Link
+                                            href={`/vagas/${vaga.id}`}
+                                            aria-label={`Abrir vaga ${vaga.titulo}`}
+                                            className="absolute inset-0 rounded-[min(var(--radius-4xl),24px)] outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                                        />
 
-                                            <CardContent className="flex flex-col gap-4">
-                                                <Badge
-                                                    variant={badge.variant}
-                                                    className="w-fit"
-                                                >
-                                                    {badge.label}
-                                                </Badge>
+                                        <CardHeader>
+                                            <CardTitle>{vaga.titulo}</CardTitle>
+                                            <CardDescription className="line-clamp-1">
+                                                {vaga.descricao ||
+                                                    "Sem descrição"}
+                                            </CardDescription>
+                                        </CardHeader>
 
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-sm text-muted-foreground">
-                                                        {candidatos.length === 0
-                                                            ? "Nenhum candidato"
-                                                            : candidatos.length ===
-                                                                1
-                                                              ? "1 candidato"
-                                                              : `${candidatos.length} candidatos`}
-                                                    </span>
+                                        <CardContent className="flex flex-col gap-4">
+                                            <Badge
+                                                variant={badge.variant}
+                                                className="w-fit"
+                                            >
+                                                {badge.label}
+                                            </Badge>
 
-                                                    {candidatos.length > 0 && (
-                                                        <AvatarGroup>
-                                                            {candidatos
-                                                                .slice(0, 3)
-                                                                .map(
-                                                                    (
-                                                                        candidato,
-                                                                    ) => (
-                                                                        <Avatar
-                                                                            key={
-                                                                                candidato.id
-                                                                            }
-                                                                            size="sm"
-                                                                        >
-                                                                            {candidato.avatarUrl && (
-                                                                                <AvatarImage
-                                                                                    src={
-                                                                                        candidato.avatarUrl
-                                                                                    }
-                                                                                    alt={
-                                                                                        candidato.nome
-                                                                                    }
-                                                                                />
-                                                                            )}
-                                                                            <AvatarFallback>
-                                                                                {candidato.nome
-                                                                                    .charAt(
-                                                                                        0,
-                                                                                    )
-                                                                                    .toUpperCase()}
-                                                                            </AvatarFallback>
-                                                                        </Avatar>
-                                                                    ),
-                                                                )}
-                                                            {candidatos.length >
-                                                                3 && (
-                                                                <AvatarGroupCount>
-                                                                    +
-                                                                    {candidatos.length -
-                                                                        3}
-                                                                </AvatarGroupCount>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm text-muted-foreground">
+                                                    {candidatos.length === 0
+                                                        ? "Nenhum candidato"
+                                                        : candidatos.length ===
+                                                            1
+                                                          ? "1 candidato"
+                                                          : `${candidatos.length} candidatos`}
+                                                </span>
+
+                                                {candidatos.length > 0 && (
+                                                    <AvatarGroup>
+                                                        {candidatos
+                                                            .slice(0, 3)
+                                                            .map(
+                                                                (candidato) => (
+                                                                    <Avatar
+                                                                        key={
+                                                                            candidato.id
+                                                                        }
+                                                                        size="sm"
+                                                                    >
+                                                                        {candidato.avatarUrl && (
+                                                                            <AvatarImage
+                                                                                src={
+                                                                                    candidato.avatarUrl
+                                                                                }
+                                                                                alt={
+                                                                                    candidato.nome
+                                                                                }
+                                                                            />
+                                                                        )}
+                                                                        <AvatarFallback>
+                                                                            {candidato.nome
+                                                                                .charAt(
+                                                                                    0,
+                                                                                )
+                                                                                .toUpperCase()}
+                                                                        </AvatarFallback>
+                                                                    </Avatar>
+                                                                ),
                                                             )}
-                                                        </AvatarGroup>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </Link>
+                                                        {candidatos.length >
+                                                            3 && (
+                                                            <AvatarGroupCount>
+                                                                +
+                                                                {candidatos.length -
+                                                                    3}
+                                                            </AvatarGroupCount>
+                                                        )}
+                                                    </AvatarGroup>
+                                                )}
+                                            </div>
+
+                                            {/* `relative z-10` põe os ícones
+                                                    acima do link em overlay, senão
+                                                    o clique cairia na navegação. */}
+                                            <div className="relative z-10 w-fit">
+                                                <DivulgarVaga
+                                                    vagaId={vaga.id}
+                                                    titulo={vaga.titulo}
+                                                    compacto
+                                                />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
                                 );
                             })}
                         </div>
