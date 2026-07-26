@@ -24,7 +24,11 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/_components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/_components/ui/tooltip";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/_components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -32,19 +36,6 @@ const NAV = [
     { href: "/vagas", label: "Vagas", icone: Briefcase },
     { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
-
-// Rotas fora do app: renderizam sem navegação. Cada entrada cobre a própria
-// rota e tudo abaixo dela — /candidatura é pública e tem id na URL, então
-// comparar por igualdade não bastaria.
-const ROUTES_WITHOUT_NAV = ["/login", "/candidatura"];
-
-function estaAtivo(pathname: string, href: string) {
-    // "/" só casa exato; as demais também cobrem as rotas filhas
-    // (ex.: /vagas/[id] mantém "Vagas" ativo).
-    return href === "/"
-        ? pathname === "/"
-        : pathname === href || pathname.startsWith(`${href}/`);
-}
 
 interface NavLinkProps {
     href: string;
@@ -98,10 +89,7 @@ export function Sidebar() {
     const [colapsado, setColapsado] = useState(false);
     const [menuAberto, setMenuAberto] = useState(false);
 
-    const rotaSemNav = ROUTES_WITHOUT_NAV.some(
-        (rota) => pathname === rota || pathname.startsWith(`${rota}/`),
-    );
-    if (rotaSemNav) return null;
+    if (!rotaTemNav(pathname)) return null;
 
     return (
         <>
@@ -131,9 +119,7 @@ export function Sidebar() {
                         <SheetHeader className="border-b border-sidebar-border">
                             <SheetTitle>
                                 VoiceMatch
-                                <span className="text-sidebar-primary">
-                                    Ai
-                                </span>
+                                <span className="text-sidebar-primary">Ai</span>
                             </SheetTitle>
                         </SheetHeader>
 
@@ -144,7 +130,7 @@ export function Sidebar() {
                                     href={href}
                                     label={label}
                                     icone={icone}
-                                    ativo={estaAtivo(pathname, href)}
+                                    ativo={rotaCasa(pathname, href)}
                                     onNavigate={() => setMenuAberto(false)}
                                 />
                             ))}
@@ -171,9 +157,7 @@ export function Sidebar() {
                     <div
                         className={cn(
                             "flex items-center gap-2",
-                            colapsado
-                                ? "flex-col"
-                                : "justify-between px-1",
+                            colapsado ? "flex-col" : "justify-between px-1",
                         )}
                     >
                         <Link
@@ -201,11 +185,7 @@ export function Sidebar() {
                                 colapsado ? "Expandir menu" : "Recolher menu"
                             }
                         >
-                            {colapsado ? (
-                                <PanelLeftOpen />
-                            ) : (
-                                <PanelLeftClose />
-                            )}
+                            {colapsado ? <PanelLeftOpen /> : <PanelLeftClose />}
                         </Button>
                     </div>
 
@@ -216,7 +196,7 @@ export function Sidebar() {
                                 href={href}
                                 label={label}
                                 icone={icone}
-                                ativo={estaAtivo(pathname, href)}
+                                ativo={rotaCasa(pathname, href)}
                                 colapsado={colapsado}
                             />
                         ))}

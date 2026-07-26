@@ -1,4 +1,4 @@
-import type { Candidato, StatusCandidato } from "@/types";
+import type { Candidato } from "@/types";
 
 export interface ResumoVagaBadge {
     label: string;

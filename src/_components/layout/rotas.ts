@@ -2,8 +2,9 @@
 const ROUTES_WITHOUT_NAV = ["/login", "/cadastro"];
 
 // Prefixos de rotas (cobrem também as filhas) que renderizam sem navegação.
-// O chat usa a tela inteira para a conversa, sem sidebar.
-const PREFIXOS_SEM_NAV = ["/chat"];
+// O chat usa a tela inteira para a conversa, sem sidebar. /candidatura é a
+// página pública de inscrição — quem acessa não é o recrutador logado.
+const PREFIXOS_SEM_NAV = ["/chat", "/candidatura"];
 
 // Prefixos de rotas que realmente existem no app. Qualquer pathname fora
 // dessa lista é uma 404 (ou uma rota futura ainda não cadastrada aqui).
@@ -14,6 +15,7 @@ const ROUTE_PREFIXES = [
     "/chat",
     "/login",
     "/cadastro",
+    "/candidatura",
 ];
 
 export function rotaCasa(pathname: string, prefixo: string) {

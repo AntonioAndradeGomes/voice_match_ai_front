@@ -48,6 +48,7 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     <TooltipProvider>
+                        <FloatingThemeToggle />
                         <div className="flex h-svh flex-col lg:flex-row">
                             <Sidebar />
                             <main className="flex-1 overflow-hidden">

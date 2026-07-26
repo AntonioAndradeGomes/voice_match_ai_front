@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/_components/ui/avatar";
 import { Badge } from "@/_components/ui/badge";
-import { getCandidatoStatusBadge } from "@/lib/vaga-status";
+import { getCandidatoBadge } from "@/lib/vaga-status";
 import type { Candidato, Vaga } from "@/types";
 
 export function ChatHeader({
@@ -10,7 +10,7 @@ export function ChatHeader({
     candidato: Candidato;
     vaga: Vaga | null;
 }) {
-    const badge = getCandidatoStatusBadge(candidato);
+    const badge = getCandidatoBadge(candidato);
 
     return (
         <div className="flex items-center gap-3 border-b border-border py-4 pr-16 pl-6">

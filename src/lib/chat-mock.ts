@@ -15,13 +15,20 @@ const minutosAtras = (min: number) =>
 export const MOCK_VAGA: Vaga = {
     id: "1",
     titulo: "Desenvolvedor(a) Frontend Pleno",
-    area: "Engenharia",
-    funcao: "Frontend",
-    descricaoFuncao:
+    descricao:
         "Manutenção e evolução dos produtos web da empresa, com foco em React.",
-    hardSkills: ["React", "TypeScript", "CSS"],
-    softSkills: ["Comunicação", "Autonomia"],
+    hardSkills: [
+        { nome: "React", peso: 5 },
+        { nome: "TypeScript", peso: 4 },
+        { nome: "CSS", peso: 3 },
+    ],
+    softSkills: [
+        { nome: "Comunicação", peso: 4 },
+        { nome: "Autonomia", peso: 4 },
+    ],
     experienciaPrevia: "2+ anos com React em produção",
+    modalidade: "remoto",
+    localizacao: "",
     perfilIdeal: criarPerfilNeutro(),
     createdAt: minutosAtras(120),
 };
