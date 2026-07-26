@@ -3,17 +3,15 @@
 import { motion } from "motion/react";
 import { use, useEffect, useState } from "react";
 
-import { MensagemBubble } from "@/_components/chat/mensagem-bubble";
-import { Avatar, AvatarFallback, AvatarImage } from "@/_components/ui/avatar";
-import { Badge } from "@/_components/ui/badge";
-import { ScrollArea } from "@/_components/ui/scroll-area";
+import { ChatFooter } from "@/_components/chat/chat-footer";
+import { ChatHeader } from "@/_components/chat/chat-header";
+import { ChatMensagens } from "@/_components/chat/chat-mensagens";
 import { MOCK_CANDIDATO, MOCK_MENSAGENS, MOCK_VAGA } from "@/lib/chat-mock";
 import {
     getCandidatoById,
     getMensagensByCandidato,
     getVagaById,
 } from "@/lib/storage";
-import { getCandidatoStatusBadge } from "@/lib/vaga-status";
 import type { Candidato, MensagemChat, Vaga } from "@/types";
 
 interface Conversa {
@@ -68,62 +66,9 @@ export default function ChatPage({
             transition={{ duration: 0.2 }}
             className="flex h-full flex-col"
         >
-            <div className="flex items-center gap-3 border-b border-border py-4 pr-16 pl-6">
-                <Avatar>
-                    {conversa.candidato.avatarUrl && (
-                        <AvatarImage
-                            src={conversa.candidato.avatarUrl}
-                            alt={conversa.candidato.nome}
-                        />
-                    )}
-                    <AvatarFallback>
-                        {conversa.candidato.nome.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                </Avatar>
-
-                <div className="flex flex-col">
-                    <span className="font-medium">
-                        {conversa.candidato.nome}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                        Entrevista para{" "}
-                        {conversa.vaga?.titulo ?? "vaga removida"}
-                    </span>
-                </div>
-
-                <Badge
-                    variant={
-                        getCandidatoStatusBadge(conversa.candidato).variant
-                    }
-                    className="ml-auto"
-                >
-                    {getCandidatoStatusBadge(conversa.candidato).label}
-                </Badge>
-            </div>
-
-            <ScrollArea className="min-h-0 flex-1">
-                <div className="flex flex-col gap-3 px-6 py-6">
-                    {conversa.mensagens.length === 0 ? (
-                        <p className="text-center text-sm text-muted-foreground">
-                            Essa entrevista ainda não tem mensagens.
-                        </p>
-                    ) : (
-                        conversa.mensagens.map((mensagem, index) => (
-                            <MensagemBubble
-                                key={mensagem.id}
-                                mensagem={mensagem}
-                                index={index}
-                            />
-                        ))
-                    )}
-                </div>
-            </ScrollArea>
-
-            {conversa.candidato.status === "finalizado" && (
-                <div className="border-t border-border px-6 py-3 text-center text-sm text-muted-foreground">
-                    Entrevista finalizada — veja o scorecard na página da vaga.
-                </div>
-            )}
+            <ChatHeader candidato={conversa.candidato} vaga={conversa.vaga} />
+            <ChatMensagens mensagens={conversa.mensagens} />
+            <ChatFooter status={conversa.candidato.status} />
         </motion.div>
     );
 }
