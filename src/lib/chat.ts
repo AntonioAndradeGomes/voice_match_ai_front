@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { MOCK_CANDIDATO, MOCK_MENSAGENS, MOCK_VAGA } from "@/lib/chat-mock";
 import {
     getCandidatoById,
@@ -28,7 +28,7 @@ export async function carregarConversa(
     if (isValidUUID(vagaId) && isValidUUID(candidatoId)) {
         try {
             // 1. Buscar candidatura para pegar o ID da candidatura no backend
-            const resCandidatura = await fetch(`${API_BASE_URL}/candidaturas/vaga/${vagaId}`);
+            const resCandidatura = await apiFetch(`${API_BASE_URL}/candidaturas/vaga/${vagaId}`);
             if (resCandidatura.ok) {
                 const candidaturas = await resCandidatura.json();
                 const candidatura = candidaturas.find(
@@ -37,7 +37,7 @@ export async function carregarConversa(
 
                 if (candidatura) {
                     // 2. Buscar entrevistas da candidatura
-                    const resEntrevistas = await fetch(
+                    const resEntrevistas = await apiFetch(
                         `${API_BASE_URL}/candidaturas/${candidatura.id}/entrevistas`,
                     );
                     if (resEntrevistas.ok) {
@@ -45,7 +45,7 @@ export async function carregarConversa(
                         if (Array.isArray(entrevistas) && entrevistas.length > 0) {
                             const entrevistaId = entrevistas[0].id;
                             // 3. Buscar detalhes completos da entrevista (com perguntas e respostas)
-                            const resDet = await fetch(`${API_BASE_URL}/entrevistas/${entrevistaId}`);
+                            const resDet = await apiFetch(`${API_BASE_URL}/entrevistas/${entrevistaId}`);
                             if (resDet.ok) {
                                 const entrevistaDet = await resDet.json();
                                 const mensagens: MensagemChat[] = [];

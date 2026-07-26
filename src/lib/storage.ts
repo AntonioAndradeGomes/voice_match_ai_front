@@ -4,7 +4,7 @@
 
 import { normalizarVaga } from "@/lib/migracoes";
 import type { Candidato, MensagemChat, StatusCandidato, Vaga } from "@/types";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 
 const KEYS = {
     vagas: "voicematch:vagas",
@@ -45,7 +45,7 @@ export function getVagasLocal(): Vaga[] {
 
 export async function getVagas(): Promise<Vaga[]> {
     try {
-        const response = await fetch(`${API_BASE_URL}/vagas`);
+        const response = await apiFetch(`${API_BASE_URL}/vagas`);
         if (response.ok) {
             const data = await response.json();
             if (Array.isArray(data)) {
@@ -90,7 +90,7 @@ export async function saveVaga(vaga: Vaga): Promise<Vaga> {
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/vagas`, {
+        const response = await apiFetch(`${API_BASE_URL}/vagas`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
@@ -138,14 +138,14 @@ export function getCandidatosByVagaLocal(vagaId: string): Candidato[] {
 export async function getCandidatosByVaga(vagaId: string): Promise<Candidato[]> {
     if (isValidUUID(vagaId)) {
         try {
-            const response = await fetch(`${API_BASE_URL}/candidaturas/vaga/${vagaId}`);
+            const response = await apiFetch(`${API_BASE_URL}/candidaturas/vaga/${vagaId}`);
             if (response.ok) {
                 const candidaturas = await response.json();
                 if (Array.isArray(candidaturas)) {
                     const lista: Candidato[] = [];
                     for (const cand of candidaturas) {
                         try {
-                            const resCand = await fetch(`${API_BASE_URL}/candidatos/${cand.candidato_id}`);
+                            const resCand = await apiFetch(`${API_BASE_URL}/candidatos/${cand.candidato_id}`);
                             if (resCand.ok) {
                                 const dadosCand = await resCand.json();
                                 const statusFrontend: StatusCandidato =
@@ -210,7 +210,7 @@ export async function saveCandidato(candidato: Candidato): Promise<Candidato> {
             const curriculoNome = candidato.inscricao?.curriculoNome || null;
 
             // 1. Criar Candidato no Backend
-            const resCandidato = await fetch(`${API_BASE_URL}/candidatos`, {
+            const resCandidato = await apiFetch(`${API_BASE_URL}/candidatos`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -228,7 +228,7 @@ export async function saveCandidato(candidato: Candidato): Promise<Candidato> {
                 backendCandidatoId = dataCand.id;
             } else if (resCandidato.status === 400) {
                 // Email já cadastrado — tenta buscar candidato existente
-                const listRes = await fetch(`${API_BASE_URL}/candidatos`);
+                const listRes = await apiFetch(`${API_BASE_URL}/candidatos`);
                 if (listRes.ok) {
                     const todos = await listRes.json();
                     const existente = todos.find(
@@ -243,7 +243,7 @@ export async function saveCandidato(candidato: Candidato): Promise<Candidato> {
             candidato.id = backendCandidatoId;
 
             // 2. Criar Candidatura no Backend
-            const resCandidatura = await fetch(`${API_BASE_URL}/candidaturas`, {
+            const resCandidatura = await apiFetch(`${API_BASE_URL}/candidaturas`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
