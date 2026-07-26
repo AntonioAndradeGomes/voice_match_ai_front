@@ -1,11 +1,6 @@
 "use client";
 
-import {
-    Briefcase,
-    ChartColumn,
-    LayoutDashboard,
-    MessagesSquare,
-} from "lucide-react";
+import { Briefcase, ChartColumn, LayoutDashboard } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,17 +12,40 @@ import { cn } from "@/lib/utils";
 const NAV = [
     { href: "/", label: "Dashboard", icone: LayoutDashboard },
     { href: "/vagas", label: "Vagas", icone: Briefcase },
-    { href: "/chat", label: "Chat", icone: MessagesSquare },
     { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
 
 // Rotas fora do app: renderizam sem navegação.
-const ROUTES_WITHOUT_NAV = ["/login"];
+const ROUTES_WITHOUT_NAV = ["/login", "/cadastro"];
+
+// Prefixos de rotas que realmente existem no app. Qualquer pathname fora
+// dessa lista é uma 404 (ou uma rota futura ainda não cadastrada aqui) —
+// nesse caso a sidebar some, para não ficar ao lado da página de erro.
+// "/chat" não tem item na nav, mas é uma rota válida (acessada por link
+// direto vaga/candidato), então mantém a sidebar.
+const ROUTE_PREFIXES = [
+    "/",
+    "/vagas",
+    "/relatorios",
+    "/chat",
+    "/login",
+    "/cadastro",
+];
+
+function rotaExiste(pathname: string) {
+    return ROUTE_PREFIXES.some((prefixo) =>
+        prefixo === "/"
+            ? pathname === "/"
+            : pathname === prefixo || pathname.startsWith(`${prefixo}/`),
+    );
+}
 
 export function Sidebar() {
     const pathname = usePathname();
 
-    if (ROUTES_WITHOUT_NAV.includes(pathname)) return null;
+    if (ROUTES_WITHOUT_NAV.includes(pathname) || !rotaExiste(pathname)) {
+        return null;
+    }
 
     return (
         <aside className="flex h-svh w-60 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground">
