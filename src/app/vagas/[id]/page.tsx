@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/_components/ui/avatar";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
+import { DivulgarVaga } from "@/_components/vagas/divulgar-vaga";
 import { getCandidatosByVaga, getVagaById } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { getCandidatoBadge } from "@/lib/vaga-status";
@@ -165,16 +166,20 @@ export default function VagaDetalhePage({
     return (
         <>
             <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-fit"
-                    nativeButton={false}
-                    render={<Link href="/vagas" />}
-                >
-                    <ArrowLeft data-icon="inline-start" />
-                    Voltar para vagas
-                </Button>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-fit"
+                        nativeButton={false}
+                        render={<Link href="/vagas" />}
+                    >
+                        <ArrowLeft data-icon="inline-start" />
+                        Voltar para vagas
+                    </Button>
+
+                    <DivulgarVaga vagaId={vaga.id} titulo={vaga.titulo} />
+                </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                     <div className="flex flex-col gap-5">
@@ -252,9 +257,9 @@ export default function VagaDetalhePage({
                             </span>
                         </CardContent>
                         <CardContent className="text-sm text-muted-foreground">
-                            A Iris envia perguntas por WhatsApp, ouve os áudios
-                            dos candidatos e compara cada resposta com o
-                            candidato ideal descrito por você.
+                            A Iris é uma IA que entrevista candidatos por áudio,
+                            por meio de um agente, e devolve um relatório pra
+                            todo mundo: Recrutador e Candidato.
                         </CardContent>
                     </Card>
                 </div>
