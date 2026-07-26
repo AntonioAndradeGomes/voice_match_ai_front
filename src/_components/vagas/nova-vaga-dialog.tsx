@@ -216,28 +216,34 @@ export function NovaVagaDialog({
     const valido = campos.titulo.trim() !== "" && campos.modalidade !== "";
 
     function handleSalvar() {
-        if (!valido) return;
+        (async () => {
+            if (!valido) return;
 
-        const vaga: Vaga = {
-            id: crypto.randomUUID(),
-            titulo: campos.titulo.trim(),
-            descricao: campos.descricao.trim(),
-            hardSkills: campos.hardSkills,
-            softSkills: campos.softSkills,
-            experienciaPrevia: campos.experienciaPrevia,
-            modalidade: campos.modalidade as Modalidade,
-            localizacao:
-                campos.modalidade === "remoto"
-                    ? ""
-                    : campos.localizacao.trim(),
-            perfilIdeal: criarPerfilNeutro(),
-            createdAt: new Date().toISOString(),
-        };
+            const vaga: Vaga = {
+                id: crypto.randomUUID(),
+                titulo: campos.titulo.trim(),
+                descricao: campos.descricao.trim(),
+                hardSkills: campos.hardSkills,
+                softSkills: campos.softSkills,
+                experienciaPrevia: campos.experienciaPrevia,
+                modalidade: campos.modalidade as Modalidade,
+                localizacao:
+                    campos.modalidade === "remoto"
+                        ? ""
+                        : campos.localizacao.trim(),
+                perfilIdeal: criarPerfilNeutro(),
+                createdAt: new Date().toISOString(),
+            };
 
-        saveVaga(vaga);
-        toast.success("Vaga criada com sucesso", { description: vaga.titulo });
-        handleOpenChange(false);
-        onVagaCriada();
+            try {
+                await saveVaga(vaga);
+                toast.success("Vaga criada com sucesso", { description: vaga.titulo });
+                handleOpenChange(false);
+                onVagaCriada();
+            } catch (error) {
+                toast.error("Erro ao conectar com a API", { description: "Verifique se o backend está rodando na porta 8000." });
+            }
+        })();
     }
 
     return (

@@ -26,14 +26,15 @@ interface DadosDashboard {
     candidatosPorVaga: Record<string, Candidato[]>;
 }
 
-function carregarDashboard(): DadosDashboard {
-    const vagas = getVagas();
+async function carregarDashboard(): Promise<DadosDashboard> {
+    const vagas = await getVagas();
+    const candidatosEntries = await Promise.all(
+        vagas.map(async (vaga) => [vaga.id, await getCandidatosByVaga(vaga.id)] as const)
+    );
     return {
         vagas,
         candidatos: getCandidatos(),
-        candidatosPorVaga: Object.fromEntries(
-            vagas.map((vaga) => [vaga.id, getCandidatosByVaga(vaga.id)]),
-        ),
+        candidatosPorVaga: Object.fromEntries(candidatosEntries),
     };
 }
 
@@ -47,19 +48,13 @@ function Metrica({
     valor: number;
 }) {
     return (
-        <Card size="sm">
-            <CardContent className="flex items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-                    <Icone className="size-4" />
-                </span>
-                <div className="flex flex-col">
-                    <span className="font-heading text-2xl font-semibold tracking-tight">
-                        {valor}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                        {label}
-                    </span>
-                </div>
+        <Card className="flex-1">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{label}</CardTitle>
+                <Icone className="size-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold font-heading">{valor}</div>
             </CardContent>
         </Card>
     );
@@ -69,10 +64,7 @@ export default function DashboardPage() {
     const [dados, setDados] = useState<DadosDashboard | null>(null);
 
     useEffect(() => {
-        // localStorage não existe no SSR; a leitura real só é possível depois do
-        // mount no cliente, por isso o estado inicial é preenchido aqui.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setDados(carregarDashboard());
+        carregarDashboard().then(setDados);
     }, []);
 
     // `null` enquanto não montou: evita renderizar o estado vazio antes de saber
