@@ -1,4 +1,4 @@
-import type { Candidato } from "@/types";
+import type { Candidato, StatusCandidato } from "@/types";
 
 export interface ResumoVagaBadge {
     label: string;
@@ -33,4 +33,15 @@ export function getResumoVagaBadge(candidatos: Candidato[]): ResumoVagaBadge {
     }
 
     return { label: "Entrevistas concluídas", variant: "outline" };
+}
+
+const STATUS_CANDIDATO_BADGE: Record<StatusCandidato, ResumoVagaBadge> = {
+    aguardando: { label: "Aguardando", variant: "outline" },
+    em_entrevista: { label: "Em entrevista", variant: "default" },
+    finalizado: { label: "Finalizado", variant: "secondary" },
+};
+
+// Badge de status de um único candidato (usado na lista de conversas do chat).
+export function getCandidatoStatusBadge(candidato: Candidato): ResumoVagaBadge {
+    return STATUS_CANDIDATO_BADGE[candidato.status];
 }
