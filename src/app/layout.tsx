@@ -39,7 +39,7 @@ export default function RootLayout({
             className={cn("h-full", "antialiased", inter.variable)}
             suppressHydrationWarning
         >
-            <body className="h-full font-sans">
+            <body className="h-full font-sans" suppressHydrationWarning>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="system"

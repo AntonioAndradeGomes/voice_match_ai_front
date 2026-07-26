@@ -58,10 +58,10 @@ export default function CandidaturaPage({
     const [carregando, setCarregando] = useState(true);
 
     useEffect(() => {
-        // A vaga vive no localStorage, que só existe no cliente.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setVaga(getVagaById(id));
-        setCarregando(false);
+        getVagaById(id).then((vagaEncontrada) => {
+            setVaga(vagaEncontrada);
+            setCarregando(false);
+        });
     }, [id]);
 
     return (

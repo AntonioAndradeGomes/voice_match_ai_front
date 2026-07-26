@@ -20,13 +20,22 @@ export function ChatConversa({
     const [conversa, setConversa] = useState<Conversa | null>(null);
 
     useEffect(() => {
-        // localStorage não existe no SSR; a leitura real só é possível depois do
-        // mount no cliente, por isso o estado inicial é preenchido aqui.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setConversa(carregarConversa(candidatoId, vagaId));
+        let ativo = true;
+        carregarConversa(candidatoId, vagaId).then((res) => {
+            if (ativo) setConversa(res);
+        });
+        return () => {
+            ativo = false;
+        };
     }, [candidatoId, vagaId]);
 
-    if (!conversa) return null;
+    if (!conversa) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <p className="text-sm text-muted-foreground">Carregando conversa...</p>
+            </div>
+        );
+    }
 
     return (
         <motion.div
