@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/lib/api";
 import { MOCK_CANDIDATO, MOCK_MENSAGENS, MOCK_VAGA } from "@/lib/chat-mock";
 import {
     getCandidatoById,
@@ -27,7 +28,7 @@ export async function carregarConversa(
     if (isValidUUID(vagaId) && isValidUUID(candidatoId)) {
         try {
             // 1. Buscar candidatura para pegar o ID da candidatura no backend
-            const resCandidatura = await fetch(`http://localhost:8000/candidaturas/vaga/${vagaId}`);
+            const resCandidatura = await fetch(`${API_BASE_URL}/candidaturas/vaga/${vagaId}`);
             if (resCandidatura.ok) {
                 const candidaturas = await resCandidatura.json();
                 const candidatura = candidaturas.find(
@@ -37,14 +38,14 @@ export async function carregarConversa(
                 if (candidatura) {
                     // 2. Buscar entrevistas da candidatura
                     const resEntrevistas = await fetch(
-                        `http://localhost:8000/candidaturas/${candidatura.id}/entrevistas`,
+                        `${API_BASE_URL}/candidaturas/${candidatura.id}/entrevistas`,
                     );
                     if (resEntrevistas.ok) {
                         const entrevistas = await resEntrevistas.json();
                         if (Array.isArray(entrevistas) && entrevistas.length > 0) {
                             const entrevistaId = entrevistas[0].id;
                             // 3. Buscar detalhes completos da entrevista (com perguntas e respostas)
-                            const resDet = await fetch(`http://localhost:8000/entrevistas/${entrevistaId}`);
+                            const resDet = await fetch(`${API_BASE_URL}/entrevistas/${entrevistaId}`);
                             if (resDet.ok) {
                                 const entrevistaDet = await resDet.json();
                                 const mensagens: MensagemChat[] = [];
@@ -70,7 +71,7 @@ export async function carregarConversa(
                                             const audioUrlBackend = p.resposta.audio_url
                                                 ? p.resposta.audio_url.startsWith("http")
                                                     ? p.resposta.audio_url
-                                                    : `http://localhost:8000${p.resposta.audio_url}`
+                                                    : `${API_BASE_URL}${p.resposta.audio_url}`
                                                 : undefined;
 
                                             mensagens.push({
