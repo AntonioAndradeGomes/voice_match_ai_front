@@ -2,6 +2,7 @@
 // corpo destas funções por chamadas a uma API/backend (Supabase, Firebase, REST)
 // mantendo as mesmas assinaturas — nenhuma tela deve importar localStorage direto.
 
+import { normalizarVaga } from "@/lib/migracoes";
 import type { Candidato, MensagemChat, Vaga } from "@/types";
 
 const KEYS = {
@@ -34,10 +35,15 @@ function writeList<T>(key: string, list: T[]) {
 // Vagas
 
 export function getVagas(): Vaga[] {
-    return readList<Vaga>(KEYS.vagas).sort(
-        (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+    // Normaliza antes de entregar: o storage pode conter vagas gravadas em
+    // versões anteriores do tipo `Vaga` (ver `migracoes.ts`).
+    return readList<unknown>(KEYS.vagas)
+        .map(normalizarVaga)
+        .sort(
+            (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
+        );
 }
 
 export function getVagaById(id: string): Vaga | null {

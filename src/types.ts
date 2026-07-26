@@ -33,20 +33,53 @@ export function criarPerfilNeutro(): PerfilComportamental {
     ) as PerfilComportamental;
 }
 
+export interface SkillComPeso {
+    nome: string;
+    peso: number;
+}
+
+export const MODALIDADES = ["presencial", "hibrido", "remoto"] as const;
+
+export type Modalidade = (typeof MODALIDADES)[number];
+
+export const MODALIDADE_LABEL: Record<Modalidade, string> = {
+    presencial: "Presencial",
+    hibrido: "Híbrido",
+    remoto: "Remoto",
+};
+
 export interface Vaga {
     id: string;
     titulo: string;
-    area: string;
-    funcao: string;
-    descricaoFuncao: string;
-    hardSkills: string[];
-    softSkills: string[];
+    descricao: string;
+    hardSkills: SkillComPeso[];
+    softSkills: SkillComPeso[];
     experienciaPrevia: string;
+    modalidade: Modalidade;
+    // Só faz sentido quando `modalidade` é "presencial" ou "hibrido"; vazia em "remoto".
+    localizacao: string;
     perfilIdeal: PerfilComportamental;
     createdAt: string;
 }
 
 export type StatusCandidato = "aguardando" | "em_entrevista" | "finalizado";
+
+/**
+ * O que o próprio candidato preenche na página pública da vaga. Separado do
+ * resto de `Candidato` porque é dado de inscrição, não de avaliação.
+ */
+export interface DadosInscricao {
+    email: string;
+    /** Só dígitos, sem máscara. `null` quando o candidato não é brasileiro. */
+    cpf: string | null;
+    telefone: string;
+    linkedin: string;
+    /**
+     * Apenas o nome do arquivo. O binário não vai para o localStorage — quando
+     * existir backend, aqui entra a URL do currículo no storage remoto.
+     */
+    curriculoNome: string;
+}
 
 export interface Candidato {
     id: string;
@@ -54,6 +87,8 @@ export interface Candidato {
     nome: string;
     avatarUrl: string | null;
     status: StatusCandidato;
+    /** Ausente nos candidatos criados antes da página pública de candidatura. */
+    inscricao?: DadosInscricao;
     perfilAvaliado: PerfilComportamental | null;
     notaFinal: number | null;
     pontosFortes: string[] | null;
@@ -74,4 +109,7 @@ export interface MensagemChat {
     perguntaRelacionada?: Trait[];
     timestamp: string;
     duracaoAudio?: number;
+    /** URL do arquivo de áudio (ex.: "/audio/arquivo.wav"). Sem isso, o
+     * player mostra a onda como decoração — não tem o que tocar. */
+    audioUrl?: string;
 }
