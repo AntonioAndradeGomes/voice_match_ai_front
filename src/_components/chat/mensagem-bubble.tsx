@@ -1,6 +1,6 @@
-import { Play } from "lucide-react";
 import { motion } from "motion/react";
 
+import { AudioPlayer } from "@/_components/ui/audio-player";
 import { cn } from "@/lib/utils";
 import type { MensagemChat } from "@/types";
 
@@ -9,25 +9,6 @@ function formatHora(timestamp: string) {
         hour: "2-digit",
         minute: "2-digit",
     }).format(new Date(timestamp));
-}
-
-function formatDuracao(segundos: number) {
-    const minutos = Math.floor(segundos / 60);
-    const resto = Math.floor(segundos % 60);
-    return `${minutos}:${String(resto).padStart(2, "0")}`;
-}
-
-// Alturas da onda sonora derivadas do id da mensagem: precisam parecer
-// aleatórias mas ficar estáveis entre renders (sem Math.random no render).
-function alturasOnda(id: string) {
-    let seed = 0;
-    for (let i = 0; i < id.length; i++)
-        seed = (seed * 31 + id.charCodeAt(i)) >>> 0;
-
-    return Array.from({ length: 24 }, (_, i) => {
-        seed = (seed * 1103515245 + 12345) >>> 0;
-        return 20 + (seed % 100) * 0.8 * (i % 5 === 0 ? 0.5 : 1);
-    });
 }
 
 // Esta tela é do entrevistador: as mensagens da IA (quem conduz a entrevista
@@ -62,39 +43,14 @@ export function MensagemBubble({
             >
                 {mensagem.tipo === "audio" ? (
                     <>
-                        <div className="flex items-center gap-2">
-                            <span
-                                className={cn(
-                                    "flex size-6 shrink-0 items-center justify-center rounded-full",
-                                    enviada
-                                        ? "bg-primary-foreground/20"
-                                        : "bg-muted",
-                                )}
-                            >
-                                <Play className="size-3 fill-current" />
-                            </span>
-
-                            <div className="flex h-6 flex-1 items-center gap-0.5">
-                                {alturasOnda(mensagem.id).map((altura, i) => (
-                                    <span
-                                        key={i}
-                                        className={cn(
-                                            "w-0.5 rounded-full",
-                                            enviada
-                                                ? "bg-primary-foreground/50"
-                                                : "bg-foreground/20",
-                                        )}
-                                        style={{ height: `${altura}%` }}
-                                    />
-                                ))}
-                            </div>
-
-                            {mensagem.duracaoAudio !== undefined && (
-                                <span className="shrink-0 text-xs tabular-nums opacity-80">
-                                    {formatDuracao(mensagem.duracaoAudio)}
-                                </span>
-                            )}
-                        </div>
+                        {mensagem.audioUrl && (
+                            <AudioPlayer
+                                src={mensagem.audioUrl}
+                                duracaoInicial={mensagem.duracaoAudio}
+                                seed={mensagem.id}
+                                onColorido={enviada}
+                            />
+                        )}
 
                         <p
                             className={cn(

@@ -109,4 +109,7 @@ export interface MensagemChat {
     perguntaRelacionada?: Trait[];
     timestamp: string;
     duracaoAudio?: number;
+    /** URL do arquivo de áudio (ex.: "/audio/arquivo.wav"). Sem isso, o
+     * player mostra a onda como decoração — não tem o que tocar. */
+    audioUrl?: string;
 }

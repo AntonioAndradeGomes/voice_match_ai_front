@@ -63,7 +63,8 @@ export const MOCK_MENSAGENS: MensagemChat[] = [
         autor: "candidato",
         tipo: "audio",
         conteudo: "Oi, tudo bem! Pode começar sim.",
-        duracaoAudio: 8,
+        duracaoAudio: 5,
+        audioUrl: "/audio/saudacao-marina.wav",
         timestamp: minutosAtras(57),
     },
     {
@@ -82,7 +83,8 @@ export const MOCK_MENSAGENS: MensagemChat[] = [
         tipo: "audio",
         conteudo:
             "Liderei a refatoração do checkout de um e-commerce, migrando de Redux para Zustand e reduzindo o bundle em 32%. Trabalhei junto com design para revisar a jornada e subimos a conversão em 11%.",
-        duracaoAudio: 47,
+        duracaoAudio: 18,
+        audioUrl: "/audio/projeto-react-longo.wav",
         timestamp: minutosAtras(54),
     },
     {
@@ -100,7 +102,8 @@ export const MOCK_MENSAGENS: MensagemChat[] = [
         tipo: "audio",
         conteudo:
             "Code review em toda PR, testes automatizados nas regras de negócio críticas e CI bloqueando merge se algo quebrar.",
-        duracaoAudio: 33,
+        duracaoAudio: 10,
+        audioUrl: "/audio/qualidade-codigo.wav",
         timestamp: minutosAtras(51),
     },
 ];
