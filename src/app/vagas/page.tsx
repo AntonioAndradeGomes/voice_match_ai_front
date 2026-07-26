@@ -22,6 +22,7 @@ import {
 } from "@/_components/ui/card";
 import { ScrollArea } from "@/_components/ui/scroll-area";
 import { NovaVagaDialog } from "@/_components/vagas/nova-vaga-dialog";
+import { seedDadosTeste } from "@/lib/seed";
 import { getCandidatosByVaga, getVagas } from "@/lib/storage";
 import { getResumoVagaBadge } from "@/lib/vaga-status";
 import type { Candidato, Vaga } from "@/types";
@@ -30,6 +31,13 @@ function carregarVagasComCandidatos(): {
     vagas: Vaga[];
     candidatosPorVaga: Record<string, Candidato[]>;
 } {
+    // Primeira visita com storage vazio já vem com vagas/candidatos de teste
+    // (ver src/lib/seed.ts) — sem precisar cadastrar nada na mão. Como o
+    // storage é local a cada navegador, isso não afeta outras pessoas.
+    if (getVagas().length === 0) {
+        seedDadosTeste();
+    }
+
     const vagasSalvas = getVagas();
     return {
         vagas: vagasSalvas,

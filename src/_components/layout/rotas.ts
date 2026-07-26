@@ -6,6 +6,10 @@ const ROUTES_WITHOUT_NAV = ["/login", "/cadastro"];
 // página pública de inscrição — quem acessa não é o recrutador logado.
 const PREFIXOS_SEM_NAV = ["/chat", "/candidatura"];
 
+// Rotas que também são o chat, só que aninhadas em /vagas/[id]/[candidatoId]/chat
+// (acesso pela aba de vagas) — mesmo tratamento: tela cheia, sem sidebar.
+const REGEX_SEM_NAV = [/^\/vagas\/[^/]+\/[^/]+\/chat$/];
+
 // Prefixos de rotas que realmente existem no app. Qualquer pathname fora
 // dessa lista é uma 404 (ou uma rota futura ainda não cadastrada aqui).
 const ROUTE_PREFIXES = [
@@ -34,5 +38,8 @@ export function rotaExiste(pathname: string) {
 export function rotaTemNav(pathname: string) {
     if (!rotaExiste(pathname)) return false;
     if (ROUTES_WITHOUT_NAV.includes(pathname)) return false;
-    return !PREFIXOS_SEM_NAV.some((prefixo) => rotaCasa(pathname, prefixo));
+    if (PREFIXOS_SEM_NAV.some((prefixo) => rotaCasa(pathname, prefixo))) {
+        return false;
+    }
+    return !REGEX_SEM_NAV.some((regex) => regex.test(pathname));
 }
