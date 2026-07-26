@@ -145,7 +145,8 @@ const MENSAGENS: MensagemChat[] = [
         autor: "candidato",
         tipo: "audio",
         conteudo: "Oi, tudo bem! Pode começar sim.",
-        duracaoAudio: 8,
+        duracaoAudio: 5,
+        audioUrl: "/audio/saudacao-marina.wav",
         timestamp: minutosAtras(57),
     },
     {
@@ -164,7 +165,8 @@ const MENSAGENS: MensagemChat[] = [
         tipo: "audio",
         conteudo:
             "Liderei a refatoração do checkout de um e-commerce, migrando de Redux para Zustand e reduzindo o bundle em 32%.",
-        duracaoAudio: 47,
+        duracaoAudio: 10,
+        audioUrl: "/audio/projeto-react-curto.wav",
         timestamp: minutosAtras(54),
     },
     {
@@ -182,7 +184,8 @@ const MENSAGENS: MensagemChat[] = [
         autor: "candidato",
         tipo: "audio",
         conteudo: "Claro, pode mandar a primeira pergunta.",
-        duracaoAudio: 6,
+        duracaoAudio: 4,
+        audioUrl: "/audio/bruno-resposta.wav",
         timestamp: minutosAtras(19),
     },
     {
