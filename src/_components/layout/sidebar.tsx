@@ -1,6 +1,13 @@
 "use client";
 
-import { Briefcase, ChartColumn, LayoutDashboard, Mic } from "lucide-react";
+import {
+    Briefcase,
+    ChartColumn,
+    LayoutDashboard,
+    MessagesSquare,
+} from "lucide-react";
+import { motion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +17,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
     { href: "/", label: "Dashboard", icone: LayoutDashboard },
     { href: "/vagas", label: "Vagas", icone: Briefcase },
+    { href: "/chat", label: "Chat", icone: MessagesSquare },
     { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
 
@@ -25,9 +33,13 @@ export function Sidebar() {
         <aside className="flex h-svh w-60 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground">
             <div className="flex flex-col gap-6">
                 <Link href="/" className="flex items-center gap-2 px-1">
-                    <span className="flex size-8 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-                        <Mic className="size-4" />
-                    </span>
+                    <Image
+                        src="/logo/favicon.svg"
+                        alt="VoiceMatchAi"
+                        width={32}
+                        height={32}
+                        className="size-8 shrink-0 rounded-xl"
+                    />
                     <span className="font-heading text-lg font-semibold tracking-tight">
                         VoiceMatch
                         <span className="text-sidebar-primary">Ai</span>
@@ -50,16 +62,27 @@ export function Sidebar() {
                                 href={href}
                                 aria-current={ativo ? "page" : undefined}
                                 className={cn(
-                                    "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                                    // Ativo: o azul do app diluído. No hover a opacidade cai,
-                                    // então a cor clareia em vez de escurecer.
+                                    "relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium",
+                                    // Ativo: o azul do app diluído (o pill animado cobre o fundo).
+                                    // No hover a opacidade cai, então a cor clareia em vez de escurecer.
                                     ativo
-                                        ? "bg-sidebar-primary/20 text-sidebar-primary hover:bg-sidebar-primary/10 hover:text-sidebar-primary"
-                                        : "text-sidebar-foreground",
+                                        ? "text-sidebar-primary hover:text-sidebar-primary"
+                                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                                 )}
                             >
-                                <Icone className="size-4" />
-                                {label}
+                                {ativo && (
+                                    <motion.span
+                                        layoutId="sidebar-active-pill"
+                                        className="absolute inset-0 rounded-lg bg-sidebar-primary/20"
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 500,
+                                            damping: 35,
+                                        }}
+                                    />
+                                )}
+                                <Icone className="relative z-10 size-4" />
+                                <span className="relative z-10">{label}</span>
                             </Link>
                         );
                     })}
