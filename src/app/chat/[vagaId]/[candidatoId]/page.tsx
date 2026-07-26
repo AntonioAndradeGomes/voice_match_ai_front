@@ -2,7 +2,8 @@
 
 import { MessagesSquare } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { use, useEffect, useState } from "react";
 
 import { MensagemBubble } from "@/_components/chat/mensagem-bubble";
 import { Avatar, AvatarFallback, AvatarImage } from "@/_components/ui/avatar";
@@ -65,9 +66,13 @@ function carregarConversas(): Conversa[] {
     ];
 }
 
-export default function ChatPage() {
+export default function ChatPage({
+    params,
+}: {
+    params: Promise<{ vagaId: string; candidatoId: string }>;
+}) {
+    const { candidatoId } = use(params);
     const [conversas, setConversas] = useState<Conversa[] | null>(null);
-    const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
 
     useEffect(() => {
         // localStorage não existe no SSR; a leitura real só é possível depois do
@@ -79,7 +84,7 @@ export default function ChatPage() {
     const carregando = conversas === null;
     const lista = conversas ?? [];
     const selecionada =
-        lista.find((conversa) => conversa.candidato.id === selecionadoId) ??
+        lista.find((conversa) => conversa.candidato.id === candidatoId) ??
         lista[0] ??
         null;
 
@@ -113,18 +118,15 @@ export default function ChatPage() {
                     <aside className="w-72 shrink-0 border-r border-border">
                         <ScrollArea className="h-full">
                             <nav className="flex flex-col gap-1 p-3">
-                                {lista.map(({ candidato, mensagens }) => {
+                                {lista.map(({ candidato, vaga, mensagens }) => {
                                     const ativo =
                                         candidato.id ===
                                         selecionada?.candidato.id;
 
                                     return (
-                                        <button
+                                        <Link
                                             key={candidato.id}
-                                            type="button"
-                                            onClick={() =>
-                                                setSelecionadoId(candidato.id)
-                                            }
+                                            href={`/chat/${vaga?.id ?? "vaga"}/${candidato.id}`}
                                             className={cn(
                                                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-muted",
                                                 ativo && "bg-muted",
@@ -156,7 +158,7 @@ export default function ChatPage() {
                                                     )}
                                                 </span>
                                             </div>
-                                        </button>
+                                        </Link>
                                     );
                                 })}
                             </nav>
