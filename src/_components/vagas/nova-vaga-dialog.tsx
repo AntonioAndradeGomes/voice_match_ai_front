@@ -1,5 +1,6 @@
 "use client";
 
+import { XIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -15,7 +16,6 @@ import {
 } from "@/_components/ui/dialog";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
-import { ScrollArea } from "@/_components/ui/scroll-area";
 import {
     Select,
     SelectContent,
@@ -23,50 +23,180 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/_components/ui/select";
-import { TagInput } from "@/_components/ui/tag-input";
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "@/_components/ui/tabs";
+import { Slider } from "@/_components/ui/slider";
 import { Textarea } from "@/_components/ui/textarea";
 import { saveVaga } from "@/lib/storage";
-import { criarPerfilNeutro, type Vaga } from "@/types";
+import {
+    criarPerfilNeutro,
+    MODALIDADE_LABEL,
+    MODALIDADES,
+    type Modalidade,
+    type SkillComPeso,
+    type Vaga,
+} from "@/types";
 
-const AREAS = [
-    "Comercial & Vendas",
-    "Marketing",
-    "Produto",
-    "Tecnologia",
-    "Operações",
-    "Financeiro",
-    "Recursos Humanos",
-    "Atendimento ao Cliente",
-    "Outra",
+const HARD_SKILLS_DISPONIVEIS = [
+    "Excel avançado",
+    "SQL",
+    "Inglês avançado",
+    "Gestão de projetos",
+    "CRM (Salesforce/HubSpot)",
+    "Copywriting",
+    "SEO",
+    "Análise de dados",
+    "Programação (JavaScript/Python)",
+    "Design gráfico",
+    "Contabilidade",
+    "Recrutamento e seleção",
+    "Atendimento ao cliente",
+    "Negociação comercial",
+    "Edição de vídeo",
+    "Marketing digital",
+    "Gestão financeira",
+    "Power BI",
+    "Vendas B2B",
 ];
 
-const NIVEIS_EXPERIENCIA = [
-    "Sem experiência prévia",
-    "Júnior (1-2 anos)",
-    "Pleno (3-5 anos)",
-    "Sênior (5+ anos)",
+const SOFT_SKILLS_DISPONIVEIS = [
+    "Comunicação",
+    "Trabalho em equipe",
+    "Proatividade",
+    "Resiliência",
+    "Liderança",
+    "Adaptabilidade",
+    "Pensamento crítico",
+    "Organização",
+    "Empatia",
+    "Criatividade",
+    "Autonomia",
+    "Foco em resultado",
+    "Inteligência emocional",
+    "Gestão do tempo",
 ];
+
+const NIVEIS_EXPERIENCIA = ["1 a 2 anos", "3 a 5 anos", "Mais de 5 anos"];
+
+const PESO_INICIAL = 5;
 
 const CAMPOS_INICIAIS = {
     titulo: "",
-    area: "",
-    funcao: "",
-    descricaoFuncao: "",
-    hardSkills: [] as string[],
-    softSkills: [] as string[],
+    descricao: "",
+    hardSkills: [] as SkillComPeso[],
+    softSkills: [] as SkillComPeso[],
     experienciaPrevia: "",
+    modalidade: "" as Modalidade | "",
+    localizacao: "",
 };
 
 interface NovaVagaDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onVagaCriada: () => void;
+}
+
+interface SkillPickerProps {
+    label: string;
+    opcoes: string[];
+    skills: SkillComPeso[];
+    onChange: (skills: SkillComPeso[]) => void;
+}
+
+function SkillPicker({ label, opcoes, skills, onChange }: SkillPickerProps) {
+    const opcoesDisponiveis = opcoes.filter(
+        (opcao) => !skills.some((skill) => skill.nome === opcao),
+    );
+
+    function adicionarSkill(nome: string) {
+        onChange([...skills, { nome, peso: PESO_INICIAL }]);
+    }
+
+    function removerSkill(nome: string) {
+        onChange(skills.filter((skill) => skill.nome !== nome));
+    }
+
+    function atualizarPeso(nome: string, peso: number) {
+        onChange(
+            skills.map((skill) =>
+                skill.nome === nome ? { ...skill, peso } : skill,
+            ),
+        );
+    }
+
+    return (
+        <div className="flex flex-col gap-2">
+            <Label>{label}</Label>
+            <div className="flex flex-col gap-3 rounded-2xl border border-border p-3">
+                {skills.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                        Nenhuma skill selecionada.
+                    </p>
+                ) : (
+                    <div className="flex flex-col gap-3">
+                        {skills.map((skill) => (
+                            <div
+                                key={skill.nome}
+                                className="flex flex-wrap items-center gap-x-3 gap-y-1.5"
+                            >
+                                <span className="min-w-32 flex-1 truncate text-sm">
+                                    {skill.nome}
+                                </span>
+                                <div className="flex shrink-0 items-center gap-2">
+                                    <div className="w-20">
+                                        <Slider
+                                            min={1}
+                                            max={10}
+                                            step={1}
+                                            value={[skill.peso]}
+                                            onValueChange={(value) =>
+                                                atualizarPeso(
+                                                    skill.nome,
+                                                    Array.isArray(value)
+                                                        ? value[0]
+                                                        : value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <span className="w-5 shrink-0 text-right text-xs text-muted-foreground">
+                                        {skill.peso}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            removerSkill(skill.nome)
+                                        }
+                                        className="shrink-0 rounded-full p-0.5 text-muted-foreground hover:bg-foreground/10"
+                                        aria-label={`Remover ${skill.nome}`}
+                                    >
+                                        <XIcon className="size-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <Select
+                    value={null}
+                    onValueChange={(value) => {
+                        if (value) adicionarSkill(String(value));
+                    }}
+                    disabled={opcoesDisponiveis.length === 0}
+                >
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Adicionar skill..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {opcoesDisponiveis.map((opcao) => (
+                            <SelectItem key={opcao} value={opcao}>
+                                {opcao}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
+    );
 }
 
 export function NovaVagaDialog({
@@ -83,10 +213,7 @@ export function NovaVagaDialog({
         }
     }
 
-    const valido =
-        campos.titulo.trim() !== "" &&
-        campos.area !== "" &&
-        campos.funcao.trim() !== "";
+    const valido = campos.titulo.trim() !== "" && campos.modalidade !== "";
 
     function handleSalvar() {
         if (!valido) return;
@@ -94,12 +221,15 @@ export function NovaVagaDialog({
         const vaga: Vaga = {
             id: crypto.randomUUID(),
             titulo: campos.titulo.trim(),
-            area: campos.area,
-            funcao: campos.funcao.trim(),
-            descricaoFuncao: campos.descricaoFuncao.trim(),
+            descricao: campos.descricao.trim(),
             hardSkills: campos.hardSkills,
             softSkills: campos.softSkills,
             experienciaPrevia: campos.experienciaPrevia,
+            modalidade: campos.modalidade as Modalidade,
+            localizacao:
+                campos.modalidade === "remoto"
+                    ? ""
+                    : campos.localizacao.trim(),
             perfilIdeal: criarPerfilNeutro(),
             createdAt: new Date().toISOString(),
         };
@@ -112,198 +242,164 @@ export function NovaVagaDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-w-4xl">
-                <DialogHeader>
+            <DialogContent className="flex max-h-[85vh] flex-col p-4 sm:max-w-6xl sm:p-6">
+                <DialogHeader className="shrink-0">
                     <DialogTitle>Nova vaga</DialogTitle>
                     <DialogDescription>
-                        Preencha os requisitos da vaga. O perfil comportamental
-                        ideal (radar de 20 traços) é configurado na próxima
-                        etapa.
+                        Descreva a vaga, escolha as skills e o peso de cada
+                        uma. A Iris usa isso para conduzir e avaliar as
+                        entrevistas.
                     </DialogDescription>
                 </DialogHeader>
 
-                <Tabs defaultValue="requisitos">
-                    <TabsList>
-                        <TabsTrigger value="requisitos">Requisitos</TabsTrigger>
-                        <TabsTrigger value="perfil">Perfil ideal</TabsTrigger>
-                    </TabsList>
+                <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto py-1 pr-1">
+                    <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="flex flex-col gap-2 sm:col-span-2">
+                            <Label htmlFor="titulo">Título</Label>
+                            <Input
+                                id="titulo"
+                                placeholder="Ex.: Desenvolvedor(a) Front-end Pleno"
+                                value={campos.titulo}
+                                onChange={(event) =>
+                                    setCampos((prev) => ({
+                                        ...prev,
+                                        titulo: event.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
 
-                    <TabsContent value="requisitos">
-                        <ScrollArea className="h-[55vh] pr-4">
-                            <div className="flex flex-col gap-5 py-1 pr-1">
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="flex flex-col gap-2">
-                                        <Label htmlFor="titulo">
-                                            Título da vaga *
-                                        </Label>
-                                        <Input
-                                            id="titulo"
-                                            placeholder="Ex: Analista de Vendas Pleno"
-                                            value={campos.titulo}
-                                            onChange={(event) =>
-                                                setCampos((prev) => ({
-                                                    ...prev,
-                                                    titulo: event.target.value,
-                                                }))
-                                            }
-                                        />
-                                    </div>
-
-                                    <div className="flex flex-col gap-2">
-                                        <Label htmlFor="area">Área *</Label>
-                                        <Select
-                                            value={campos.area || undefined}
-                                            onValueChange={(value) =>
-                                                setCampos((prev) => ({
-                                                    ...prev,
-                                                    area: String(value),
-                                                }))
-                                            }
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="modalidade">Modalidade</Label>
+                            <Select
+                                value={campos.modalidade || undefined}
+                                onValueChange={(value) =>
+                                    setCampos((prev) => ({
+                                        ...prev,
+                                        modalidade: value as Modalidade,
+                                        localizacao:
+                                            value === "remoto"
+                                                ? ""
+                                                : prev.localizacao,
+                                    }))
+                                }
+                            >
+                                <SelectTrigger
+                                    id="modalidade"
+                                    className="w-full"
+                                >
+                                    <SelectValue placeholder="Selecione a modalidade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {MODALIDADES.map((modalidade) => (
+                                        <SelectItem
+                                            key={modalidade}
+                                            value={modalidade}
                                         >
-                                            <SelectTrigger
-                                                id="area"
-                                                className="w-full"
-                                            >
-                                                <SelectValue placeholder="Selecione a área" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {AREAS.map((area) => (
-                                                    <SelectItem
-                                                        key={area}
-                                                        value={area}
-                                                    >
-                                                        {area}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
+                                            {MODALIDADE_LABEL[modalidade]}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
 
-                                <div className="flex flex-col gap-2">
-                                    <Label htmlFor="funcao">Função *</Label>
-                                    <Input
-                                        id="funcao"
-                                        placeholder="Ex: Responsável por prospecção e fechamento de contas PME"
-                                        value={campos.funcao}
-                                        onChange={(event) =>
-                                            setCampos((prev) => ({
-                                                ...prev,
-                                                funcao: event.target.value,
-                                            }))
-                                        }
-                                    />
-                                </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="flex flex-col gap-2 sm:col-span-2">
+                            <Label htmlFor="descricao">Descrição</Label>
+                            <Textarea
+                                id="descricao"
+                                rows={3}
+                                placeholder="Descreva o contexto da vaga, principais responsabilidades e o que se espera do candidato ideal."
+                                value={campos.descricao}
+                                onChange={(event) =>
+                                    setCampos((prev) => ({
+                                        ...prev,
+                                        descricao: event.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
 
+                        <div className="flex flex-col gap-4">
+                            {campos.modalidade !== "remoto" && (
                                 <div className="flex flex-col gap-2">
-                                    <Label htmlFor="descricaoFuncao">
-                                        Descrição da função
+                                    <Label htmlFor="localizacao">
+                                        Localização
                                     </Label>
-                                    <Textarea
-                                        id="descricaoFuncao"
-                                        placeholder="Descreva as responsabilidades e o contexto da vaga"
-                                        value={campos.descricaoFuncao}
+                                    <Input
+                                        id="localizacao"
+                                        placeholder="Ex.: São Paulo, SP"
+                                        value={campos.localizacao}
                                         onChange={(event) =>
                                             setCampos((prev) => ({
                                                 ...prev,
-                                                descricaoFuncao:
+                                                localizacao:
                                                     event.target.value,
                                             }))
                                         }
                                     />
                                 </div>
+                            )}
 
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="flex flex-col gap-2">
-                                        <Label htmlFor="hardSkills">
-                                            Hard skills
-                                        </Label>
-                                        <TagInput
-                                            id="hardSkills"
-                                            placeholder="Digite e pressione Enter"
-                                            value={campos.hardSkills}
-                                            onChange={(tags) =>
-                                                setCampos((prev) => ({
-                                                    ...prev,
-                                                    hardSkills: tags,
-                                                }))
-                                            }
-                                        />
-                                    </div>
-
-                                    <div className="flex flex-col gap-2">
-                                        <Label htmlFor="softSkills">
-                                            Soft skills
-                                        </Label>
-                                        <TagInput
-                                            id="softSkills"
-                                            placeholder="Digite e pressione Enter"
-                                            value={campos.softSkills}
-                                            onChange={(tags) =>
-                                                setCampos((prev) => ({
-                                                    ...prev,
-                                                    softSkills: tags,
-                                                }))
-                                            }
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <Label htmlFor="experiencia">
-                                        Experiência prévia
-                                    </Label>
-                                    <Select
-                                        value={
-                                            campos.experienciaPrevia ||
-                                            undefined
-                                        }
-                                        onValueChange={(value) =>
-                                            setCampos((prev) => ({
-                                                ...prev,
-                                                experienciaPrevia:
-                                                    String(value),
-                                            }))
-                                        }
+                            <div className="flex flex-col gap-2">
+                                <Label htmlFor="experiencia">
+                                    Experiência prévia
+                                </Label>
+                                <Select
+                                    value={
+                                        campos.experienciaPrevia || undefined
+                                    }
+                                    onValueChange={(value) =>
+                                        setCampos((prev) => ({
+                                            ...prev,
+                                            experienciaPrevia: String(value),
+                                        }))
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="experiencia"
+                                        className="w-full"
                                     >
-                                        <SelectTrigger
-                                            id="experiencia"
-                                            className="w-full sm:w-72"
-                                        >
-                                            <SelectValue placeholder="Selecione o nível esperado" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {NIVEIS_EXPERIENCIA.map((nivel) => (
-                                                <SelectItem
-                                                    key={nivel}
-                                                    value={nivel}
-                                                >
-                                                    {nivel}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                        <SelectValue placeholder="Selecione o nível" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {NIVEIS_EXPERIENCIA.map((nivel) => (
+                                            <SelectItem
+                                                key={nivel}
+                                                value={nivel}
+                                            >
+                                                {nivel}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                        </ScrollArea>
-                    </TabsContent>
-
-                    <TabsContent value="perfil">
-                        <div className="flex h-[55vh] flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
-                            <p className="font-heading text-base font-medium text-foreground">
-                                Perfil comportamental ideal
-                            </p>
-                            <p className="max-w-sm">
-                                O radar arrastável com os 20 traços
-                                comportamentais chega na próxima parte. Por
-                                enquanto a vaga é criada com um perfil neutro
-                                (5/10 em todos os traços).
-                            </p>
                         </div>
-                    </TabsContent>
-                </Tabs>
+                    </div>
 
-                <DialogFooter>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <SkillPicker
+                            label="Hard skills"
+                            opcoes={HARD_SKILLS_DISPONIVEIS}
+                            skills={campos.hardSkills}
+                            onChange={(hardSkills) =>
+                                setCampos((prev) => ({ ...prev, hardSkills }))
+                            }
+                        />
+
+                        <SkillPicker
+                            label="Soft skills"
+                            opcoes={SOFT_SKILLS_DISPONIVEIS}
+                            skills={campos.softSkills}
+                            onChange={(softSkills) =>
+                                setCampos((prev) => ({ ...prev, softSkills }))
+                            }
+                        />
+                    </div>
+                </div>
+
+                <DialogFooter className="shrink-0">
                     <DialogClose render={<Button variant="outline" />}>
                         Cancelar
                     </DialogClose>

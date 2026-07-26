@@ -47,7 +47,7 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     <TooltipProvider>
-                        <div className="flex h-svh">
+                        <div className="flex h-svh flex-col lg:flex-row">
                             <Sidebar />
                             <main className="flex-1 overflow-hidden">
                                 {children}
