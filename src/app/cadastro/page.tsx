@@ -13,32 +13,40 @@ import { Card, CardContent } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
 
-interface LoginFormValues {
+interface CadastroFormValues {
+    nome: string;
     email: string;
     password: string;
+    confirmarSenha: string;
 }
 
-export default function LoginPage() {
+export default function CadastroPage() {
     const [showPassword, setShowPassword] = useState(false);
 
     const {
         register,
         handleSubmit,
+        getValues,
         formState: { errors, isSubmitting },
-    } = useForm<LoginFormValues>({
+    } = useForm<CadastroFormValues>({
         mode: "onBlur",
-        defaultValues: { email: "", password: "" },
+        defaultValues: {
+            nome: "",
+            email: "",
+            password: "",
+            confirmarSenha: "",
+        },
     });
 
-    async function onSubmit(values: LoginFormValues) {
-        // TODO: o backend ainda não expõe login (não há POST /auth/login e o
-        // cadastro de recrutador nem recebe senha). Ligar aqui quando existir.
-        console.log("login", values);
+    async function onSubmit(values: CadastroFormValues) {
+        // TODO: o backend ainda não expõe cadastro de recrutador com senha
+        // (só existe a criação de vaga hoje). Ligar aqui quando existir.
+        console.log("cadastro", values);
     }
 
     return (
         <div className="grid h-full lg:grid-cols-2">
-            <AuthBrandPanel headline="Entrevistas por chat com match de perfil comportamental." />
+            <AuthBrandPanel headline="Crie sua conta e comece a entrevistar candidatos em minutos." />
 
             <div className="flex items-center justify-center px-6 py-10">
                 <motion.div
@@ -56,17 +64,18 @@ export default function LoginPage() {
                             className="size-11 rounded-2xl"
                         />
                         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                            Entrar na VoiceMatch
+                            Criar conta na VoiceMatch
                             <span className="text-sidebar-primary">Ai</span>
                         </h1>
                     </div>
 
                     <div className="hidden flex-col gap-1 lg:flex">
                         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                            Bem-vindo de volta
+                            Criar conta
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Entre com as credenciais da sua conta de recrutador.
+                            Cadastre sua conta de recrutador para começar a usar
+                            a VoiceMatchAi.
                         </p>
                     </div>
 
@@ -79,6 +88,39 @@ export default function LoginPage() {
                                 noValidate
                                 className="flex flex-col gap-6"
                             >
+                                <div className="flex flex-col gap-2">
+                                    <Label htmlFor="nome" className="text-base">
+                                        Nome completo
+                                    </Label>
+                                    <Input
+                                        id="nome"
+                                        type="text"
+                                        autoComplete="name"
+                                        placeholder="Seu nome"
+                                        className="h-12 px-4 text-base md:text-base"
+                                        aria-invalid={
+                                            errors.nome ? true : undefined
+                                        }
+                                        aria-describedby={
+                                            errors.nome
+                                                ? "nome-error"
+                                                : undefined
+                                        }
+                                        {...register("nome", {
+                                            required: "Informe seu nome.",
+                                        })}
+                                    />
+                                    {errors.nome && (
+                                        <p
+                                            id="nome-error"
+                                            role="alert"
+                                            className="text-sm text-destructive"
+                                        >
+                                            {errors.nome.message}
+                                        </p>
+                                    )}
+                                </div>
+
                                 <div className="flex flex-col gap-2">
                                     <Label
                                         htmlFor="email"
@@ -134,7 +176,7 @@ export default function LoginPage() {
                                                     ? "text"
                                                     : "password"
                                             }
-                                            autoComplete="current-password"
+                                            autoComplete="new-password"
                                             placeholder="••••••••"
                                             className="h-12 px-4 pr-11 text-base md:text-base"
                                             aria-invalid={
@@ -148,7 +190,7 @@ export default function LoginPage() {
                                                     : undefined
                                             }
                                             {...register("password", {
-                                                required: "Informe sua senha.",
+                                                required: "Crie uma senha.",
                                                 minLength: {
                                                     value: 8,
                                                     message:
@@ -190,27 +232,71 @@ export default function LoginPage() {
                                     )}
                                 </div>
 
+                                <div className="flex flex-col gap-2">
+                                    <Label
+                                        htmlFor="confirmarSenha"
+                                        className="text-base"
+                                    >
+                                        Confirmar senha
+                                    </Label>
+                                    <Input
+                                        id="confirmarSenha"
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
+                                        autoComplete="new-password"
+                                        placeholder="••••••••"
+                                        className="h-12 px-4 text-base md:text-base"
+                                        aria-invalid={
+                                            errors.confirmarSenha
+                                                ? true
+                                                : undefined
+                                        }
+                                        aria-describedby={
+                                            errors.confirmarSenha
+                                                ? "confirmar-senha-error"
+                                                : undefined
+                                        }
+                                        {...register("confirmarSenha", {
+                                            required: "Confirme sua senha.",
+                                            validate: (value) =>
+                                                value ===
+                                                    getValues("password") ||
+                                                "As senhas não coincidem.",
+                                        })}
+                                    />
+                                    {errors.confirmarSenha && (
+                                        <p
+                                            id="confirmar-senha-error"
+                                            role="alert"
+                                            className="text-sm text-destructive"
+                                        >
+                                            {errors.confirmarSenha.message}
+                                        </p>
+                                    )}
+                                </div>
+
                                 <Button
                                     type="submit"
                                     size="lg"
                                     disabled={isSubmitting}
                                     className="h-12 text-base"
                                 >
-                                    {isSubmitting ? "Entrando..." : "Entrar"}
+                                    {isSubmitting
+                                        ? "Criando conta..."
+                                        : "Criar conta"}
                                 </Button>
                             </form>
                         </CardContent>
                     </Card>
 
-                    {/* TODO: /cadastro ainda não existe — criar quando o
-                    backend expuser cadastro de recrutador. */}
                     <p className="text-center text-sm text-muted-foreground">
-                        Não tem conta?{" "}
+                        Já tem conta?{" "}
                         <Link
-                            href="/cadastro"
+                            href="/login"
                             className="font-medium text-primary hover:underline"
                         >
-                            Criar conta
+                            Entrar
                         </Link>
                     </p>
                 </motion.div>
