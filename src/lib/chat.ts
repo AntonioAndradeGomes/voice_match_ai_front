@@ -61,7 +61,7 @@ export async function carregarConversa(
                                             candidatoId,
                                             autor: "ia",
                                             tipo: "texto",
-                                            conteudo: p.texto,
+                                            conteudo: p.pergunta_texto,
                                             timestamp: entrevistaDet.data_inicio || new Date().toISOString(),
                                         });
 
