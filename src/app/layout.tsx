@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/theme-provider";
 import { TooltipProvider } from "@/_components/ui/tooltip";
 import { Toaster } from "@/_components/ui/sonner";
 import { Sidebar } from "@/_components/layout/sidebar";
+import { ThemeToggle } from "@/_components/layout/theme-toggle";
 
 const bodyFont = Plus_Jakarta_Sans({
     subsets: ["latin"],
@@ -47,6 +48,9 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     <TooltipProvider>
+                        <div className="fixed top-4 right-4 z-50">
+                            <ThemeToggle />
+                        </div>
                         <div className="flex h-svh">
                             <Sidebar />
                             <main className="flex-1 overflow-hidden">

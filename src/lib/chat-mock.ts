@@ -13,7 +13,7 @@ const minutosAtras = (min: number) =>
     new Date(AGORA - min * 60_000).toISOString();
 
 export const MOCK_VAGA: Vaga = {
-    id: "mock-vaga-1",
+    id: "1",
     titulo: "Desenvolvedor(a) Frontend Pleno",
     area: "Engenharia",
     funcao: "Frontend",
@@ -27,7 +27,7 @@ export const MOCK_VAGA: Vaga = {
 };
 
 export const MOCK_CANDIDATO: Candidato = {
-    id: "mock-candidato-1",
+    id: "1",
     vagaId: MOCK_VAGA.id,
     nome: "Marina Alves",
     avatarUrl: null,
