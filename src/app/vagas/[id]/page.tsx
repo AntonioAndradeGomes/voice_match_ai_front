@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, LayoutGrid, List, MapPin, Sparkles } from "lucide-react";
+import { ArrowLeft, ExternalLink, LayoutGrid, List, MapPin, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from "@/_components/ui/avatar";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
+import { DivulgarVaga } from "@/_components/vagas/divulgar-vaga";
 import { getCandidatosByVaga, getVagaById } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { getCandidatoBadge } from "@/lib/vaga-status";
@@ -125,14 +126,15 @@ export default function VagaDetalhePage({
         useState<Candidato | null>(null);
 
     useEffect(() => {
-        // localStorage não existe no SSR; a leitura real só é possível depois
-        // do mount no cliente, por isso o estado inicial é preenchido aqui.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setEstado({
-            vaga: getVagaById(id),
-            candidatos: getCandidatosByVaga(id),
-            carregado: true,
-        });
+        Promise.all([getVagaById(id), getCandidatosByVaga(id)]).then(
+            ([vaga, candidatos]) => {
+                setEstado({
+                    vaga,
+                    candidatos,
+                    carregado: true,
+                });
+            },
+        );
     }, [id]);
 
     const candidatosOrdenados = useMemo(
@@ -165,16 +167,37 @@ export default function VagaDetalhePage({
     return (
         <>
             <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-fit"
-                    nativeButton={false}
-                    render={<Link href="/vagas" />}
-                >
-                    <ArrowLeft data-icon="inline-start" />
-                    Voltar para vagas
-                </Button>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-fit"
+                        nativeButton={false}
+                        render={<Link href="/vagas" />}
+                    >
+                        <ArrowLeft data-icon="inline-start" />
+                        Voltar para vagas
+                    </Button>
+
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            nativeButton={false}
+                            render={
+                                <Link
+                                    href={`/candidatura/${vaga.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                />
+                            }
+                        >
+                            <ExternalLink data-icon="inline-start" />
+                            Ver vaga
+                        </Button>
+                        <DivulgarVaga vagaId={vaga.id} titulo={vaga.titulo} />
+                    </div>
+                </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                     <div className="flex flex-col gap-5">
@@ -252,9 +275,9 @@ export default function VagaDetalhePage({
                             </span>
                         </CardContent>
                         <CardContent className="text-sm text-muted-foreground">
-                            A Iris envia perguntas por WhatsApp, ouve os áudios
-                            dos candidatos e compara cada resposta com o
-                            candidato ideal descrito por você.
+                            A Iris é uma IA que entrevista candidatos por áudio,
+                            por meio de um agente, e devolve um relatório pra
+                            todo mundo: Recrutador e Candidato.
                         </CardContent>
                     </Card>
                 </div>

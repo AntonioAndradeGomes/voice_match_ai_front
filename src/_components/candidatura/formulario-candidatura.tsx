@@ -17,6 +17,7 @@ import {
     type CamposCandidatura,
     type ErrosCandidatura,
 } from "@/lib/inscricao";
+import { salvarCurriculo } from "@/lib/curriculos";
 import { saveCandidato } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import type { Candidato, Vaga } from "@/types";
@@ -105,7 +106,7 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
         if (tentouEnviar) setErros(validarCandidatura(proximos));
     }
 
-    function handleSubmit(evento: React.FormEvent) {
+    async function handleSubmit(evento: React.FormEvent) {
         evento.preventDefault();
         setTentouEnviar(true);
 
@@ -140,6 +141,21 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
         };
 
         saveCandidato(candidato);
+
+        // O arquivo vai depois do candidato, e a falha aqui não derruba a
+        // inscrição: perder a candidatura inteira porque a cota de storage
+        // estourou seria pior do que ficar sem o anexo. O recrutador vê o nome
+        // do arquivo de qualquer forma; só o download fica indisponível.
+        if (campos.curriculo) {
+            try {
+                await salvarCurriculo(candidato.id, campos.curriculo);
+            } catch {
+                toast.warning(
+                    "Sua candidatura foi enviada, mas não conseguimos guardar o currículo. O recrutador pode pedir o arquivo por email.",
+                );
+            }
+        }
+
         setEnviado(true);
     }
 

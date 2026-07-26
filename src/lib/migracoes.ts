@@ -60,13 +60,27 @@ function normalizarModalidade(valor: unknown): Modalidade {
 export function normalizarVaga(bruta: unknown): Vaga {
     const dados = (bruta ?? {}) as Record<string, unknown>;
 
+    const hardRaw =
+        dados.requisitos_hard &&
+        typeof dados.requisitos_hard === "object" &&
+        "items" in (dados.requisitos_hard as object)
+            ? (dados.requisitos_hard as Record<string, unknown>).items
+            : dados.hardSkills;
+
+    const softRaw =
+        dados.requisitos_soft &&
+        typeof dados.requisitos_soft === "object" &&
+        "items" in (dados.requisitos_soft as object)
+            ? (dados.requisitos_soft as Record<string, unknown>).items
+            : dados.softSkills;
+
     return {
         id: texto(dados.id),
         titulo: texto(dados.titulo),
         // `descricaoFuncao` é o nome antigo do mesmo campo.
         descricao: texto(dados.descricao) || texto(dados.descricaoFuncao),
-        hardSkills: normalizarSkills(dados.hardSkills),
-        softSkills: normalizarSkills(dados.softSkills),
+        hardSkills: normalizarSkills(hardRaw),
+        softSkills: normalizarSkills(softRaw),
         experienciaPrevia: texto(dados.experienciaPrevia),
         modalidade: normalizarModalidade(dados.modalidade),
         localizacao: texto(dados.localizacao),
@@ -74,6 +88,9 @@ export function normalizarVaga(bruta: unknown): Vaga {
             dados.perfilIdeal !== null && typeof dados.perfilIdeal === "object"
                 ? (dados.perfilIdeal as Vaga["perfilIdeal"])
                 : criarPerfilNeutro(),
-        createdAt: texto(dados.createdAt) || new Date(0).toISOString(),
+        createdAt:
+            texto(dados.data_criacao) ||
+            texto(dados.createdAt) ||
+            new Date(0).toISOString(),
     };
 }
