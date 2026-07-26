@@ -32,8 +32,10 @@ const NAV = [
     { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
 
-// Rotas fora do app: renderizam sem navegação.
-const ROUTES_WITHOUT_NAV = ["/login"];
+// Rotas fora do app: renderizam sem navegação. Cada entrada cobre a própria
+// rota e tudo abaixo dela — /candidatura é pública e tem id na URL, então
+// comparar por igualdade não bastaria.
+const ROUTES_WITHOUT_NAV = ["/login", "/candidatura"];
 
 function estaAtivo(pathname: string, href: string) {
     // "/" só casa exato; as demais também cobrem as rotas filhas
@@ -95,7 +97,10 @@ export function Sidebar() {
     const [colapsado, setColapsado] = useState(false);
     const [menuAberto, setMenuAberto] = useState(false);
 
-    if (ROUTES_WITHOUT_NAV.includes(pathname)) return null;
+    const rotaSemNav = ROUTES_WITHOUT_NAV.some(
+        (rota) => pathname === rota || pathname.startsWith(`${rota}/`),
+    );
+    if (rotaSemNav) return null;
 
     return (
         <>

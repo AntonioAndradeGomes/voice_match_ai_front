@@ -64,12 +64,31 @@ export interface Vaga {
 
 export type StatusCandidato = "aguardando" | "em_entrevista" | "finalizado";
 
+/**
+ * O que o próprio candidato preenche na página pública da vaga. Separado do
+ * resto de `Candidato` porque é dado de inscrição, não de avaliação.
+ */
+export interface DadosInscricao {
+    email: string;
+    /** Só dígitos, sem máscara. `null` quando o candidato não é brasileiro. */
+    cpf: string | null;
+    telefone: string;
+    linkedin: string;
+    /**
+     * Apenas o nome do arquivo. O binário não vai para o localStorage — quando
+     * existir backend, aqui entra a URL do currículo no storage remoto.
+     */
+    curriculoNome: string;
+}
+
 export interface Candidato {
     id: string;
     vagaId: string;
     nome: string;
     avatarUrl: string | null;
     status: StatusCandidato;
+    /** Ausente nos candidatos criados antes da página pública de candidatura. */
+    inscricao?: DadosInscricao;
     perfilAvaliado: PerfilComportamental | null;
     notaFinal: number | null;
     pontosFortes: string[] | null;
