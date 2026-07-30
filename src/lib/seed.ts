@@ -107,6 +107,129 @@ const VAGAS: Vaga[] = [
         perfilIdeal: criarPerfilNeutro(),
         createdAt: diasAtras(2),
     },
+    {
+        id: "seed-vaga-data-engineer",
+        titulo: "Engenheiro(a) de Dados Pleno",
+        descricao:
+            "Construção de pipelines de dados em tempo real, ETLs e data warehouse para modelos analíticos.",
+        hardSkills: [
+            { nome: "Python", peso: 5 },
+            { nome: "SQL", peso: 5 },
+            { nome: "Spark", peso: 4 },
+            { nome: "Airflow", peso: 3 },
+        ],
+        softSkills: [
+            { nome: "Pensamento Analítico", peso: 5 },
+            { nome: "Organização", peso: 4 },
+        ],
+        experienciaPrevia: "Pleno (3-5 anos)",
+        modalidade: "remoto",
+        localizacao: "",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(5),
+    },
+    {
+        id: "seed-vaga-devops",
+        titulo: "Especialista DevOps / SRE",
+        descricao:
+            "Gerenciamento de infraestrutura cloud na AWS, Kubernetes, CI/CD e monitoramento de observabilidade.",
+        hardSkills: [
+            { nome: "Kubernetes", peso: 5 },
+            { nome: "Terraform", peso: 4 },
+            { nome: "AWS", peso: 5 },
+            { nome: "Docker", peso: 4 },
+        ],
+        softSkills: [
+            { nome: "Ação Sob Pressão", peso: 5 },
+            { nome: "Proatividade", peso: 4 },
+        ],
+        experienciaPrevia: "Sênior (+5 anos)",
+        modalidade: "hibrido",
+        localizacao: "Rio de Janeiro - RJ",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(7),
+    },
+    {
+        id: "seed-vaga-qa",
+        titulo: "Analista de QA / Testes Automatizados",
+        descricao:
+            "Garantia de qualidade, elaboração de planos de teste e automação E2E de aplicações web e mobile.",
+        hardSkills: [
+            { nome: "Cypress", peso: 5 },
+            { nome: "Playwright", peso: 4 },
+            { nome: "JavaScript", peso: 3 },
+        ],
+        softSkills: [
+            { nome: "Atenção aos Detalhes", peso: 5 },
+            { nome: "Comunicação", peso: 4 },
+        ],
+        experienciaPrevia: "Pleno (3-5 anos)",
+        modalidade: "remoto",
+        localizacao: "",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(3),
+    },
+    {
+        id: "seed-vaga-pm",
+        titulo: "Product Manager (IA & Inovação)",
+        descricao:
+            "Definição de roadmap do produto de voz, refinamento de backlog e alinhamento de métricas com executivos.",
+        hardSkills: [
+            { nome: "Gestão de Produto", peso: 5 },
+            { nome: "Metodologias Ágeis", peso: 4 },
+            { nome: "Métricas de Produto", peso: 4 },
+        ],
+        softSkills: [
+            { nome: "Liderança", peso: 5 },
+            { nome: "Visão Estratégica", peso: 5 },
+        ],
+        experienciaPrevia: "Sênior (+5 anos)",
+        modalidade: "presencial",
+        localizacao: "São Paulo - SP",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(8),
+    },
+    {
+        id: "seed-vaga-mobile",
+        titulo: "Desenvolvedor(a) Mobile React Native",
+        descricao:
+            "Desenvolvimento e publicação de aplicativos nativos Android e iOS com integração de recursos de áudio.",
+        hardSkills: [
+            { nome: "React Native", peso: 5 },
+            { nome: "TypeScript", peso: 4 },
+            { nome: "Expo", peso: 3 },
+        ],
+        softSkills: [
+            { nome: "Resolução de Conflitos", peso: 4 },
+            { nome: "Adaptabilidade", peso: 4 },
+        ],
+        experienciaPrevia: "Pleno (3-5 anos)",
+        modalidade: "remoto",
+        localizacao: "",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(1),
+    },
+    {
+        id: "seed-vaga-ai-engineer",
+        titulo: "Engenheiro(a) de Inteligência Artificial / LLMs",
+        descricao:
+            "Aprimoramento de modelos de IA de áudio, fine-tuning de LLMs e otimização de agentes conversacionais.",
+        hardSkills: [
+            { nome: "Python", peso: 5 },
+            { nome: "PyTorch", peso: 4 },
+            { nome: "LangChain", peso: 4 },
+            { nome: "OpenAI API", peso: 5 },
+        ],
+        softSkills: [
+            { nome: "Inovação", peso: 5 },
+            { nome: "Curiosidade Técnica", peso: 5 },
+        ],
+        experienciaPrevia: "Sênior (+5 anos)",
+        modalidade: "remoto",
+        localizacao: "",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(9),
+    },
 ];
 
 const CANDIDATOS: Candidato[] = [
