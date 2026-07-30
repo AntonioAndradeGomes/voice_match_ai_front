@@ -45,31 +45,74 @@ const minutosAtras = (min: number) =>
 const diasAtras = (dias: number) =>
     new Date(AGORA - dias * 24 * 60 * 60_000).toISOString();
 
-const VAGA: Vaga = {
-    id: "seed-vaga-frontend",
-    titulo: "Desenvolvedor(a) Frontend Pleno",
-    descricao:
-        "Manutenção e evolução dos produtos web da empresa, com foco em React.",
-    hardSkills: [
-        { nome: "React", peso: 5 },
-        { nome: "TypeScript", peso: 4 },
-        { nome: "CSS", peso: 3 },
-    ],
-    softSkills: [
-        { nome: "Comunicação", peso: 4 },
-        { nome: "Autonomia", peso: 4 },
-    ],
-    experienciaPrevia: "Pleno (3-5 anos)",
-    modalidade: "remoto",
-    localizacao: "",
-    perfilIdeal: criarPerfilNeutro(),
-    createdAt: diasAtras(6),
-};
+const VAGAS: Vaga[] = [
+    {
+        id: "seed-vaga-frontend",
+        titulo: "Desenvolvedor(a) Frontend Pleno",
+        descricao:
+            "Manutenção e evolução dos produtos web da empresa, com foco em React, TypeScript e Next.js.",
+        hardSkills: [
+            { nome: "React", peso: 5 },
+            { nome: "TypeScript", peso: 4 },
+            { nome: "CSS", peso: 3 },
+        ],
+        softSkills: [
+            { nome: "Comunicação", peso: 4 },
+            { nome: "Autonomia", peso: 4 },
+        ],
+        experienciaPrevia: "Pleno (3-5 anos)",
+        modalidade: "remoto",
+        localizacao: "",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(6),
+    },
+    {
+        id: "seed-vaga-backend",
+        titulo: "Desenvolvedor(a) Backend Senior (Python/FastAPI)",
+        descricao:
+            "Arquitetura e desenvolvimento de microsserviços de inteligência artificial e processamento de áudio.",
+        hardSkills: [
+            { nome: "Python", peso: 5 },
+            { nome: "FastAPI", peso: 5 },
+            { nome: "PostgreSQL", peso: 4 },
+            { nome: "Docker", peso: 3 },
+        ],
+        softSkills: [
+            { nome: "Resolução de Problemas", peso: 5 },
+            { nome: "Trabalho em Equipe", peso: 4 },
+        ],
+        experienciaPrevia: "Sênior (+5 anos)",
+        modalidade: "hibrido",
+        localizacao: "São Paulo - SP",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(4),
+    },
+    {
+        id: "seed-vaga-ux",
+        titulo: "Product Designer / UX Specialist",
+        descricao:
+            "Criação de fluxos e protótipos de alta fidelidade focando na experiência de recrutadores e candidatos.",
+        hardSkills: [
+            { nome: "Figma", peso: 5 },
+            { nome: "Design Systems", peso: 4 },
+            { nome: "Pesquisa de Usuário", peso: 4 },
+        ],
+        softSkills: [
+            { nome: "Empatia", peso: 5 },
+            { nome: "Escuta Ativa", peso: 5 },
+        ],
+        experienciaPrevia: "Pleno (3-5 anos)",
+        modalidade: "remoto",
+        localizacao: "",
+        perfilIdeal: criarPerfilNeutro(),
+        createdAt: diasAtras(2),
+    },
+];
 
 const CANDIDATOS: Candidato[] = [
     {
         id: "seed-cand-marina",
-        vagaId: VAGA.id,
+        vagaId: "seed-vaga-frontend",
         nome: "Marina Alves",
         avatarUrl: null,
         status: "finalizado",
@@ -89,7 +132,7 @@ const CANDIDATOS: Candidato[] = [
     },
     {
         id: "seed-cand-bruno",
-        vagaId: VAGA.id,
+        vagaId: "seed-vaga-frontend",
         nome: "Bruno Castro",
         avatarUrl: null,
         status: "em_entrevista",
@@ -109,7 +152,7 @@ const CANDIDATOS: Candidato[] = [
     },
     {
         id: "seed-cand-julia",
-        vagaId: VAGA.id,
+        vagaId: "seed-vaga-frontend",
         nome: "Júlia Nakamura",
         avatarUrl: null,
         status: "aguardando",
@@ -125,6 +168,46 @@ const CANDIDATOS: Candidato[] = [
             telefone: "(31) 96666-5555",
             linkedin: "https://linkedin.com/in/julia-nakamura",
             curriculoNome: "julia-nakamura-cv.pdf",
+        },
+    },
+    {
+        id: "seed-cand-carlos",
+        vagaId: "seed-vaga-backend",
+        nome: "Carlos Eduardo",
+        avatarUrl: null,
+        status: "finalizado",
+        perfilAvaliado: PERFIL_MARINA,
+        notaFinal: 92,
+        pontosFortes: ["Excelente lógica de programação", "Domínio em FastAPI e microsserviços"],
+        pontosFracos: ["Comunicação verbal um pouco direta"],
+        melhorias: ["Trabalhar liderança de equipes"],
+        createdAt: diasAtras(3),
+        inscricao: {
+            email: "carlos.eduardo@example.com",
+            cpf: "44455566677",
+            telefone: "(11) 95555-4444",
+            linkedin: "https://linkedin.com/in/carlos-eduardo",
+            curriculoNome: "carlos-eduardo-cv.pdf",
+        },
+    },
+    {
+        id: "seed-cand-ana",
+        vagaId: "seed-vaga-ux",
+        nome: "Ana Beatriz Rocha",
+        avatarUrl: null,
+        status: "em_entrevista",
+        perfilAvaliado: null,
+        notaFinal: null,
+        pontosFortes: null,
+        pontosFracos: null,
+        melhorias: null,
+        createdAt: diasAtras(1),
+        inscricao: {
+            email: "ana.rocha@example.com",
+            cpf: "88899900011",
+            telefone: "(41) 94444-3333",
+            linkedin: "https://linkedin.com/in/ana-rocha",
+            curriculoNome: "ana-rocha-cv.pdf",
         },
     },
 ];
@@ -199,7 +282,7 @@ const MENSAGENS: MensagemChat[] = [
 ];
 
 export function seedDadosTeste() {
-    saveVaga(VAGA);
+    VAGAS.forEach(saveVaga);
     CANDIDATOS.forEach(saveCandidato);
     MENSAGENS.forEach(saveMensagem);
 }
