@@ -31,9 +31,10 @@ async function carregarDashboard(): Promise<DadosDashboard> {
     const candidatosEntries = await Promise.all(
         vagas.map(async (vaga) => [vaga.id, await getCandidatosByVaga(vaga.id)] as const)
     );
+    const candidatos = await getCandidatos();
     return {
         vagas,
-        candidatos: getCandidatos(),
+        candidatos,
         candidatosPorVaga: Object.fromEntries(candidatosEntries),
     };
 }

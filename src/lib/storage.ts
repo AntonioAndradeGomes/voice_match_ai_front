@@ -44,30 +44,37 @@ export function getVagasLocal(): Vaga[] {
 }
 
 export async function getVagas(): Promise<Vaga[]> {
+    let backendVagas: Vaga[] = [];
     try {
         const response = await apiFetch(`${API_BASE_URL}/vagas`);
         if (response.ok) {
             const data = await response.json();
             if (Array.isArray(data)) {
-                const backendVagas = data.map(normalizarVaga);
-                const localVagas = getVagasLocal();
-                const idsBackend = new Set(backendVagas.map((v) => v.id));
-                const mescladas = [
-                    ...backendVagas,
-                    ...localVagas.filter((v) => !idsBackend.has(v.id)),
-                ].sort(
-                    (a, b) =>
-                        new Date(b.createdAt).getTime() -
-                        new Date(a.createdAt).getTime(),
-                );
-                writeList(KEYS.vagas, mescladas);
-                return mescladas;
+                backendVagas = data.map(normalizarVaga);
             }
         }
     } catch (e) {
         console.warn("API do backend indisponível, utilizando dados locais.", e);
     }
-    return getVagasLocal();
+
+    let localVagas = getVagasLocal();
+    if (backendVagas.length === 0 && localVagas.length === 0) {
+        const { seedDadosTeste } = require("@/lib/seed");
+        seedDadosTeste();
+        localVagas = getVagasLocal();
+    }
+
+    const idsBackend = new Set(backendVagas.map((v) => v.id));
+    const mescladas = [
+        ...backendVagas,
+        ...localVagas.filter((v) => !idsBackend.has(v.id)),
+    ].sort(
+        (a, b) =>
+            new Date(b.createdAt).getTime() -
+            new Date(a.createdAt).getTime(),
+    );
+    writeList(KEYS.vagas, mescladas);
+    return mescladas;
 }
 
 export async function getVagaById(id: string): Promise<Vaga | null> {
@@ -127,7 +134,43 @@ export function getCandidatosLocal(): Candidato[] {
     );
 }
 
-export function getCandidatos(): Candidato[] {
+export async function getCandidatos(): Promise<Candidato[]> {
+    try {
+        const response = await apiFetch(`${API_BASE_URL}/candidatos`);
+        if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                const backendCandidatos: Candidato[] = data.map((cand) => ({
+                    id: cand.id,
+                    vagaId: "",
+                    nome: cand.nome,
+                    avatarUrl: null,
+                    status: "aguardando",
+                    perfilAvaliado: null,
+                    notaFinal: null,
+                    pontosFortes: null,
+                    pontosFracos: null,
+                    melhorias: null,
+                    createdAt: cand.data_cadastro || new Date().toISOString(),
+                    inscricao: {
+                        email: cand.email,
+                        cpf: null,
+                        telefone: cand.telefone || "",
+                        linkedin: "",
+                        curriculoNome: cand.curriculo_url || "",
+                    },
+                }));
+                const locais = getCandidatosLocal();
+                const idsBackend = new Set(backendCandidatos.map((c) => c.id));
+                return [
+                    ...backendCandidatos,
+                    ...locais.filter((c) => !idsBackend.has(c.id)),
+                ];
+            }
+        }
+    } catch (e) {
+        console.warn("API de candidatos indisponível, usando localStorage.", e);
+    }
     return getCandidatosLocal();
 }
 

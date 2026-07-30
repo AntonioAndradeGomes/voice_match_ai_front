@@ -35,7 +35,7 @@ interface DadosRelatorio {
 
 async function carregarRelatorios(): Promise<DadosRelatorio> {
     const vagas = await getVagas();
-    const candidatos = getCandidatos();
+    const candidatos = await getCandidatos();
 
     return {
         resumo: calcularResumo(vagas, candidatos),
