@@ -58,7 +58,7 @@ export async function getVagas(): Promise<Vaga[]> {
     }
 
     let localVagas = getVagasLocal();
-    if (backendVagas.length === 0 && localVagas.length === 0) {
+    if (backendVagas.length === 0 && localVagas.length < 9) {
         const { seedDadosTeste } = require("@/lib/seed");
         seedDadosTeste();
         localVagas = getVagasLocal();
