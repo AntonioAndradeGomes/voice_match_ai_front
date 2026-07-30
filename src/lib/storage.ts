@@ -103,15 +103,15 @@ export async function saveVaga(vaga: Vaga): Promise<Vaga> {
             body: JSON.stringify(payload)
         });
         
-        if (!response.ok) {
-            throw new Error("Falha ao salvar no banco");
+        if (response.ok) {
+            const data = await response.json();
+            vaga.id = data.id;
+            vaga.createdAt = data.data_criacao;
+        } else {
+            console.warn("Falha ao salvar vaga no backend API. Salvando localmente.");
         }
-
-        const data = await response.json();
-        vaga.id = data.id;
-        vaga.createdAt = data.data_criacao;
     } catch (e) {
-        throw e;
+        console.warn("API de vagas indisponível. Salvando localmente.", e);
     }
 
     const vagas = readList<Vaga>(KEYS.vagas);

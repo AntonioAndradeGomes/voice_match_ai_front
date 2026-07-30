@@ -5,7 +5,7 @@
 // está vazio — não depende de ambiente, já que o storage é local a cada
 // navegador (localStorage), não um banco compartilhado.
 
-import { saveCandidato, saveMensagem, saveVaga } from "@/lib/storage";
+import { saveMensagem } from "@/lib/storage";
 import { criarPerfilNeutro } from "@/types";
 import type {
     Candidato,
@@ -282,7 +282,8 @@ const MENSAGENS: MensagemChat[] = [
 ];
 
 export function seedDadosTeste() {
-    VAGAS.forEach(saveVaga);
-    CANDIDATOS.forEach(saveCandidato);
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("voicematch:vagas", JSON.stringify(VAGAS));
+    window.localStorage.setItem("voicematch:candidatos", JSON.stringify(CANDIDATOS));
     MENSAGENS.forEach(saveMensagem);
 }
