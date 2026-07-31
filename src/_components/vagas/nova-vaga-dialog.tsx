@@ -235,14 +235,10 @@ export function NovaVagaDialog({
                 createdAt: new Date().toISOString(),
             };
 
-            try {
-                await saveVaga(vaga);
-                toast.success("Vaga criada com sucesso", { description: vaga.titulo });
-                handleOpenChange(false);
-                onVagaCriada();
-            } catch (error) {
-                toast.error("Erro ao conectar com a API", { description: "Verifique se o backend está rodando na porta 8000." });
-            }
+            await saveVaga(vaga);
+            toast.success("Vaga criada com sucesso", { description: vaga.titulo });
+            handleOpenChange(false);
+            onVagaCriada();
         })();
     }
 
