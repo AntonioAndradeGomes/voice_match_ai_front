@@ -90,23 +90,19 @@ export async function saveVaga(vaga: Vaga): Promise<Vaga> {
         recrutador_id: "32b043a7-d234-460c-a38a-70340e2ce04f"
     };
 
-    try {
-        const response = await apiFetch(`${API_BASE_URL}/vagas`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            vaga.id = data.id;
-            vaga.createdAt = data.data_criacao;
-        } else {
-            console.warn("Falha ao salvar vaga no backend API. Salvando localmente.");
-        }
-    } catch (e) {
-        console.warn("API de vagas indisponível. Salvando localmente.", e);
+    const response = await apiFetch(`${API_BASE_URL}/vagas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+        throw new Error("Erro ao salvar vaga na API do backend.");
     }
+
+    const data = await response.json();
+    vaga.id = data.id;
+    vaga.createdAt = data.data_criacao;
 
     const vagas = readList<Vaga>(KEYS.vagas);
     vagas.push(vaga);
