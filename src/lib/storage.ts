@@ -44,13 +44,18 @@ export function getVagasLocal(): Vaga[] {
 }
 
 export async function getVagas(): Promise<Vaga[]> {
-    let backendVagas: Vaga[] = [];
     try {
         const response = await apiFetch(`${API_BASE_URL}/vagas`);
         if (response.ok) {
             const data = await response.json();
             if (Array.isArray(data)) {
-                backendVagas = data.map(normalizarVaga);
+                const backendVagas = data.map(normalizarVaga).sort(
+                    (a, b) =>
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime(),
+                );
+                writeList(KEYS.vagas, backendVagas);
+                return backendVagas;
             }
         }
     } catch (e) {
@@ -58,23 +63,12 @@ export async function getVagas(): Promise<Vaga[]> {
     }
 
     let localVagas = getVagasLocal();
-    if (backendVagas.length === 0 && localVagas.length < 9) {
+    if (localVagas.length === 0) {
         const { seedDadosTeste } = require("@/lib/seed");
         seedDadosTeste();
         localVagas = getVagasLocal();
     }
-
-    const idsBackend = new Set(backendVagas.map((v) => v.id));
-    const mescladas = [
-        ...backendVagas,
-        ...localVagas.filter((v) => !idsBackend.has(v.id)),
-    ].sort(
-        (a, b) =>
-            new Date(b.createdAt).getTime() -
-            new Date(a.createdAt).getTime(),
-    );
-    writeList(KEYS.vagas, mescladas);
-    return mescladas;
+    return localVagas;
 }
 
 export async function getVagaById(id: string): Promise<Vaga | null> {
