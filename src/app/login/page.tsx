@@ -4,14 +4,17 @@ import { Eye, EyeOff } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type CSSProperties } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import { AuthBrandPanel } from "@/_components/auth/auth-brand-panel";
 import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
+import { entrar } from "@/lib/usuarios";
 
 interface LoginFormValues {
     email: string;
@@ -20,6 +23,7 @@ interface LoginFormValues {
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
+    const router = useRouter();
 
     const {
         register,
@@ -31,9 +35,20 @@ export default function LoginPage() {
     });
 
     async function onSubmit(values: LoginFormValues) {
-        // TODO: o backend ainda não expõe login (não há POST /auth/login e o
-        // cadastro de recrutador nem recebe senha). Ligar aqui quando existir.
-        console.log("login", values);
+        try {
+            const usuario = await entrar(values.email.trim(), values.password);
+
+            toast.success(`Bem-vindo, ${usuario.nome_completo.split(" ")[0]}!`);
+            router.push("/");
+        } catch (erro) {
+            // Credencial errada volta como mensagem do backend; só cai no texto
+            // genérico quando a resposta não traz motivo (ex.: rede fora).
+            toast.error(
+                erro instanceof Error
+                    ? erro.message
+                    : "Não foi possível entrar.",
+            );
+        }
     }
 
     return (
