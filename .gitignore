@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...menos o modelo, que precisa ser versionado para quem clona saber
+# quais variáveis existem. Ele não contém valor sensível.
+!.env.example
 
 # vercel
 .vercel
