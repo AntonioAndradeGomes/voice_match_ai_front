@@ -137,4 +137,10 @@
     h4 {
         @apply font-heading;
     }
+    /* O Edge injeta um botão próprio de revelar senha dentro do campo. Como
+       login e cadastro já têm o próprio botão de olho, sem isto apareceriam
+       dois — e o nativo fica por cima do nosso, no mesmo canto. */
+    input::-ms-reveal {
+        display: none;
+    }
 }

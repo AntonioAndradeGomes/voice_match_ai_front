@@ -14,7 +14,7 @@ import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
-import { entrar } from "@/lib/usuarios";
+import { useAuth } from "@/context/auth-provider";
 
 interface LoginFormValues {
     email: string;
@@ -24,6 +24,7 @@ interface LoginFormValues {
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
+    const { entrar } = useAuth();
 
     const {
         register,
@@ -92,21 +93,16 @@ export default function LoginPage() {
                             <form
                                 onSubmit={handleSubmit(onSubmit)}
                                 noValidate
-                                className="flex flex-col gap-6"
+                                className="flex flex-col gap-5"
                             >
                                 <div className="flex flex-col gap-2">
-                                    <Label
-                                        htmlFor="email"
-                                        className="text-base"
-                                    >
-                                        E-mail
-                                    </Label>
+                                    <Label htmlFor="email">E-mail</Label>
                                     <Input
                                         id="email"
                                         type="email"
                                         autoComplete="email"
                                         placeholder="voce@empresa.com"
-                                        className="h-12 px-4 text-base md:text-base"
+                                        className="h-11 rounded-xl px-4"
                                         aria-invalid={
                                             errors.email ? true : undefined
                                         }
@@ -135,12 +131,7 @@ export default function LoginPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-2">
-                                    <Label
-                                        htmlFor="password"
-                                        className="text-base"
-                                    >
-                                        Senha
-                                    </Label>
+                                    <Label htmlFor="password">Senha</Label>
                                     <div className="relative">
                                         <Input
                                             id="password"
@@ -151,7 +142,7 @@ export default function LoginPage() {
                                             }
                                             autoComplete="current-password"
                                             placeholder="••••••••"
-                                            className="h-12 px-4 pr-11 text-base md:text-base"
+                                            className="h-11 rounded-xl px-4 pr-11"
                                             aria-invalid={
                                                 errors.password
                                                     ? true
@@ -209,7 +200,7 @@ export default function LoginPage() {
                                     type="submit"
                                     size="lg"
                                     disabled={isSubmitting}
-                                    className="h-12 text-base"
+                                    className="mt-1 h-11 rounded-xl"
                                 >
                                     {isSubmitting ? "Entrando..." : "Entrar"}
                                 </Button>

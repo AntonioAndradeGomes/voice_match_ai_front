@@ -16,6 +16,7 @@ import { useState } from "react";
 
 import { rotaCasa, rotaTemNav } from "@/_components/layout/rotas";
 import { ThemeToggle } from "@/_components/layout/theme-toggle";
+import { UserMenu } from "@/_components/layout/user-menu";
 import { Button } from "@/_components/ui/button";
 import {
     Sheet,
@@ -136,11 +137,14 @@ export function Sidebar() {
                             ))}
                         </nav>
 
-                        <div className="mt-auto flex items-center justify-between p-4">
-                            <span className="text-xs text-muted-foreground">
-                                Tema
-                            </span>
-                            <ThemeToggle />
+                        <div className="mt-auto flex flex-col gap-3 p-4">
+                            <UserMenu />
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted-foreground">
+                                    Tema
+                                </span>
+                                <ThemeToggle />
+                            </div>
                         </div>
                     </SheetContent>
                 </Sheet>
@@ -203,18 +207,21 @@ export function Sidebar() {
                     </nav>
                 </div>
 
-                <div
-                    className={cn(
-                        "flex items-center px-1",
-                        colapsado ? "justify-center" : "justify-between",
-                    )}
-                >
-                    {!colapsado && (
-                        <span className="text-xs text-muted-foreground">
-                            Tema
-                        </span>
-                    )}
-                    <ThemeToggle />
+                <div className="flex flex-col gap-2">
+                    <UserMenu colapsado={colapsado} />
+                    <div
+                        className={cn(
+                            "flex items-center px-1",
+                            colapsado ? "justify-center" : "justify-between",
+                        )}
+                    >
+                        {!colapsado && (
+                            <span className="text-xs text-muted-foreground">
+                                Tema
+                            </span>
+                        )}
+                        <ThemeToggle />
+                    </div>
                 </div>
             </aside>
         </>

@@ -8,7 +8,6 @@ import {
     MessagesSquare,
     Phone,
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -92,14 +91,14 @@ function LinhaInscricao({
 
 export function CandidatoDetalheModal({
     candidato,
-    vagaId,
     open,
     onOpenChange,
+    onVerChat,
 }: {
     candidato: Candidato | null;
-    vagaId: string;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onVerChat: () => void;
 }) {
     // Hooks antes do early return: `candidato` pode ser null, e declarar hook
     // depois de um `return` condicional quebraria a ordem entre renders.
@@ -245,14 +244,7 @@ export function CandidatoDetalheModal({
                 </ScrollArea>
 
                 <DialogFooter>
-                    <Button
-                        nativeButton={false}
-                        render={
-                            <Link
-                                href={`/vagas/${vagaId}/${candidato.id}/chat`}
-                            />
-                        }
-                    >
+                    <Button type="button" onClick={onVerChat}>
                         <MessagesSquare data-icon="inline-start" />
                         Ver chat
                     </Button>
