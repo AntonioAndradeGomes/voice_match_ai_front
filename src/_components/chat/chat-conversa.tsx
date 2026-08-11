@@ -8,8 +8,11 @@ import { ChatHeader } from "@/_components/chat/chat-header";
 import { ChatMensagens } from "@/_components/chat/chat-mensagens";
 import { carregarConversa, type Conversa } from "@/lib/chat";
 
-// Corpo da tela de chat de uma entrevista, reaproveitado tanto por
-// /chat/[vagaId]/[candidatoId] quanto por /vagas/[id]/[candidatoId]/chat.
+// Corpo da conversa de uma entrevista, reaproveitado tanto pela página pública
+// /chat/[vagaId]/[candidatoId] (link enviado ao candidato) quanto pelo dialog
+// "Ver chat" que o recrutador abre a partir de /vagas/[id] (ver
+// candidato-chat-dialog.tsx) — por isso o componente não assume estar em tela
+// cheia, só precisa de um ancestral com altura definida.
 export function ChatConversa({
     vagaId,
     candidatoId,

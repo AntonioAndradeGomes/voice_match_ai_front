@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { AuthProvider } from "@/context/auth-provider";
 import { ThemeProvider } from "@/context/theme-provider";
 import { TooltipProvider } from "@/_components/ui/tooltip";
 import { Toaster } from "@/_components/ui/sonner";
 import { FloatingThemeToggle } from "@/_components/layout/floating-theme-toggle";
+import { RouteGuard } from "@/_components/layout/route-guard";
 import { Sidebar } from "@/_components/layout/sidebar";
 
 // Família única do projeto. O token `--font-heading` continua existindo, mas
@@ -40,23 +42,27 @@ export default function RootLayout({
             suppressHydrationWarning
         >
             <body className="h-full font-sans" suppressHydrationWarning>
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="system"
-                    enableSystem
-                    disableTransitionOnChange
-                >
-                    <TooltipProvider>
-                        <FloatingThemeToggle />
-                        <div className="flex h-svh flex-col lg:flex-row">
-                            <Sidebar />
-                            <main className="flex-1 overflow-hidden">
-                                {children}
-                            </main>
-                        </div>
-                        <Toaster />
-                    </TooltipProvider>
-                </ThemeProvider>
+                <AuthProvider>
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="system"
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        <TooltipProvider>
+                            <FloatingThemeToggle />
+                            <RouteGuard>
+                                <div className="flex h-svh flex-col lg:flex-row">
+                                    <Sidebar />
+                                    <main className="flex-1 overflow-hidden">
+                                        {children}
+                                    </main>
+                                </div>
+                            </RouteGuard>
+                            <Toaster />
+                        </TooltipProvider>
+                    </ThemeProvider>
+                </AuthProvider>
             </body>
         </html>
     );

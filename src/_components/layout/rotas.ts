@@ -2,13 +2,11 @@
 const ROUTES_WITHOUT_NAV = ["/login", "/cadastro"];
 
 // Prefixos de rotas (cobrem também as filhas) que renderizam sem navegação.
-// O chat usa a tela inteira para a conversa, sem sidebar. /candidatura é a
-// página pública de inscrição — quem acessa não é o recrutador logado.
+// O chat usa a tela inteira para a conversa, sem sidebar — é o link enviado
+// ao candidato, que não é o recrutador logado. A visão do recrutador sobre a
+// mesma conversa é um dialog dentro de /vagas/[id] (candidato-chat-dialog.tsx),
+// não uma rota própria. /candidatura é a página pública de inscrição.
 const PREFIXOS_SEM_NAV = ["/chat", "/candidatura"];
-
-// Rotas que também são o chat, só que aninhadas em /vagas/[id]/[candidatoId]/chat
-// (acesso pela aba de vagas) — mesmo tratamento: tela cheia, sem sidebar.
-const REGEX_SEM_NAV = [/^\/vagas\/[^/]+\/[^/]+\/chat$/];
 
 // Prefixos de rotas que realmente existem no app. Qualquer pathname fora
 // dessa lista é uma 404 (ou uma rota futura ainda não cadastrada aqui).
@@ -38,8 +36,23 @@ export function rotaExiste(pathname: string) {
 export function rotaTemNav(pathname: string) {
     if (!rotaExiste(pathname)) return false;
     if (ROUTES_WITHOUT_NAV.includes(pathname)) return false;
-    if (PREFIXOS_SEM_NAV.some((prefixo) => rotaCasa(pathname, prefixo))) {
-        return false;
-    }
-    return !REGEX_SEM_NAV.some((regex) => regex.test(pathname));
+    return !PREFIXOS_SEM_NAV.some((prefixo) => rotaCasa(pathname, prefixo));
+}
+
+// O chat do candidato é a única tela sem sidebar que também não tem marca
+// própria (login e cadastro têm o painel de marca; a 404 tem o logo central),
+// então é a única onde o logo flutuante faz sentido. Ver FloatingLogo.
+export function rotaEhChat(pathname: string) {
+    return rotaCasa(pathname, "/chat");
+}
+
+// Rotas acessíveis sem login. É um critério independente de rotaTemNav: essa
+// aqui é sobre permissão, a outra é só sobre a sidebar aparecer ou não —
+// /candidatura e /chat não têm sidebar E são públicas, mas
+// /vagas/[id]/[candidatoId]/chat (o dialog "Ver chat" do recrutador) exige
+// login mesmo não tendo rota própria hoje.
+const PREFIXOS_PUBLICOS = ["/login", "/cadastro", "/candidatura", "/chat"];
+
+export function rotaPublica(pathname: string) {
+    return PREFIXOS_PUBLICOS.some((prefixo) => rotaCasa(pathname, prefixo));
 }

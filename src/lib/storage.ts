@@ -5,6 +5,7 @@
 import { normalizarVaga } from "@/lib/migracoes";
 import type { Candidato, MensagemChat, StatusCandidato, Vaga } from "@/types";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
+import { lerUsuarioSalvo } from "@/lib/usuarios";
 
 const KEYS = {
     vagas: "voicematch:vagas",
@@ -64,7 +65,12 @@ export async function getVagas(): Promise<Vaga[]> {
 
     let localVagas = getVagasLocal();
     if (localVagas.length === 0) {
-        const { seedDadosTeste } = require("@/lib/seed");
+        // Import dinâmico, e não estático no topo do arquivo, por dois
+        // motivos: seed.ts importa `saveMensagem` daqui, então um import
+        // estático fecharia um ciclo entre os dois módulos na inicialização;
+        // e são 400+ linhas de dados de teste que não precisam entrar no
+        // bundle de quem já tem vagas salvas.
+        const { seedDadosTeste } = await import("@/lib/seed");
         seedDadosTeste();
         localVagas = getVagasLocal();
     }
@@ -87,7 +93,7 @@ export async function saveVaga(vaga: Vaga): Promise<Vaga> {
         status: "ativa",
         requisitos_hard: { items: vaga.hardSkills },
         requisitos_soft: { items: vaga.softSkills },
-        recrutador_id: "32b043a7-d234-460c-a38a-70340e2ce04f"
+        recrutador_id: lerUsuarioSalvo()?.id,
     };
 
     try {

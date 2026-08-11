@@ -5,6 +5,7 @@ import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 
 import { CandidatoDetalheModal } from "@/_components/candidatos/candidato-detalhe-modal";
+import { CandidatoChatDialog } from "@/_components/chat/candidato-chat-dialog";
 import { Avatar, AvatarFallback } from "@/_components/ui/avatar";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
@@ -124,6 +125,9 @@ export default function VagaDetalhePage({
         useState<ModoVisualizacao>("grade");
     const [candidatoSelecionado, setCandidatoSelecionado] =
         useState<Candidato | null>(null);
+    const [candidatoNoChat, setCandidatoNoChat] = useState<Candidato | null>(
+        null,
+    );
 
     useEffect(() => {
         Promise.all([getVagaById(id), getCandidatosByVaga(id)]).then(
@@ -352,10 +356,22 @@ export default function VagaDetalhePage({
 
             <CandidatoDetalheModal
                 candidato={candidatoSelecionado}
-                vagaId={vaga.id}
                 open={candidatoSelecionado !== null}
                 onOpenChange={(open) => {
                     if (!open) setCandidatoSelecionado(null);
+                }}
+                onVerChat={() => {
+                    setCandidatoNoChat(candidatoSelecionado);
+                    setCandidatoSelecionado(null);
+                }}
+            />
+
+            <CandidatoChatDialog
+                vagaId={vaga.id}
+                candidatoId={candidatoNoChat?.id ?? null}
+                open={candidatoNoChat !== null}
+                onOpenChange={(open) => {
+                    if (!open) setCandidatoNoChat(null);
                 }}
             />
         </>
