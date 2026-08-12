@@ -296,26 +296,26 @@ export function CandidatoDetalheModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                    <div className="flex items-center gap-3 pr-11">
-                        <Avatar>
-                            <AvatarFallback>
-                                {candidato.nome.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="flex min-w-0 flex-1 flex-col">
-                            <DialogTitle className="truncate">
+            <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-6 sm:max-w-2xl">
+                <DialogHeader className="mb-2 border-b border-border pb-3 pr-8">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                            <Avatar className="size-10 shrink-0">
+                                <AvatarFallback className="bg-primary/10 font-bold text-primary">
+                                    {candidato.nome.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <DialogTitle className="truncate text-lg font-bold text-foreground">
                                 {candidato.nome}
                             </DialogTitle>
                         </div>
-                        <Badge variant={badge.variant} className="shrink-0">
+                        <Badge variant={badge.variant} className="shrink-0 font-medium">
                             {badge.label}
                         </Badge>
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="max-h-[70vh]">
+                <ScrollArea className="max-h-[calc(90vh-140px)] flex-1 pr-1">
                     <div className="flex flex-col gap-6 p-1">
                         {/* 1. Parecer Executivo Final da IA (Exibido quando a entrevista é finalizada) */}
                         {parecerFinal && (
