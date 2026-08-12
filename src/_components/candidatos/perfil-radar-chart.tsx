@@ -53,7 +53,7 @@ export function PerfilRadarChart({ perfil }: { perfil: PerfilComportamental }) {
     return (
         <svg
             viewBox={`0 0 ${TAMANHO} ${TAMANHO}`}
-            className="mx-auto w-full max-w-115"
+            className="mx-auto h-auto w-full max-w-[340px]"
             role="img"
             aria-label="Radar do perfil comportamental"
         >

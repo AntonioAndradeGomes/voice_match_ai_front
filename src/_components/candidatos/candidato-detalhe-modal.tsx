@@ -28,6 +28,7 @@ import {
 } from "@/_components/ui/dialog";
 import { ScrollArea } from "@/_components/ui/scroll-area";
 import { PerfilRadarChart } from "@/_components/candidatos/perfil-radar-chart";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { baixarBlob, temCurriculo, obterCurriculo } from "@/lib/curriculos";
 import type { Candidato, PerfilComportamental } from "@/types";
 import { getCandidatoBadge } from "@/lib/vaga-status";
@@ -160,24 +161,28 @@ export function CandidatoDetalheModal({
     const carregarDadosDoBackend = async () => {
         if (!candidatoId) return;
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-            const res = await fetch(`${apiUrl}/candidaturas`);
+            const res = await apiFetch(`${API_BASE_URL}/candidaturas`);
             if (res.ok) {
                 const candidaturas = await res.json();
-                const item = candidaturas.find((c: any) => c.candidato_id === candidatoId) || candidaturas[candidaturas.length - 1];
-                if (item) {
-                    const resE = await fetch(`${apiUrl}/candidaturas/${item.id}/entrevistas`);
-                    if (resE.ok) {
-                        const entrevistas = await resE.json();
-                        if (Array.isArray(entrevistas) && entrevistas.length > 0) {
-                            const entrevistaId = entrevistas[0].id;
-                            const resDet = await fetch(`${apiUrl}/entrevistas/${entrevistaId}`);
-                            if (resDet.ok) {
-                                const det = await resDet.json();
-                                setDadosBackend({
-                                    candidatura: item,
-                                    entrevista: det,
-                                });
+                if (Array.isArray(candidaturas) && candidaturas.length > 0) {
+                    let item = candidaturas.find((c: any) => c.candidato_id === candidatoId);
+                    if (!item) {
+                        item = candidaturas[candidaturas.length - 1];
+                    }
+                    if (item) {
+                        const resE = await apiFetch(`${API_BASE_URL}/candidaturas/${item.id}/entrevistas`);
+                        if (resE.ok) {
+                            const entrevistas = await resE.json();
+                            if (Array.isArray(entrevistas) && entrevistas.length > 0) {
+                                const entrevistaId = entrevistas[0].id;
+                                const resDet = await apiFetch(`${API_BASE_URL}/entrevistas/${entrevistaId}`);
+                                if (resDet.ok) {
+                                    const det = await resDet.json();
+                                    setDadosBackend({
+                                        candidatura: item,
+                                        entrevista: det,
+                                    });
+                                }
                             }
                         }
                     }
@@ -264,29 +269,47 @@ export function CandidatoDetalheModal({
     async function handleFinalizarEntrevista() {
         setCarregandoParecer(true);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-            const res = await fetch(`${apiUrl}/candidaturas`);
-            if (res.ok) {
-                const candidaturas = await res.json();
-                const item = candidaturas.find((c: any) => c.candidato_id === candidato!.id) || candidaturas[candidaturas.length - 1];
-                if (item) {
-                    const resE = await fetch(`${apiUrl}/candidaturas/${item.id}/entrevistas`);
-                    if (resE.ok) {
-                        const entrevistas = await resE.json();
-                        if (Array.isArray(entrevistas) && entrevistas.length > 0) {
-                            const resFin = await fetch(`${apiUrl}/entrevistas/${entrevistas[0].id}/finalizar`, { method: "POST" });
-                            if (resFin.ok) {
-                                const dadosFin = await resFin.json();
-                                toast.success(`Entrevista finalizada com sucesso! Score: ${dadosFin.score_geral}/10`);
-                                await carregarDadosDoBackend();
-                                setCarregandoParecer(false);
-                                return;
+            let entrevistaId = dadosBackend?.entrevista?.id;
+
+            if (!entrevistaId) {
+                const res = await apiFetch(`${API_BASE_URL}/candidaturas`);
+                if (res.ok) {
+                    const candidaturas = await res.json();
+                    if (Array.isArray(candidaturas) && candidaturas.length > 0) {
+                        let item = candidaturas.find((c: any) => c.candidato_id === candidato!.id);
+                        if (!item) {
+                            item = candidaturas[candidaturas.length - 1];
+                        }
+                        if (item) {
+                            const resE = await apiFetch(`${API_BASE_URL}/candidaturas/${item.id}/entrevistas`);
+                            if (resE.ok) {
+                                const entrevistas = await resE.json();
+                                if (Array.isArray(entrevistas) && entrevistas.length > 0) {
+                                    entrevistaId = entrevistas[0].id;
+                                }
                             }
                         }
                     }
                 }
             }
-            toast.success("Entrevista finalizada e avaliada pela IA!");
+
+            if (entrevistaId) {
+                const resFin = await apiFetch(`${API_BASE_URL}/entrevistas/${entrevistaId}/finalizar`, {
+                    method: "POST",
+                });
+                if (resFin.ok) {
+                    const dadosFin = await resFin.json();
+                    setDadosBackend((prev: any) => ({
+                        ...prev,
+                        entrevista: dadosFin,
+                    }));
+                    toast.success(`Entrevista finalizada! Score Consolidado: ${dadosFin.score_geral}/10`);
+                    setCarregandoParecer(false);
+                    return;
+                }
+            }
+
+            toast.error("Não foi possível encontrar a entrevista do candidato no backend.");
         } catch (e) {
             toast.error("Falha ao se conectar com a API de finalização.");
         } finally {
@@ -296,30 +319,30 @@ export function CandidatoDetalheModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                    <div className="flex items-center gap-3 pr-11">
-                        <Avatar>
-                            <AvatarFallback>
-                                {candidato.nome.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="flex min-w-0 flex-1 flex-col">
-                            <DialogTitle className="truncate">
+            <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-6 sm:max-w-2xl">
+                <DialogHeader className="mb-2 border-b border-border pb-3 pr-8">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                            <Avatar className="size-10 shrink-0">
+                                <AvatarFallback className="bg-primary/10 font-bold text-primary">
+                                    {candidato.nome.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <DialogTitle className="truncate text-lg font-bold text-foreground">
                                 {candidato.nome}
                             </DialogTitle>
                         </div>
-                        <Badge variant={badge.variant} className="shrink-0">
+                        <Badge variant={badge.variant} className="shrink-0 font-medium">
                             {badge.label}
                         </Badge>
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="max-h-[70vh]">
+                <div className="flex-1 overflow-y-auto max-h-[70vh] pr-2 space-y-6">
                     <div className="flex flex-col gap-6 p-1">
                         {/* 1. Parecer Executivo Final da IA (Exibido quando a entrevista é finalizada) */}
                         {parecerFinal && (
-                            <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
+                            <div className="flex flex-col gap-3.5 rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
                                 <div className="flex items-center justify-between border-b border-primary/20 pb-3">
                                     <div className="flex items-center gap-2">
                                         <Brain className="size-4 text-primary" />
@@ -328,18 +351,49 @@ export function CandidatoDetalheModal({
                                         </span>
                                     </div>
                                     {scoreGeral !== null && (
-                                        <Badge variant="default" className="font-bold">
-                                            Score Consolidado: {scoreGeral.toFixed(1)} / 10
+                                        <Badge variant="default" className="font-bold text-xs">
+                                            Nota Consolidada: {scoreGeral.toFixed(1)} / 10
                                         </Badge>
                                     )}
                                 </div>
 
-                                {parecerFinal.summary && (
-                                    <p className="text-xs font-medium leading-relaxed text-foreground/90">
-                                        {parecerFinal.summary}
-                                    </p>
+                                {/* A. Sugestão de Entrevista por Vídeo */}
+                                {parecerFinal.sugestao_entrevista_video && (
+                                    <div className="flex flex-col gap-1 rounded-xl bg-blue-500/10 p-3 text-xs dark:bg-blue-950/20">
+                                        <span className="flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
+                                            📹 Recomendação de Avanço para Entrevista por Vídeo
+                                        </span>
+                                        <p className="font-medium leading-relaxed text-foreground/90">
+                                            {parecerFinal.sugestao_entrevista_video}
+                                        </p>
+                                    </div>
                                 )}
 
+                                {/* B. Resumo Geral do Recrutador */}
+                                {(parecerFinal.feedback_geral || parecerFinal.summary) && (
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                            Feedback Geral do Candidato (Recrutador)
+                                        </span>
+                                        <p className="text-xs font-medium leading-relaxed text-foreground/90">
+                                            {parecerFinal.feedback_geral || parecerFinal.summary}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* C. Feedback Pronto para Envio ao Candidato em caso de Reprovação */}
+                                {parecerFinal.feedback_candidato && (
+                                    <div className="flex flex-col gap-1 rounded-xl border border-border bg-muted/60 p-3 text-xs">
+                                        <span className="flex items-center gap-1 font-bold text-muted-foreground">
+                                            ✉️ Feedback Personalizado de Retorno para o Candidato
+                                        </span>
+                                        <p className="italic leading-relaxed text-muted-foreground">
+                                            &ldquo;{parecerFinal.feedback_candidato}&rdquo;
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* D. Pontos Fortes e Gaps */}
                                 <div className="grid gap-3 pt-1 sm:grid-cols-2">
                                     {parecerFinal.strengths && parecerFinal.strengths.length > 0 && (
                                         <div className="flex flex-col gap-1.5 rounded-xl bg-emerald-500/10 p-3 text-xs dark:bg-emerald-950/20">
@@ -529,7 +583,7 @@ export function CandidatoDetalheModal({
                             )}
                         </div>
                     </div>
-                </ScrollArea>
+                </div>
 
                 <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <Button
