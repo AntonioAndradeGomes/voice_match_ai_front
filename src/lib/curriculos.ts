@@ -58,23 +58,45 @@ function executar<T>(
     );
 }
 
+import { API_BASE_URL, apiFetch } from "@/lib/api";
+
+function isValidUUID(id: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
+
 /** Guarda o PDF sob o id do candidato. Lança se a cota estourar. */
 export async function salvarCurriculo(
     candidatoId: string,
     arquivo: File,
 ): Promise<void> {
-    if (indisponivel()) return;
+    if (!indisponivel()) {
+        await executar("readwrite", (loja) =>
+            loja.put(
+                {
+                    nome: arquivo.name,
+                    tipo: arquivo.type,
+                    blob: arquivo,
+                } satisfies CurriculoArmazenado,
+                candidatoId,
+            ),
+        );
+    }
 
-    await executar("readwrite", (loja) =>
-        loja.put(
-            {
-                nome: arquivo.name,
-                tipo: arquivo.type,
-                blob: arquivo,
-            } satisfies CurriculoArmazenado,
-            candidatoId,
-        ),
-    );
+    if (isValidUUID(candidatoId)) {
+        try {
+            const formData = new FormData();
+            formData.append("file", arquivo);
+            await apiFetch(
+                `${API_BASE_URL}/candidatos/${candidatoId}/upload-curriculo`,
+                {
+                    method: "POST",
+                    body: formData,
+                },
+            );
+        } catch (e) {
+            console.warn("Erro ao fazer upload do arquivo de currículo para o backend:", e);
+        }
+    }
 }
 
 export async function obterCurriculo(

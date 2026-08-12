@@ -40,6 +40,15 @@ export function ChatConversa({
         );
     }
 
+    const recarregarConversa = () => {
+        carregarConversa(candidatoId, vagaId).then((res) => setConversa(res));
+    };
+
+    const ultimasIAPerguntas = conversa?.mensagens.filter((m) => m.autor === "ia");
+    const perguntaAtualId = ultimasIAPerguntas && ultimasIAPerguntas.length > 0
+        ? ultimasIAPerguntas[ultimasIAPerguntas.length - 1].id
+        : undefined;
+
     return (
         <motion.div
             key={conversa.candidato.id}
@@ -50,7 +59,11 @@ export function ChatConversa({
         >
             <ChatHeader candidato={conversa.candidato} vaga={conversa.vaga} />
             <ChatMensagens mensagens={conversa.mensagens} />
-            <ChatFooter status={conversa.candidato.status} />
+            <ChatFooter
+                status={conversa.candidato.status}
+                perguntaAtualId={perguntaAtualId}
+                onRespostaEnviada={recarregarConversa}
+            />
         </motion.div>
     );
 }

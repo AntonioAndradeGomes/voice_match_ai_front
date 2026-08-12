@@ -58,6 +58,7 @@ export interface Vaga {
     modalidade: Modalidade;
     // Só faz sentido quando `modalidade` é "presencial" ou "hibrido"; vazia em "remoto".
     localizacao: string;
+    scoreMinimoTriagem?: number | null;
     perfilIdeal: PerfilComportamental;
     createdAt: string;
 }
@@ -94,6 +95,13 @@ export interface Candidato {
     pontosFortes: string[] | null;
     pontosFracos: string[] | null;
     melhorias: string[] | null;
+    softSkillsAcusticas?: {
+        oratoria_e_clareza?: number;
+        firmeza_e_confianca?: number;
+        controle_de_estresse?: number;
+        entusiasmo_e_engajamento?: number;
+        parecer_acustico?: string;
+    } | null;
     createdAt: string;
 }
 

@@ -86,6 +86,7 @@ const CAMPOS_INICIAIS = {
     experienciaPrevia: "",
     modalidade: "" as Modalidade | "",
     localizacao: "",
+    scoreMinimoTriagem: 7.0,
 };
 
 interface NovaVagaDialogProps {
@@ -231,6 +232,7 @@ export function NovaVagaDialog({
                     campos.modalidade === "remoto"
                         ? ""
                         : campos.localizacao.trim(),
+                scoreMinimoTriagem: campos.scoreMinimoTriagem,
                 perfilIdeal: criarPerfilNeutro(),
                 createdAt: new Date().toISOString(),
             };
@@ -398,6 +400,31 @@ export function NovaVagaDialog({
                                 setCampos((prev) => ({ ...prev, softSkills }))
                             }
                         />
+                    </div>
+
+                    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/20 p-3.5">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="scoreMinimoTriagem" className="font-medium">
+                                Nota mínima para aprovação na triagem por IA: <span className="font-bold text-primary">{campos.scoreMinimoTriagem.toFixed(1)}</span> / 10
+                            </Label>
+                            <span className="text-xs text-muted-foreground">
+                                Threshold de aprovação
+                            </span>
+                        </div>
+                        <Slider
+                            id="scoreMinimoTriagem"
+                            min={0}
+                            max={10}
+                            step={0.5}
+                            value={[campos.scoreMinimoTriagem]}
+                            onValueChange={(val) => {
+                                const novoVal = Array.isArray(val) ? val[0] : val;
+                                setCampos((prev) => ({ ...prev, scoreMinimoTriagem: novoVal }));
+                            }}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Candidatos com nota calculada pela IA abaixo deste valor serão automaticamente reprovados na triagem e não avançarão para a entrevista por voz.
+                        </p>
                     </div>
                 </div>
 
