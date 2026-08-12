@@ -93,6 +93,7 @@ export async function saveVaga(vaga: Vaga): Promise<Vaga> {
         status: "ativa",
         requisitos_hard: { items: vaga.hardSkills },
         requisitos_soft: { items: vaga.softSkills },
+        score_minimo_triagem: vaga.scoreMinimoTriagem ?? 7.0,
         recrutador_id: lerUsuarioSalvo()?.id,
     };
 
@@ -245,7 +246,10 @@ export function getCandidatoById(id: string): Candidato | null {
     return getCandidatosLocal().find((candidato) => candidato.id === id) ?? null;
 }
 
-export async function saveCandidato(candidato: Candidato): Promise<Candidato> {
+export async function saveCandidato(
+    candidato: Candidato,
+    arquivoCurriculo?: File | null,
+): Promise<Candidato> {
     if (isValidUUID(candidato.vagaId)) {
         try {
             const email = candidato.inscricao?.email || "";
@@ -285,7 +289,30 @@ export async function saveCandidato(candidato: Candidato): Promise<Candidato> {
 
             candidato.id = backendCandidatoId;
 
-            // 2. Criar Candidatura no Backend
+            // 2. Upload do arquivo físico do currículo (PDF/DOCX) se fornecido
+            if (arquivoCurriculo) {
+                try {
+                    const formData = new FormData();
+                    formData.append("file", arquivoCurriculo);
+                    const resUpload = await apiFetch(
+                        `${API_BASE_URL}/candidatos/${backendCandidatoId}/upload-curriculo`,
+                        {
+                            method: "POST",
+                            body: formData,
+                        },
+                    );
+                    if (resUpload.ok) {
+                        const dataUp = await resUpload.json();
+                        if (candidato.inscricao) {
+                            candidato.inscricao.curriculoNome = dataUp.curriculo_url || curriculoNome;
+                        }
+                    }
+                } catch (errUp) {
+                    console.warn("Falha no upload do arquivo de currículo para o backend:", errUp);
+                }
+            }
+
+            // 3. Criar Candidatura no Backend (Dispara Triagem por IA)
             const resCandidatura = await apiFetch(`${API_BASE_URL}/candidaturas`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

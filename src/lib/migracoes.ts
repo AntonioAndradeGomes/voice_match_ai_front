@@ -84,6 +84,12 @@ export function normalizarVaga(bruta: unknown): Vaga {
         experienciaPrevia: texto(dados.experienciaPrevia),
         modalidade: normalizarModalidade(dados.modalidade),
         localizacao: texto(dados.localizacao),
+        scoreMinimoTriagem:
+            typeof dados.score_minimo_triagem === "number"
+                ? dados.score_minimo_triagem
+                : typeof dados.scoreMinimoTriagem === "number"
+                  ? dados.scoreMinimoTriagem
+                  : 7.0,
         perfilIdeal:
             dados.perfilIdeal !== null && typeof dados.perfilIdeal === "object"
                 ? (dados.perfilIdeal as Vaga["perfilIdeal"])

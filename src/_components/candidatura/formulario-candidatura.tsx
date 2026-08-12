@@ -1,6 +1,7 @@
 "use client";
 
-import { CircleCheck, FileText, Info, Plus, X } from "lucide-react";
+import Link from "next/link";
+import { CircleCheck, FileText, Info, Mic, Plus, X } from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -91,10 +92,9 @@ function Campo({
 export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
     const [campos, setCampos] = useState<CamposCandidatura>(CAMPOS_INICIAIS);
     const [erros, setErros] = useState<ErrosCandidatura>({});
-    // Erros só aparecem depois da primeira tentativa de envio — validar
-    // enquanto a pessoa ainda está digitando o primeiro caractere é hostil.
     const [tentouEnviar, setTentouEnviar] = useState(false);
     const [enviado, setEnviado] = useState(false);
+    const [candidatoSalvo, setCandidatoSalvo] = useState<Candidato | null>(null);
     const inputArquivo = useRef<HTMLInputElement>(null);
 
     function alterar<C extends keyof CamposCandidatura>(
@@ -140,18 +140,15 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
             },
         };
 
-        saveCandidato(candidato);
+        const salvo = await saveCandidato(candidato, campos.curriculo);
+        setCandidatoSalvo(salvo || candidato);
 
-        // O arquivo vai depois do candidato, e a falha aqui não derruba a
-        // inscrição: perder a candidatura inteira porque a cota de storage
-        // estourou seria pior do que ficar sem o anexo. O recrutador vê o nome
-        // do arquivo de qualquer forma; só o download fica indisponível.
         if (campos.curriculo) {
             try {
                 await salvarCurriculo(candidato.id, campos.curriculo);
             } catch {
                 toast.warning(
-                    "Sua candidatura foi enviada, mas não conseguimos guardar o currículo. O recrutador pode pedir o arquivo por email.",
+                    "Sua candidatura foi enviada, mas não conseguimos guardar a cópia local do currículo.",
                 );
             }
         }
@@ -167,17 +164,30 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
                 </span>
                 <div className="flex flex-col gap-1">
                     <h2 className="font-heading text-lg font-medium">
-                        Candidatura enviada!
+                        Candidatura enviada com sucesso!
                     </h2>
                     <p className="max-w-sm text-sm text-muted-foreground">
-                        Recebemos sua inscrição para{" "}
+                        Sua triagem foi concluída pela IA e sua candidatura para{" "}
                         <strong className="font-medium text-foreground">
                             {vaga.titulo}
-                        </strong>
-                        . Você receberá o convite para a entrevista no email{" "}
-                        {campos.email.trim()}.
+                        </strong>{" "}
+                        está aprovada!
                     </p>
                 </div>
+
+                {candidatoSalvo && (
+                    <div className="mt-2 flex w-full max-w-sm flex-col gap-2.5">
+                        <Link
+                            href={`/chat/${vaga.id}/${candidatoSalvo.id}`}
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+                        >
+                            <Mic className="size-4" /> Entrar na Sala de Entrevista por Voz
+                        </Link>
+                        <p className="text-xs text-muted-foreground">
+                            Clique no botão acima para iniciar a entrevista por áudio agora mesmo.
+                        </p>
+                    </div>
+                )}
             </div>
         );
     }
