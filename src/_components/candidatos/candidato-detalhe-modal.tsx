@@ -315,7 +315,7 @@ export function CandidatoDetalheModal({
                     </div>
                 </DialogHeader>
 
-                <ScrollArea className="max-h-[calc(90vh-140px)] flex-1 pr-1">
+                <div className="flex-1 overflow-y-auto max-h-[70vh] pr-2 space-y-6">
                     <div className="flex flex-col gap-6 p-1">
                         {/* 1. Parecer Executivo Final da IA (Exibido quando a entrevista é finalizada) */}
                         {parecerFinal && (
@@ -529,7 +529,7 @@ export function CandidatoDetalheModal({
                             )}
                         </div>
                     </div>
-                </ScrollArea>
+                </div>
 
                 <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <Button
