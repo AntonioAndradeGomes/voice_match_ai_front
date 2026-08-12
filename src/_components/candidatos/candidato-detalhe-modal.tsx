@@ -28,6 +28,7 @@ import {
 } from "@/_components/ui/dialog";
 import { ScrollArea } from "@/_components/ui/scroll-area";
 import { PerfilRadarChart } from "@/_components/candidatos/perfil-radar-chart";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { baixarBlob, temCurriculo, obterCurriculo } from "@/lib/curriculos";
 import type { Candidato, PerfilComportamental } from "@/types";
 import { getCandidatoBadge } from "@/lib/vaga-status";
@@ -160,24 +161,28 @@ export function CandidatoDetalheModal({
     const carregarDadosDoBackend = async () => {
         if (!candidatoId) return;
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-            const res = await fetch(`${apiUrl}/candidaturas`);
+            const res = await apiFetch(`${API_BASE_URL}/candidaturas`);
             if (res.ok) {
                 const candidaturas = await res.json();
-                const item = candidaturas.find((c: any) => c.candidato_id === candidatoId) || candidaturas[candidaturas.length - 1];
-                if (item) {
-                    const resE = await fetch(`${apiUrl}/candidaturas/${item.id}/entrevistas`);
-                    if (resE.ok) {
-                        const entrevistas = await resE.json();
-                        if (Array.isArray(entrevistas) && entrevistas.length > 0) {
-                            const entrevistaId = entrevistas[0].id;
-                            const resDet = await fetch(`${apiUrl}/entrevistas/${entrevistaId}`);
-                            if (resDet.ok) {
-                                const det = await resDet.json();
-                                setDadosBackend({
-                                    candidatura: item,
-                                    entrevista: det,
-                                });
+                if (Array.isArray(candidaturas) && candidaturas.length > 0) {
+                    let item = candidaturas.find((c: any) => c.candidato_id === candidatoId);
+                    if (!item) {
+                        item = candidaturas[candidaturas.length - 1];
+                    }
+                    if (item) {
+                        const resE = await apiFetch(`${API_BASE_URL}/candidaturas/${item.id}/entrevistas`);
+                        if (resE.ok) {
+                            const entrevistas = await resE.json();
+                            if (Array.isArray(entrevistas) && entrevistas.length > 0) {
+                                const entrevistaId = entrevistas[0].id;
+                                const resDet = await apiFetch(`${API_BASE_URL}/entrevistas/${entrevistaId}`);
+                                if (resDet.ok) {
+                                    const det = await resDet.json();
+                                    setDadosBackend({
+                                        candidatura: item,
+                                        entrevista: det,
+                                    });
+                                }
                             }
                         }
                     }
@@ -264,31 +269,46 @@ export function CandidatoDetalheModal({
     async function handleFinalizarEntrevista() {
         setCarregandoParecer(true);
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-            const res = await fetch(`${apiUrl}/candidaturas`);
-            if (res.ok) {
-                const candidaturas = await res.json();
-                const item = candidaturas.find((c: any) => c.candidato_id === candidato!.id) || candidaturas[candidaturas.length - 1];
-                if (item) {
-                    const resE = await fetch(`${apiUrl}/candidaturas/${item.id}/entrevistas`);
-                    if (resE.ok) {
-                        const entrevistas = await resE.json();
-                        if (Array.isArray(entrevistas) && entrevistas.length > 0) {
-                            const resFin = await fetch(`${apiUrl}/entrevistas/${entrevistas[0].id}/finalizar`, { method: "POST" });
-                            if (resFin.ok) {
-                                const dadosFin = await resFin.json();
-                                setDadosBackend({
-                                    candidatura: item,
-                                    entrevista: dadosFin,
-                                });
-                                toast.success(`Entrevista finalizada com sucesso! Score: ${dadosFin.score_geral}/10`);
-                                setCarregandoParecer(false);
-                                return;
+            let entrevistaId = dadosBackend?.entrevista?.id;
+
+            if (!entrevistaId) {
+                const res = await apiFetch(`${API_BASE_URL}/candidaturas`);
+                if (res.ok) {
+                    const candidaturas = await res.json();
+                    if (Array.isArray(candidaturas) && candidaturas.length > 0) {
+                        let item = candidaturas.find((c: any) => c.candidato_id === candidato!.id);
+                        if (!item) {
+                            item = candidaturas[candidaturas.length - 1];
+                        }
+                        if (item) {
+                            const resE = await apiFetch(`${API_BASE_URL}/candidaturas/${item.id}/entrevistas`);
+                            if (resE.ok) {
+                                const entrevistas = await resE.json();
+                                if (Array.isArray(entrevistas) && entrevistas.length > 0) {
+                                    entrevistaId = entrevistas[0].id;
+                                }
                             }
                         }
                     }
                 }
             }
+
+            if (entrevistaId) {
+                const resFin = await apiFetch(`${API_BASE_URL}/entrevistas/${entrevistaId}/finalizar`, {
+                    method: "POST",
+                });
+                if (resFin.ok) {
+                    const dadosFin = await resFin.json();
+                    setDadosBackend((prev: any) => ({
+                        ...prev,
+                        entrevista: dadosFin,
+                    }));
+                    toast.success(`Entrevista finalizada! Score Consolidado: ${dadosFin.score_geral}/10`);
+                    setCarregandoParecer(false);
+                    return;
+                }
+            }
+
             toast.error("Não foi possível encontrar a entrevista do candidato no backend.");
         } catch (e) {
             toast.error("Falha ao se conectar com a API de finalização.");
