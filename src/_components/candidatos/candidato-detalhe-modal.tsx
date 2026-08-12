@@ -277,8 +277,11 @@ export function CandidatoDetalheModal({
                             const resFin = await fetch(`${apiUrl}/entrevistas/${entrevistas[0].id}/finalizar`, { method: "POST" });
                             if (resFin.ok) {
                                 const dadosFin = await resFin.json();
+                                setDadosBackend({
+                                    candidatura: item,
+                                    entrevista: dadosFin,
+                                });
                                 toast.success(`Entrevista finalizada com sucesso! Score: ${dadosFin.score_geral}/10`);
-                                await carregarDadosDoBackend();
                                 setCarregandoParecer(false);
                                 return;
                             }
@@ -286,7 +289,7 @@ export function CandidatoDetalheModal({
                     }
                 }
             }
-            toast.success("Entrevista finalizada e avaliada pela IA!");
+            toast.error("Não foi possível encontrar a entrevista do candidato no backend.");
         } catch (e) {
             toast.error("Falha ao se conectar com a API de finalização.");
         } finally {
@@ -319,7 +322,7 @@ export function CandidatoDetalheModal({
                     <div className="flex flex-col gap-6 p-1">
                         {/* 1. Parecer Executivo Final da IA (Exibido quando a entrevista é finalizada) */}
                         {parecerFinal && (
-                            <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
+                            <div className="flex flex-col gap-3.5 rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
                                 <div className="flex items-center justify-between border-b border-primary/20 pb-3">
                                     <div className="flex items-center gap-2">
                                         <Brain className="size-4 text-primary" />
@@ -328,18 +331,49 @@ export function CandidatoDetalheModal({
                                         </span>
                                     </div>
                                     {scoreGeral !== null && (
-                                        <Badge variant="default" className="font-bold">
-                                            Score Consolidado: {scoreGeral.toFixed(1)} / 10
+                                        <Badge variant="default" className="font-bold text-xs">
+                                            Nota Consolidada: {scoreGeral.toFixed(1)} / 10
                                         </Badge>
                                     )}
                                 </div>
 
-                                {parecerFinal.summary && (
-                                    <p className="text-xs font-medium leading-relaxed text-foreground/90">
-                                        {parecerFinal.summary}
-                                    </p>
+                                {/* A. Sugestão de Entrevista por Vídeo */}
+                                {parecerFinal.sugestao_entrevista_video && (
+                                    <div className="flex flex-col gap-1 rounded-xl bg-blue-500/10 p-3 text-xs dark:bg-blue-950/20">
+                                        <span className="flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
+                                            📹 Recomendação de Avanço para Entrevista por Vídeo
+                                        </span>
+                                        <p className="font-medium leading-relaxed text-foreground/90">
+                                            {parecerFinal.sugestao_entrevista_video}
+                                        </p>
+                                    </div>
                                 )}
 
+                                {/* B. Resumo Geral do Recrutador */}
+                                {(parecerFinal.feedback_geral || parecerFinal.summary) && (
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                            Feedback Geral do Candidato (Recrutador)
+                                        </span>
+                                        <p className="text-xs font-medium leading-relaxed text-foreground/90">
+                                            {parecerFinal.feedback_geral || parecerFinal.summary}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* C. Feedback Pronto para Envio ao Candidato em caso de Reprovação */}
+                                {parecerFinal.feedback_candidato && (
+                                    <div className="flex flex-col gap-1 rounded-xl border border-border bg-muted/60 p-3 text-xs">
+                                        <span className="flex items-center gap-1 font-bold text-muted-foreground">
+                                            ✉️ Feedback Personalizado de Retorno para o Candidato
+                                        </span>
+                                        <p className="italic leading-relaxed text-muted-foreground">
+                                            &ldquo;{parecerFinal.feedback_candidato}&rdquo;
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* D. Pontos Fortes e Gaps */}
                                 <div className="grid gap-3 pt-1 sm:grid-cols-2">
                                     {parecerFinal.strengths && parecerFinal.strengths.length > 0 && (
                                         <div className="flex flex-col gap-1.5 rounded-xl bg-emerald-500/10 p-3 text-xs dark:bg-emerald-950/20">
