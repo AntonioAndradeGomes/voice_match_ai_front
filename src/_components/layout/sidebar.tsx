@@ -167,10 +167,15 @@ export function Sidebar() {
                             {NAV.map(({ href, label, icone }, indice) => (
                                 <motion.div
                                     key={href}
-                                    initial={{ opacity: 0, x: -8 }}
-                                    animate={{ opacity: 1, x: 0 }}
+                                    // Só opacidade: qualquer transform aqui
+                                    // vira um ancestral transformado entre as
+                                    // duas pílulas de `layoutId`, e a projeção
+                                    // do motion passa a calcular a posição
+                                    // errada — o indicador para de deslizar.
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
                                     transition={{
-                                        duration: 0.2,
+                                        duration: 0.25,
                                         delay: indice * 0.05,
                                         ease: "easeOut",
                                     }}
@@ -261,10 +266,15 @@ export function Sidebar() {
                         {NAV.map(({ href, label, icone }, indice) => (
                             <motion.div
                                 key={href}
-                                initial={{ opacity: 0, x: -8 }}
-                                animate={{ opacity: 1, x: 0 }}
+                                // Só opacidade: qualquer transform aqui vira um
+                                // ancestral transformado entre as duas pílulas
+                                // de `layoutId`, e a projeção do motion passa a
+                                // calcular a posição errada — o indicador para
+                                // de deslizar.
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
                                 transition={{
-                                    duration: 0.2,
+                                    duration: 0.25,
                                     delay: indice * 0.05,
                                     ease: "easeOut",
                                 }}
