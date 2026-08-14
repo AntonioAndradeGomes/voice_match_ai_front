@@ -6,9 +6,11 @@ import { normalizarVaga } from "@/lib/migracoes";
 import type {
     Candidato,
     CandidatoSalvoResultado,
+    FeedbackTriagem,
     MensagemChat,
     ResultadoTriagemCandidatura,
     StatusCandidato,
+    StatusTriagem,
     Vaga,
 } from "@/types";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
@@ -133,6 +135,73 @@ function isValidUUID(id: string): boolean {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
+// Os três primeiros valores do enum StatusCandidatura do backend. O status da
+// candidatura e o da triagem são o mesmo campo lá: enquanto a triagem não
+// concluiu, ele carrega um destes; depois avança para em_entrevista e adiante.
+const STATUS_DE_TRIAGEM: StatusTriagem[] = [
+    "pendente_triagem",
+    "aprovada_triagem",
+    "reprovada_triagem",
+];
+
+function ehStatusDeTriagem(status: string): status is StatusTriagem {
+    return (STATUS_DE_TRIAGEM as string[]).includes(status);
+}
+
+/**
+ * Traduz o StatusCandidatura do backend para o StatusCandidato do front, que é
+ * uma visão mais grossa (só aguardando / em entrevista / finalizado). Os
+ * estados de triagem entram como "aguardando" porque a entrevista ainda não
+ * começou — quem detalha essa fase é o campo `triagem`.
+ */
+function mapearStatusCandidatura(status: string): StatusCandidato {
+    if (status === "em_entrevista") return "em_entrevista";
+    if (status === "avaliada" || status === "aprovada" || status === "rejeitada") {
+        return "finalizado";
+    }
+    return "aguardando";
+}
+
+/**
+ * Monta o resultado da triagem a partir da candidatura. Devolve `null` quando
+ * não há nenhum sinal de triagem, para a UI conseguir distinguir "ainda não
+ * triado" de "triado sem pontos fortes" em vez de exibir dado inventado.
+ */
+function extrairTriagem(candidatura: {
+    status: string;
+    score_triagem?: number | string | null;
+    feedback_triagem?: FeedbackTriagem | null;
+}): ResultadoTriagemCandidatura | null {
+    const temSinalDeTriagem =
+        ehStatusDeTriagem(candidatura.status) ||
+        candidatura.score_triagem !== null ||
+        Boolean(candidatura.feedback_triagem);
+
+    if (!temSinalDeTriagem) return null;
+
+    // Passou de em_entrevista para frente sem estar num status de triagem
+    // significa que ela foi aprovada: o backend barra a entrevista de quem
+    // reprova. Sem essa inferência, o histórico de quem já avançou apareceria
+    // sem triagem nenhuma.
+    const status: StatusTriagem = ehStatusDeTriagem(candidatura.status)
+        ? candidatura.status
+        : "aprovada_triagem";
+
+    // O backend serializa Numeric como string em alguns drivers; Number() cobre
+    // os dois casos, e o guarda evita virar NaN quando o campo vem nulo.
+    const score =
+        candidatura.score_triagem === null ||
+        candidatura.score_triagem === undefined
+            ? null
+            : Number(candidatura.score_triagem);
+
+    return {
+        status,
+        score: score !== null && Number.isFinite(score) ? score : null,
+        feedback: candidatura.feedback_triagem ?? null,
+    };
+}
+
 // Candidatos
 
 export function getCandidatosLocal(): Candidato[] {
@@ -199,9 +268,8 @@ export async function getCandidatosByVaga(vagaId: string): Promise<Candidato[]> 
                             const resCand = await apiFetch(`${API_BASE_URL}/candidatos/${cand.candidato_id}`);
                             if (resCand.ok) {
                                 const dadosCand = await resCand.json();
-                                const statusFrontend: StatusCandidato =
-                                    cand.status === "finalizado" ? "finalizado" :
-                                    cand.status === "em_entrevista" ? "em_entrevista" : "aguardando";
+                                const statusFrontend = mapearStatusCandidatura(cand.status);
+                                const triagem = extrairTriagem(cand);
 
                                 lista.push({
                                     id: dadosCand.id,
@@ -209,6 +277,7 @@ export async function getCandidatosByVaga(vagaId: string): Promise<Candidato[]> 
                                     nome: dadosCand.nome,
                                     avatarUrl: null,
                                     status: statusFrontend,
+                                    triagem,
                                     perfilAvaliado: null,
                                     notaFinal: null,
                                     pontosFortes: null,

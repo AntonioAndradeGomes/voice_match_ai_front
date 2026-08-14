@@ -91,6 +91,12 @@ export interface Candidato {
     /** Ausente nos candidatos criados antes da página pública de candidatura. */
     inscricao?: DadosInscricao;
     perfilAvaliado: PerfilComportamental | null;
+    /**
+     * Triagem de currículo por IA, feita na candidatura antes da entrevista.
+     * `undefined`/`null` enquanto o backend não devolve (candidatos locais ou
+     * API fora do ar) — nesse caso a UI não deve inventar um resultado.
+     */
+    triagem?: ResultadoTriagemCandidatura | null;
     notaFinal: number | null;
     pontosFortes: string[] | null;
     pontosFracos: string[] | null;

@@ -30,8 +30,24 @@ import { ScrollArea } from "@/_components/ui/scroll-area";
 import { PerfilRadarChart } from "@/_components/candidatos/perfil-radar-chart";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { baixarBlob, temCurriculo, obterCurriculo } from "@/lib/curriculos";
-import type { Candidato, PerfilComportamental } from "@/types";
+import type {
+    Candidato,
+    FeedbackTriagem,
+    PerfilComportamental,
+    StatusTriagem,
+} from "@/types";
 import { getCandidatoBadge } from "@/lib/vaga-status";
+
+// Rótulo e cor de cada estado da triagem. Serve também de guarda: só um valor
+// presente aqui é aceito como status de triagem vindo do backend.
+const STATUS_TRIAGEM_LABEL: Record<
+    StatusTriagem,
+    { texto: string; variant: "success" | "destructive" | "warning" }
+> = {
+    aprovada_triagem: { texto: "Aprovado na Triagem", variant: "success" },
+    reprovada_triagem: { texto: "Reprovado na Triagem", variant: "destructive" },
+    pendente_triagem: { texto: "Aguardando Triagem", variant: "warning" },
+};
 
 function BarraSoftSkill({
     label,
@@ -230,21 +246,41 @@ export function CandidatoDetalheModal({
         }
     }
 
-    // Extrair scorecard de triagem se disponível no backend
-    let pontosFortesTriagem: string[] = candidato.pontosFortes || ["Experiência técnica alinhada", "Comunicação fluida"];
-    let gapsTriagem: string[] = candidato.pontosFracos || ["Pouca familiaridade com cloud nativo"];
+    // Triagem de currículo por IA. A candidatura buscada direto do backend é a
+    // fonte mais fresca; `candidato.triagem` (montado em storage.ts a partir da
+    // listagem) é o retrato que a lista já tinha. Nada aqui usa valor de
+    // exemplo: sem dado, a seção mostra o estado vazio — um "ponto forte"
+    // inventado seria lido como avaliação real da IA sobre uma pessoa.
+    const candidaturaBackend = dadosBackend?.candidatura;
 
-    if (dadosBackend?.candidatura?.feedback_triagem) {
-        const ft = dadosBackend.candidatura.feedback_triagem;
-        if (typeof ft === "object") {
-            if (Array.isArray(ft.pontos_fortes) && ft.pontos_fortes.length > 0) {
-                pontosFortesTriagem = ft.pontos_fortes;
-            }
-            if (Array.isArray(ft.gaps) && ft.gaps.length > 0) {
-                gapsTriagem = ft.gaps;
-            }
-        }
-    }
+    const feedbackTriagem: FeedbackTriagem | null =
+        (candidaturaBackend?.feedback_triagem as FeedbackTriagem | undefined) ??
+        candidato.triagem?.feedback ??
+        null;
+
+    const scoreBruto =
+        candidaturaBackend?.score_triagem ?? candidato.triagem?.score ?? null;
+    const scoreTriagem =
+        scoreBruto === null || scoreBruto === undefined
+            ? null
+            : Number(scoreBruto);
+
+    const statusTriagem: StatusTriagem | null =
+        (candidaturaBackend?.status as StatusTriagem | undefined) &&
+        STATUS_TRIAGEM_LABEL[candidaturaBackend.status as StatusTriagem]
+            ? (candidaturaBackend.status as StatusTriagem)
+            : (candidato.triagem?.status ?? null);
+
+    const pontosFortesTriagem = feedbackTriagem?.pontos_fortes ?? [];
+    const gapsTriagem = feedbackTriagem?.gaps ?? [];
+    const parecerTriagem = feedbackTriagem?.feedback_texto ?? null;
+    const erroTriagem = feedbackTriagem?.erro ?? null;
+    const temAlgumDadoDeTriagem =
+        statusTriagem !== null ||
+        scoreTriagem !== null ||
+        pontosFortesTriagem.length > 0 ||
+        gapsTriagem.length > 0 ||
+        Boolean(parecerTriagem);
 
     const softSkills = candidato.softSkillsAcusticas || {
         oratoria_e_clareza: 8.5,
@@ -426,21 +462,72 @@ export function CandidatoDetalheModal({
 
                         {/* 2. Scorecard da Triagem por IA */}
                         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-                            <div className="flex items-center justify-between border-b border-border pb-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
                                 <div className="flex items-center gap-2">
                                     <Sparkles className="size-4 text-primary" />
                                     <span className="text-sm font-semibold text-foreground">
                                         Scorecard da Triagem por IA (Análise de Currículo)
                                     </span>
                                 </div>
-                                {scoreGeral !== null && (
-                                    <Badge variant="outline" className="gap-1 border-primary/30 font-bold text-primary">
-                                        Nota: {scoreGeral.toFixed(1)} / 10
-                                    </Badge>
-                                )}
+                                <div className="flex items-center gap-2">
+                                    {statusTriagem && (
+                                        <Badge
+                                            variant={
+                                                STATUS_TRIAGEM_LABEL[
+                                                    statusTriagem
+                                                ].variant
+                                            }
+                                        >
+                                            {
+                                                STATUS_TRIAGEM_LABEL[
+                                                    statusTriagem
+                                                ].texto
+                                            }
+                                        </Badge>
+                                    )}
+                                    {/* Escala 0–10, a mesma do score mínimo da
+                                        vaga — não confundir com a notaFinal da
+                                        entrevista, que é de 0 a 100. */}
+                                    {scoreTriagem !== null && (
+                                        <Badge variant="outline" className="gap-1 border-primary/30 font-bold text-primary">
+                                            Nota: {scoreTriagem.toFixed(1)} / 10
+                                        </Badge>
+                                    )}
+                                </div>
                             </div>
 
+                            {!temAlgumDadoDeTriagem && (
+                                <p className="text-xs text-muted-foreground">
+                                    Este candidato ainda não passou pela triagem
+                                    de currículo por IA.
+                                </p>
+                            )}
+
+                            {erroTriagem && (
+                                <div className="flex items-start gap-2 rounded-xl bg-destructive/10 p-3 text-xs text-destructive">
+                                    <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+                                    <span>
+                                        A triagem falhou para este candidato:{" "}
+                                        {erroTriagem}
+                                    </span>
+                                </div>
+                            )}
+
+                            {parecerTriagem && (
+                                <div className="flex flex-col gap-1 rounded-xl bg-muted/60 p-3 text-xs">
+                                    <span className="font-semibold text-muted-foreground">
+                                        Parecer da IA
+                                    </span>
+                                    <p className="leading-relaxed text-foreground/90">
+                                        {parecerTriagem}
+                                    </p>
+                                </div>
+                            )}
+
+                            {(pontosFortesTriagem.length > 0 ||
+                                gapsTriagem.length > 0) && (
                             <div className="grid gap-3 sm:grid-cols-2">
+                                {pontosFortesTriagem.length > 0 && (
                                 <div className="flex flex-col gap-2 rounded-xl bg-emerald-500/10 p-3 text-xs dark:bg-emerald-950/20">
                                     <span className="flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
                                         <CheckCircle2 className="size-3.5" /> Pontos Fortes
@@ -453,7 +540,9 @@ export function CandidatoDetalheModal({
                                         ))}
                                     </ul>
                                 </div>
+                                )}
 
+                                {gapsTriagem.length > 0 && (
                                 <div className="flex flex-col gap-2 rounded-xl bg-amber-500/10 p-3 text-xs dark:bg-amber-950/20">
                                     <span className="flex items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400">
                                         <AlertCircle className="size-3.5" /> Gaps Identificados
@@ -466,7 +555,9 @@ export function CandidatoDetalheModal({
                                         ))}
                                     </ul>
                                 </div>
+                                )}
                             </div>
+                            )}
                         </div>
 
                         {/* 3. Relatório de Soft Skills Acústicas (Librosa) */}
