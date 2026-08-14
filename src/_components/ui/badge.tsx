@@ -15,6 +15,14 @@ const badgeVariants = cva(
                     "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
                 destructive:
                     "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+                // O tema do app é azul e não tem token semântico de verde nem
+                // de âmbar. Estas duas usam a paleta do Tailwind direto, no
+                // mesmo tom já adotado pelo scorecard de triagem no modal do
+                // candidato, para aprovado/pendente não saírem destoando.
+                success:
+                    "bg-emerald-500/10 text-emerald-700 focus-visible:ring-emerald-500/20 dark:bg-emerald-500/15 dark:text-emerald-400 [a]:hover:bg-emerald-500/20",
+                warning:
+                    "bg-amber-500/10 text-amber-700 focus-visible:ring-amber-500/20 dark:bg-amber-500/15 dark:text-amber-400 [a]:hover:bg-amber-500/20",
                 outline:
                     "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
                 ghost: "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
