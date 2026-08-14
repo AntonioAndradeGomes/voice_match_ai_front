@@ -1,7 +1,7 @@
 "use client";
 
 import { XIcon } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/_components/ui/button";
@@ -25,6 +25,7 @@ import {
 } from "@/_components/ui/select";
 import { Slider } from "@/_components/ui/slider";
 import { Textarea } from "@/_components/ui/textarea";
+import { getCatalogo, type CatalogoHabilidades } from "@/lib/habilidades";
 import { saveVaga } from "@/lib/storage";
 import {
     criarPerfilNeutro,
@@ -35,44 +36,9 @@ import {
     type Vaga,
 } from "@/types";
 
-const HARD_SKILLS_DISPONIVEIS = [
-    "Excel avançado",
-    "SQL",
-    "Inglês avançado",
-    "Gestão de projetos",
-    "CRM (Salesforce/HubSpot)",
-    "Copywriting",
-    "SEO",
-    "Análise de dados",
-    "Programação (JavaScript/Python)",
-    "Design gráfico",
-    "Contabilidade",
-    "Recrutamento e seleção",
-    "Atendimento ao cliente",
-    "Negociação comercial",
-    "Edição de vídeo",
-    "Marketing digital",
-    "Gestão financeira",
-    "Power BI",
-    "Vendas B2B",
-];
-
-const SOFT_SKILLS_DISPONIVEIS = [
-    "Comunicação",
-    "Trabalho em equipe",
-    "Proatividade",
-    "Resiliência",
-    "Liderança",
-    "Adaptabilidade",
-    "Pensamento crítico",
-    "Organização",
-    "Empatia",
-    "Criatividade",
-    "Autonomia",
-    "Foco em resultado",
-    "Inteligência emocional",
-    "Gestão do tempo",
-];
+// As listas de habilidades saíram daqui para lib/habilidades.ts, onde o
+// recrutador as edita em /configuracoes. Este componente passou a lê-las em
+// tempo de abertura do diálogo.
 
 const NIVEIS_EXPERIENCIA = ["1 a 2 anos", "3 a 5 anos", "Mais de 5 anos"];
 
@@ -206,6 +172,15 @@ export function NovaVagaDialog({
     onVagaCriada,
 }: NovaVagaDialogProps) {
     const [campos, setCampos] = useState(CAMPOS_INICIAIS);
+
+    // Derivado do `open` em vez de guardado em estado: relê a cada abertura,
+    // então editar as listas em /configuracoes e voltar para cá reflete na
+    // hora, sem recarregar a página. Fechado devolve listas vazias, o que
+    // também evita tocar em localStorage antes de existir janela.
+    const catalogo: CatalogoHabilidades = useMemo(
+        () => (open ? getCatalogo() : { hard: [], soft: [] }),
+        [open],
+    );
 
     function handleOpenChange(nextOpen: boolean) {
         onOpenChange(nextOpen);
@@ -385,7 +360,7 @@ export function NovaVagaDialog({
                     <div className="grid gap-4 sm:grid-cols-2">
                         <SkillPicker
                             label="Hard skills"
-                            opcoes={HARD_SKILLS_DISPONIVEIS}
+                            opcoes={catalogo.hard}
                             skills={campos.hardSkills}
                             onChange={(hardSkills) =>
                                 setCampos((prev) => ({ ...prev, hardSkills }))
@@ -394,7 +369,7 @@ export function NovaVagaDialog({
 
                         <SkillPicker
                             label="Soft skills"
-                            opcoes={SOFT_SKILLS_DISPONIVEIS}
+                            opcoes={catalogo.soft}
                             skills={campos.softSkills}
                             onChange={(softSkills) =>
                                 setCampos((prev) => ({ ...prev, softSkills }))
