@@ -144,17 +144,3 @@
         display: none;
     }
 }
-
-/* Onda sonora da marca (ver OndaSonora). Mesma ideia do painel de marca do
-   login, mas aqui as barras ficam paradas e só animam no hover do logo: na
-   sidebar o elemento está sempre visível, e movimento perpétuo no cromo da
-   aplicação cansa a vista e gasta bateria à toa. */
-@keyframes onda-sonora {
-    0%,
-    100% {
-        transform: scaleY(0.35);
-    }
-    50% {
-        transform: scaleY(1);
-    }
-}

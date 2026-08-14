@@ -15,7 +15,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { OndaSonora } from "@/_components/layout/onda-sonora";
 import { rotaCasa, rotaTemNav } from "@/_components/layout/rotas";
 import { ThemeToggle } from "@/_components/layout/theme-toggle";
 import { UserMenu } from "@/_components/layout/user-menu";
@@ -129,7 +128,7 @@ export function Sidebar() {
         <>
             {/* Mobile: barra superior com hambúrguer, sidebar vira um drawer */}
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground lg:hidden">
-                <Link href="/" className="group flex items-center gap-2">
+                <Link href="/" className="flex items-center gap-2">
                     <span className="flex size-7 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
                         <Mic className="size-3.5" />
                     </span>
@@ -137,7 +136,6 @@ export function Sidebar() {
                         VoiceMatch
                         <span className="text-sidebar-primary">Ai</span>
                     </span>
-                    <OndaSonora className="ml-0.5" />
                 </Link>
 
                 <Sheet open={menuAberto} onOpenChange={setMenuAberto}>
@@ -152,17 +150,9 @@ export function Sidebar() {
                         className="gap-0 bg-sidebar text-sidebar-foreground data-[side=left]:w-72"
                     >
                         <SheetHeader className="border-b border-sidebar-border">
-                            {/* `group` aqui e não no SheetTitle: no toque não
-                                existe hover, então a onda fica estática no
-                                mobile — é decoração de marca, não affordance. */}
-                            <SheetTitle className="group flex items-center gap-2">
-                                <span>
-                                    VoiceMatch
-                                    <span className="text-sidebar-primary">
-                                        Ai
-                                    </span>
-                                </span>
-                                <OndaSonora />
+                            <SheetTitle>
+                                VoiceMatch
+                                <span className="text-sidebar-primary">Ai</span>
                             </SheetTitle>
                         </SheetHeader>
 
@@ -222,15 +212,9 @@ export function Sidebar() {
                             colapsado ? "flex-col" : "justify-between px-1",
                         )}
                     >
-                        {/* Sem `overflow-hidden`: a linha tem ~164px úteis e o
-                            ícone mais o nome já ocupam quase tudo. Com o corte
-                            ligado, qualquer coisa depois do nome era descartada
-                            silenciosamente — foi o que sumiu com a onda quando
-                            ela ficava em linha. Agora ela vai embaixo do nome,
-                            onde a largura não é disputada. */}
                         <Link
                             href="/"
-                            className="group flex min-w-0 items-center gap-2"
+                            className="flex items-center gap-2 overflow-hidden"
                         >
                             <motion.span
                                 whileHover={{ scale: 1.08, rotate: -6 }}
@@ -244,17 +228,12 @@ export function Sidebar() {
                             >
                                 <Mic className="size-4" />
                             </motion.span>
-                            {/* Recolhida, a sidebar tem 64px e só cabe o ícone;
-                                a onda entraria espremida contra a borda. */}
                             {!colapsado && (
-                                <span className="flex min-w-0 flex-col">
-                                    <span className="font-heading text-lg leading-tight font-semibold tracking-tight whitespace-nowrap">
-                                        VoiceMatch
-                                        <span className="text-sidebar-primary">
-                                            Ai
-                                        </span>
+                                <span className="font-heading text-lg font-semibold tracking-tight whitespace-nowrap">
+                                    VoiceMatch
+                                    <span className="text-sidebar-primary">
+                                        Ai
                                     </span>
-                                    <OndaSonora className="mt-1" />
                                 </span>
                             )}
                         </Link>
