@@ -88,13 +88,13 @@ function NavLink({
                     // de lugar e desliza em vez de sumir e reaparecer.
                     layoutId={`nav-indicador-${grupo}`}
                     className="absolute inset-0 rounded-lg bg-sidebar-primary/20"
-                    // Mola mais lenta e macia que o padrão: a troca acontece
-                    // junto com a do conteúdo da página, e a 420 de stiffness
-                    // o deslize terminava em ~200ms, passando despercebido.
+                    // Mola firme, resolvendo em torno de 200ms: rápida o
+                    // bastante para a navegação não parecer arrastada, e o
+                    // amortecimento alto evita que a pílula balance ao chegar.
                     transition={
                         semMovimento
                             ? { duration: 0 }
-                            : { type: "spring", stiffness: 220, damping: 26 }
+                            : { type: "spring", stiffness: 500, damping: 36 }
                     }
                 />
             )}
@@ -168,8 +168,8 @@ export function Sidebar() {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{
-                                        duration: 0.25,
-                                        delay: indice * 0.05,
+                                        duration: 0.18,
+                                        delay: indice * 0.03,
                                         ease: "easeOut",
                                     }}
                                 >
@@ -262,8 +262,8 @@ export function Sidebar() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{
-                                    duration: 0.25,
-                                    delay: indice * 0.05,
+                                    duration: 0.18,
+                                    delay: indice * 0.03,
                                     ease: "easeOut",
                                 }}
                             >
