@@ -1,7 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { CircleCheck, FileText, Info, Mic, Plus, X } from "lucide-react";
+import {
+    AlertCircle,
+    CheckCircle2,
+    Clock,
+    FileText,
+    Info,
+    Mic,
+    Plus,
+    X,
+    XCircle,
+} from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -21,7 +31,7 @@ import {
 import { salvarCurriculo } from "@/lib/curriculos";
 import { saveCandidato } from "@/lib/storage";
 import { cn } from "@/lib/utils";
-import type { Candidato, Vaga } from "@/types";
+import type { Candidato, ResultadoTriagemCandidatura, Vaga } from "@/types";
 
 const CAMPOS_INICIAIS: CamposCandidatura = {
     nome: "",
@@ -93,8 +103,10 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
     const [campos, setCampos] = useState<CamposCandidatura>(CAMPOS_INICIAIS);
     const [erros, setErros] = useState<ErrosCandidatura>({});
     const [tentouEnviar, setTentouEnviar] = useState(false);
+    const [enviando, setEnviando] = useState(false);
     const [enviado, setEnviado] = useState(false);
     const [candidatoSalvo, setCandidatoSalvo] = useState<Candidato | null>(null);
+    const [triagem, setTriagem] = useState<ResultadoTriagemCandidatura | null>(null);
     const inputArquivo = useRef<HTMLInputElement>(null);
 
     function alterar<C extends keyof CamposCandidatura>(
@@ -116,6 +128,8 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
             toast.error("Confira os campos destacados antes de enviar.");
             return;
         }
+
+        setEnviando(true);
 
         const candidato: Candidato = {
             id: crypto.randomUUID(),
@@ -140,43 +154,127 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
             },
         };
 
-        const salvo = await saveCandidato(candidato, campos.curriculo);
-        setCandidatoSalvo(salvo || candidato);
+        try {
+            const salvo = await saveCandidato(candidato, campos.curriculo);
+            setCandidatoSalvo(salvo.candidato);
+            setTriagem(salvo.triagem ?? null);
 
-        if (campos.curriculo) {
-            try {
-                await salvarCurriculo(candidato.id, campos.curriculo);
-            } catch {
-                toast.warning(
-                    "Sua candidatura foi enviada, mas não conseguimos guardar a cópia local do currículo.",
-                );
+            if (campos.curriculo) {
+                try {
+                    await salvarCurriculo(candidato.id, campos.curriculo);
+                } catch {
+                    toast.warning(
+                        "Sua candidatura foi enviada, mas não conseguimos guardar a cópia local do currículo.",
+                    );
+                }
             }
-        }
 
-        setEnviado(true);
+            setEnviado(true);
+        } catch (e) {
+            console.error("Erro ao enviar candidatura:", e);
+            toast.error("Ocorreu um erro ao submeter a candidatura. Tente novamente.");
+        } finally {
+            setEnviando(false);
+        }
     }
 
     if (enviado) {
+        const statusTriagem = triagem?.status;
+        const foiReprovado = statusTriagem === "reprovada_triagem";
+        const foiAprovado = statusTriagem === "aprovada_triagem" || (!triagem && true);
+
+        if (foiReprovado) {
+            return (
+                <div className="flex flex-col items-center gap-5 rounded-3xl bg-card p-8 text-center shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10">
+                    <span className="flex size-14 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        <AlertCircle className="size-7" />
+                    </span>
+                    <div className="flex flex-col gap-2">
+                        <h2 className="font-heading text-xl font-medium">
+                            Candidatura Registrada
+                        </h2>
+                        <p className="max-w-md text-sm text-muted-foreground leading-relaxed">
+                            Obrigado pelo interesse na vaga de{" "}
+                            <strong className="font-medium text-foreground">
+                                {vaga.titulo}
+                            </strong>
+                            . Nossa triagem automática por IA analisou seu currículo em relação aos requisitos mínimos da posição e identificou que o perfil não atingiu a pontuação mínima de corte no momento.
+                        </p>
+                    </div>
+
+                    {triagem?.feedback?.feedback_texto && (
+                        <div className="mt-1 w-full max-w-md rounded-2xl bg-muted/50 p-4 text-left border border-border/50 text-xs text-muted-foreground leading-relaxed">
+                            <p className="font-semibold text-foreground mb-1">Feedback da Triagem:</p>
+                            <p>{triagem.feedback.feedback_texto}</p>
+                        </div>
+                    )}
+
+                    <div className="mt-3 flex w-full max-w-sm flex-col gap-2.5">
+                        <Link
+                            href="/"
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-5 font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80"
+                        >
+                            Conhecer Outras Oportunidades
+                        </Link>
+                        <p className="text-xs text-muted-foreground">
+                            Seu currículo continuará em nosso banco de talentos para futuras posições.
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        if (statusTriagem === "pendente_triagem") {
+            return (
+                <div className="flex flex-col items-center gap-5 rounded-3xl bg-card p-8 text-center shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10">
+                    <span className="flex size-14 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                        <Clock className="size-7" />
+                    </span>
+                    <div className="flex flex-col gap-2">
+                        <h2 className="font-heading text-xl font-medium">
+                            Candidatura Recebida
+                        </h2>
+                        <p className="max-w-md text-sm text-muted-foreground leading-relaxed">
+                            Sua inscrição para a vaga{" "}
+                            <strong className="font-medium text-foreground">
+                                {vaga.titulo}
+                            </strong>{" "}
+                            foi recebida e está em processamento de triagem. Assim que a avaliação for concluída, você receberá a atualização do processo seletivo.
+                        </p>
+                    </div>
+
+                    <div className="mt-3 flex w-full max-w-sm flex-col gap-2.5">
+                        <Link
+                            href="/"
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-5 font-medium text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80"
+                        >
+                            Voltar ao Início
+                        </Link>
+                    </div>
+                </div>
+            );
+        }
+
         return (
-            <div className="flex flex-col items-center gap-4 rounded-3xl bg-card p-8 text-center shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10">
-                <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <CircleCheck className="size-6" />
+            <div className="flex flex-col items-center gap-5 rounded-3xl bg-card p-8 text-center shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10">
+                <span className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <CheckCircle2 className="size-7" />
                 </span>
-                <div className="flex flex-col gap-1">
-                    <h2 className="font-heading text-lg font-medium">
-                        Candidatura enviada com sucesso!
+                <div className="flex flex-col gap-2">
+                    <h2 className="font-heading text-xl font-medium">
+                        Candidatura Aprovada na Triagem!
                     </h2>
-                    <p className="max-w-sm text-sm text-muted-foreground">
-                        Sua triagem foi concluída pela IA e sua candidatura para{" "}
+                    <p className="max-w-md text-sm text-muted-foreground leading-relaxed">
+                        Parabéns! Seu perfil e currículo foram aprovados na triagem inicial para a vaga de{" "}
                         <strong className="font-medium text-foreground">
                             {vaga.titulo}
-                        </strong>{" "}
-                        está aprovada!
+                        </strong>
+                        . Você já pode realizar a sua entrevista por voz agora mesmo!
                     </p>
                 </div>
 
                 {candidatoSalvo && (
-                    <div className="mt-2 flex w-full max-w-sm flex-col gap-2.5">
+                    <div className="mt-3 flex w-full max-w-sm flex-col gap-2.5">
                         <Link
                             href={`/chat/${vaga.id}/${candidatoSalvo.id}`}
                             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
@@ -184,7 +282,7 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
                             <Mic className="size-4" /> Entrar na Sala de Entrevista por Voz
                         </Link>
                         <p className="text-xs text-muted-foreground">
-                            Clique no botão acima para iniciar a entrevista por áudio agora mesmo.
+                            Clique no botão acima para iniciar a entrevista por áudio.
                         </p>
                     </div>
                 )}

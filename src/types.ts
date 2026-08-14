@@ -108,6 +108,26 @@ export interface Candidato {
 export type AutorMensagem = "ia" | "candidato";
 export type TipoMensagem = "texto" | "audio";
 
+export type StatusTriagem = "pendente_triagem" | "aprovada_triagem" | "reprovada_triagem";
+
+export interface FeedbackTriagem {
+    pontos_fortes?: string[];
+    gaps?: string[];
+    feedback_texto?: string;
+    erro?: string;
+}
+
+export interface ResultadoTriagemCandidatura {
+    status: StatusTriagem;
+    score?: number | null;
+    feedback?: FeedbackTriagem | null;
+}
+
+export interface CandidatoSalvoResultado {
+    candidato: Candidato;
+    triagem?: ResultadoTriagemCandidatura | null;
+}
+
 export interface MensagemChat {
     id: string;
     candidatoId: string;
@@ -121,3 +141,4 @@ export interface MensagemChat {
      * player mostra a onda como decoração — não tem o que tocar. */
     audioUrl?: string;
 }
+
