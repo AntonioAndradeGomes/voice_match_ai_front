@@ -114,6 +114,79 @@ export function RelatoriosSkeleton() {
     );
 }
 
+export function VagaDetalheSkeleton() {
+    return (
+        <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <Skeleton className="h-7 w-36" />
+                <div className="flex items-center gap-3">
+                    <Skeleton className="h-7 w-24" />
+                    <Skeleton className="h-7 w-24" />
+                </div>
+            </div>
+
+            {/* Mesmas colunas do conteúdo real: livre à esquerda, 320px fixos
+                à direita para o cartão da Iris. */}
+            <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+                <div className="flex flex-col gap-5">
+                    <div className="flex flex-wrap gap-2">
+                        <Skeleton className="h-5 w-24 rounded-2xl" />
+                        <Skeleton className="h-5 w-20 rounded-2xl" />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-8 w-2/3" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-4/5" />
+                    </div>
+
+                    {/* Hard e soft skills, cada bloco com rótulo e pílulas. */}
+                    {Array.from({ length: 2 }, (_, bloco) => (
+                        <div key={bloco} className="flex flex-col gap-2">
+                            <Skeleton className="h-3 w-20" />
+                            <div className="flex flex-wrap gap-2">
+                                {Array.from({ length: 4 }, (_, pilula) => (
+                                    <Skeleton
+                                        key={pilula}
+                                        className="h-6 w-28 rounded-2xl"
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <Card className="h-fit">
+                    <CardContent className="flex items-center gap-2">
+                        <Skeleton className="size-7 shrink-0 rounded-full" />
+                        <Skeleton className="h-5 w-40" />
+                    </CardContent>
+                    <CardContent className="flex flex-col gap-2">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-2/3" />
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="flex flex-col gap-4">
+                <Skeleton className="h-6 w-44" />
+                <div className="grid gap-3 sm:grid-cols-2">
+                    {Array.from({ length: 4 }, (_, indice) => (
+                        <Card key={indice} size="sm">
+                            <CardContent className="flex items-center gap-3 px-(--card-spacing)">
+                                <Skeleton className="size-8 shrink-0 rounded-full" />
+                                <Skeleton className="h-4 flex-1" />
+                                <Skeleton className="h-5 w-20 shrink-0 rounded-2xl" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function CartaoGrafico() {
     return (
         <Card>
