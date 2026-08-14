@@ -12,6 +12,8 @@ export interface Conversa {
     candidato: Candidato;
     vaga: Vaga | null;
     mensagens: MensagemChat[];
+    entrevistaDisponivel?: boolean;
+    motivoBloqueio?: string;
 }
 
 function isValidUUID(id: string): boolean {
@@ -43,6 +45,51 @@ export async function carregarConversa(
             }
 
             if (candidatura) {
+                // Verificar se a candidatura foi reprovada ou está pendente na triagem
+                if (candidatura.status === "reprovada_triagem") {
+                    return {
+                        candidato: candidato ?? {
+                            id: candidatoId,
+                            vagaId,
+                            nome: "Candidato",
+                            avatarUrl: null,
+                            status: "aguardando",
+                            perfilAvaliado: null,
+                            notaFinal: null,
+                            pontosFortes: null,
+                            pontosFracos: null,
+                            melhorias: null,
+                            createdAt: new Date().toISOString(),
+                        },
+                        vaga,
+                        mensagens: [],
+                        entrevistaDisponivel: false,
+                        motivoBloqueio: "A sua candidatura não atingiu o score mínimo na triagem de currículo para avançar à etapa de entrevista por voz.",
+                    };
+                }
+
+                if (candidatura.status === "pendente_triagem") {
+                    return {
+                        candidato: candidato ?? {
+                            id: candidatoId,
+                            vagaId,
+                            nome: "Candidato",
+                            avatarUrl: null,
+                            status: "aguardando",
+                            perfilAvaliado: null,
+                            notaFinal: null,
+                            pontosFortes: null,
+                            pontosFracos: null,
+                            melhorias: null,
+                            createdAt: new Date().toISOString(),
+                        },
+                        vaga,
+                        mensagens: [],
+                        entrevistaDisponivel: false,
+                        motivoBloqueio: "A triagem de currículo desta candidatura ainda está sendo processada. Por favor, aguarde.",
+                    };
+                }
+
                 // 2. Buscar entrevistas da candidatura
                 const resEntrevistas = await apiFetch(
                     `${API_BASE_URL}/candidaturas/${candidatura.id}/entrevistas`,

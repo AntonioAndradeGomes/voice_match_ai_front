@@ -3,7 +3,14 @@
 // mantendo as mesmas assinaturas — nenhuma tela deve importar localStorage direto.
 
 import { normalizarVaga } from "@/lib/migracoes";
-import type { Candidato, MensagemChat, StatusCandidato, Vaga } from "@/types";
+import type {
+    Candidato,
+    CandidatoSalvoResultado,
+    MensagemChat,
+    ResultadoTriagemCandidatura,
+    StatusCandidato,
+    Vaga,
+} from "@/types";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { lerUsuarioSalvo } from "@/lib/usuarios";
 
@@ -249,7 +256,9 @@ export function getCandidatoById(id: string): Candidato | null {
 export async function saveCandidato(
     candidato: Candidato,
     arquivoCurriculo?: File | null,
-): Promise<Candidato> {
+): Promise<CandidatoSalvoResultado> {
+    let triagem: ResultadoTriagemCandidatura | null = null;
+
     if (isValidUUID(candidato.vagaId)) {
         try {
             const email = candidato.inscricao?.email || "";
@@ -325,6 +334,34 @@ export async function saveCandidato(
             if (resCandidatura.ok) {
                 const dataCand = await resCandidatura.json();
                 candidato.createdAt = dataCand.data_candidatura;
+                triagem = {
+                    status: dataCand.status,
+                    score: dataCand.score_triagem,
+                    feedback: dataCand.feedback_triagem,
+                };
+            } else if (resCandidatura.status === 400) {
+                // Candidato já se candidatou anteriormente: buscar os dados da candidatura existente
+                try {
+                    const resExistentes = await apiFetch(
+                        `${API_BASE_URL}/candidaturas/vaga/${candidato.vagaId}`,
+                    );
+                    if (resExistentes.ok) {
+                        const lista = await resExistentes.json();
+                        const candExistente = lista.find(
+                            (c: { candidato_id: string }) => c.candidato_id === backendCandidatoId,
+                        );
+                        if (candExistente) {
+                            candidato.createdAt = candExistente.data_candidatura;
+                            triagem = {
+                                status: candExistente.status,
+                                score: candExistente.score_triagem,
+                                feedback: candExistente.feedback_triagem,
+                            };
+                        }
+                    }
+                } catch (eCand) {
+                    console.warn("Erro ao buscar candidatura pré-existente:", eCand);
+                }
             }
         } catch (e) {
             console.warn("Erro ao salvar candidato no backend:", e);
@@ -334,7 +371,7 @@ export async function saveCandidato(
     const candidatos = readList<Candidato>(KEYS.candidatos);
     candidatos.push(candidato);
     writeList(KEYS.candidatos, candidatos);
-    return candidato;
+    return { candidato, triagem };
 }
 
 export function updateCandidato(
