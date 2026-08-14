@@ -36,7 +36,7 @@ export function AuthBrandPanel({ headline }: { headline: string }) {
             >
                 <span className="flex size-9 items-center justify-center rounded-xl bg-white/15 p-1.5">
                     <Image
-                        src="/logo/favicon.svg"
+                        src="/logo/icone.png"
                         alt=""
                         width={24}
                         height={24}

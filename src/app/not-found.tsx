@@ -63,7 +63,7 @@ export default function NotFound() {
                 className="flex size-20 items-center justify-center rounded-3xl bg-muted"
             >
                 <Image
-                    src="/logo/favicon.svg"
+                    src="/logo/icone.png"
                     alt=""
                     width={40}
                     height={40}
