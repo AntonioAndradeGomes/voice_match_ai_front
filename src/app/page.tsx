@@ -15,6 +15,7 @@ import {
 } from "@/_components/ui/card";
 import { ScrollArea } from "@/_components/ui/scroll-area";
 import { getCandidatos, getCandidatosByVaga, getVagas } from "@/lib/storage";
+import { DashboardSkeleton } from "@/_components/layout/skeletons";
 import { getResumoVagaBadge } from "@/lib/vaga-status";
 import type { Candidato, Vaga } from "@/types";
 
@@ -107,6 +108,13 @@ export default function DashboardPage() {
                     </Button>
                 </header>
 
+                {/* Antes as métricas apareciam zeradas e a lista vazia até os
+                    dados chegarem, o que se lê como "não há nada" em vez de
+                    "ainda carregando". */}
+                {carregando ? (
+                    <DashboardSkeleton />
+                ) : (
+                <>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <Metrica
                         icone={Briefcase}
@@ -147,7 +155,7 @@ export default function DashboardPage() {
                         )}
                     </div>
 
-                    {carregando ? null : vagas.length === 0 ? (
+                    {vagas.length === 0 ? (
                         <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-border py-16 text-center">
                             <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
                                 <Briefcase className="size-5" />
@@ -205,6 +213,8 @@ export default function DashboardPage() {
                         </div>
                     )}
                 </section>
+                </>
+                )}
             </div>
         </ScrollArea>
     );

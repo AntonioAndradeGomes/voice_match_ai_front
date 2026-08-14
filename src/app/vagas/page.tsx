@@ -25,6 +25,7 @@ import { DivulgarVaga } from "@/_components/vagas/divulgar-vaga";
 import { NovaVagaDialog } from "@/_components/vagas/nova-vaga-dialog";
 import { seedDadosTeste } from "@/lib/seed";
 import { getCandidatosByVaga, getVagas } from "@/lib/storage";
+import { VagasSkeleton } from "@/_components/layout/skeletons";
 import { getResumoVagaBadge } from "@/lib/vaga-status";
 import type { Candidato, Vaga } from "@/types";
 
@@ -49,17 +50,24 @@ async function carregarVagasComCandidatos(): Promise<{
 }
 
 export default function VagasPage() {
+    // `null` inicial, e não uma lista vazia: com lista vazia não havia como
+    // distinguir "ainda carregando" de "não há vagas", e a tela piscava o
+    // estado vazio — "Nenhuma vaga criada ainda" — antes de os dados chegarem.
     const [dados, setDados] = useState<{
         vagas: Vaga[];
         candidatosPorVaga: Record<string, Candidato[]>;
-    }>({ vagas: [], candidatosPorVaga: {} });
+    } | null>(null);
     const [novaVagaOpen, setNovaVagaOpen] = useState(false);
 
     useEffect(() => {
         carregarVagasComCandidatos().then(setDados);
     }, []);
 
-    const { vagas, candidatosPorVaga } = dados;
+    const carregando = dados === null;
+    const { vagas, candidatosPorVaga } = dados ?? {
+        vagas: [],
+        candidatosPorVaga: {},
+    };
 
     return (
         <>
@@ -82,7 +90,9 @@ export default function VagasPage() {
                         </Button>
                     </header>
 
-                    {vagas.length === 0 ? (
+                    {carregando ? (
+                        <VagasSkeleton />
+                    ) : vagas.length === 0 ? (
                         <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-border py-20 text-center">
                             <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
                                 <Briefcase className="size-5" />
