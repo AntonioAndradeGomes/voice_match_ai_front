@@ -10,10 +10,12 @@ import {
     PanelLeftOpen,
     type LucideIcon,
 } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { OndaSonora } from "@/_components/layout/onda-sonora";
 import { rotaCasa, rotaTemNav } from "@/_components/layout/rotas";
 import { ThemeToggle } from "@/_components/layout/theme-toggle";
 import { UserMenu } from "@/_components/layout/user-menu";
@@ -45,6 +47,13 @@ interface NavLinkProps {
     ativo: boolean;
     colapsado?: boolean;
     onNavigate?: () => void;
+    /**
+     * Isola o indicador deslizante por contexto. O drawer mobile e a sidebar
+     * desktop ficam os dois montados ao mesmo tempo (um escondido por
+     * breakpoint), e dois elementos com o mesmo `layoutId` vivos disputariam a
+     * mesma animação, fazendo a pílula saltar entre eles.
+     */
+    grupo: string;
 }
 
 function NavLink({
@@ -54,24 +63,45 @@ function NavLink({
     ativo,
     colapsado = false,
     onNavigate,
+    grupo,
 }: NavLinkProps) {
+    const semMovimento = useReducedMotion();
+
     const link = (
         <Link
             href={href}
             aria-current={ativo ? "page" : undefined}
             onClick={onNavigate}
             className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                // Ativo: o azul do app diluído. No hover a opacidade cai,
-                // então a cor clareia em vez de escurecer.
+                "relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                // Ativo: o azul do app diluído. O fundo agora é a pílula
+                // animada abaixo, então aqui fica só a cor do texto.
                 ativo
-                    ? "bg-sidebar-primary/20 text-sidebar-primary hover:bg-sidebar-primary/10 hover:text-sidebar-primary"
-                    : "text-sidebar-foreground",
+                    ? "text-sidebar-primary"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 colapsado && "justify-center px-0",
             )}
         >
-            <Icone className="size-4 shrink-0" />
-            {!colapsado && label}
+            {ativo && (
+                <motion.span
+                    // Mesmo layoutId nos três links do grupo: ao trocar de
+                    // página, o motion entende que é o mesmo elemento mudando
+                    // de lugar e desliza em vez de sumir e reaparecer.
+                    layoutId={`nav-indicador-${grupo}`}
+                    className="absolute inset-0 rounded-lg bg-sidebar-primary/20"
+                    transition={
+                        semMovimento
+                            ? { duration: 0 }
+                            : { type: "spring", stiffness: 420, damping: 34 }
+                    }
+                />
+            )}
+            {/* z-10 e relative para o conteúdo ficar sobre a pílula, que é
+                absolute e viria por cima do ícone e do texto. */}
+            <span className="relative z-10 flex items-center gap-2">
+                <Icone className="size-4 shrink-0" />
+                {!colapsado && label}
+            </span>
         </Link>
     );
 
@@ -96,7 +126,7 @@ export function Sidebar() {
         <>
             {/* Mobile: barra superior com hambúrguer, sidebar vira um drawer */}
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground lg:hidden">
-                <Link href="/" className="flex items-center gap-2">
+                <Link href="/" className="group flex items-center gap-2">
                     <span className="flex size-7 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
                         <Mic className="size-3.5" />
                     </span>
@@ -104,6 +134,7 @@ export function Sidebar() {
                         VoiceMatch
                         <span className="text-sidebar-primary">Ai</span>
                     </span>
+                    <OndaSonora className="ml-0.5" />
                 </Link>
 
                 <Sheet open={menuAberto} onOpenChange={setMenuAberto}>
@@ -118,22 +149,41 @@ export function Sidebar() {
                         className="gap-0 bg-sidebar text-sidebar-foreground data-[side=left]:w-72"
                     >
                         <SheetHeader className="border-b border-sidebar-border">
-                            <SheetTitle>
-                                VoiceMatch
-                                <span className="text-sidebar-primary">Ai</span>
+                            {/* `group` aqui e não no SheetTitle: no toque não
+                                existe hover, então a onda fica estática no
+                                mobile — é decoração de marca, não affordance. */}
+                            <SheetTitle className="group flex items-center gap-2">
+                                <span>
+                                    VoiceMatch
+                                    <span className="text-sidebar-primary">
+                                        Ai
+                                    </span>
+                                </span>
+                                <OndaSonora />
                             </SheetTitle>
                         </SheetHeader>
 
                         <nav className="flex flex-col gap-1 p-4">
-                            {NAV.map(({ href, label, icone }) => (
-                                <NavLink
+                            {NAV.map(({ href, label, icone }, indice) => (
+                                <motion.div
                                     key={href}
-                                    href={href}
-                                    label={label}
-                                    icone={icone}
-                                    ativo={rotaCasa(pathname, href)}
-                                    onNavigate={() => setMenuAberto(false)}
-                                />
+                                    initial={{ opacity: 0, x: -8 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{
+                                        duration: 0.2,
+                                        delay: indice * 0.05,
+                                        ease: "easeOut",
+                                    }}
+                                >
+                                    <NavLink
+                                        href={href}
+                                        label={label}
+                                        icone={icone}
+                                        ativo={rotaCasa(pathname, href)}
+                                        onNavigate={() => setMenuAberto(false)}
+                                        grupo="mobile"
+                                    />
+                                </motion.div>
                             ))}
                         </nav>
 
@@ -166,18 +216,32 @@ export function Sidebar() {
                     >
                         <Link
                             href="/"
-                            className="flex items-center gap-2 overflow-hidden"
+                            className="group flex items-center gap-2 overflow-hidden"
                         >
-                            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
+                            <motion.span
+                                whileHover={{ scale: 1.08, rotate: -6 }}
+                                whileTap={{ scale: 0.94 }}
+                                transition={{
+                                    type: "spring",
+                                    stiffness: 500,
+                                    damping: 18,
+                                }}
+                                className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground"
+                            >
                                 <Mic className="size-4" />
-                            </span>
+                            </motion.span>
+                            {/* Recolhida, a sidebar tem 64px e só cabe o ícone;
+                                a onda entraria espremida contra a borda. */}
                             {!colapsado && (
-                                <span className="font-heading text-lg font-semibold tracking-tight whitespace-nowrap">
-                                    VoiceMatch
-                                    <span className="text-sidebar-primary">
-                                        Ai
+                                <>
+                                    <span className="font-heading text-lg font-semibold tracking-tight whitespace-nowrap">
+                                        VoiceMatch
+                                        <span className="text-sidebar-primary">
+                                            Ai
+                                        </span>
                                     </span>
-                                </span>
+                                    <OndaSonora className="ml-0.5 shrink-0" />
+                                </>
                             )}
                         </Link>
 
@@ -194,15 +258,26 @@ export function Sidebar() {
                     </div>
 
                     <nav className="flex flex-col gap-1">
-                        {NAV.map(({ href, label, icone }) => (
-                            <NavLink
+                        {NAV.map(({ href, label, icone }, indice) => (
+                            <motion.div
                                 key={href}
-                                href={href}
-                                label={label}
-                                icone={icone}
-                                ativo={rotaCasa(pathname, href)}
-                                colapsado={colapsado}
-                            />
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{
+                                    duration: 0.2,
+                                    delay: indice * 0.05,
+                                    ease: "easeOut",
+                                }}
+                            >
+                                <NavLink
+                                    href={href}
+                                    label={label}
+                                    icone={icone}
+                                    ativo={rotaCasa(pathname, href)}
+                                    colapsado={colapsado}
+                                    grupo="desktop"
+                                />
+                            </motion.div>
                         ))}
                     </nav>
                 </div>
