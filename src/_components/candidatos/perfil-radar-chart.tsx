@@ -1,53 +1,60 @@
-import { TRAITS, type PerfilComportamental, type Trait } from "@/types";
-
-const TRAIT_LABEL: Record<Trait, string> = {
-    equipe: "Equipe",
-    proatividade: "Proatividade",
-    resiliencia: "Resiliência",
-    foco_em_resultado: "Foco em Resultado",
-    negociacao: "Negociação",
-    relacao_hierarquica: "Relação Hierárquica",
-    resolucao_de_conflito: "Resolução de Conflitos",
-    inovacao: "Inovação",
-    acao_sob_pressao: "Ação sob Pressão",
-    assertividade: "Assertividade",
-    autenticidade: "Autenticidade",
-    autonomia: "Autonomia",
-    comunicabilidade: "Comunicabilidade",
-    cuidado: "Cuidado",
-    disciplina: "Disciplina",
-    empenho: "Empenho",
-    flexibilidade: "Flexibilidade",
-    seguranca: "Segurança",
-    tranquilidade: "Tranquilidade",
-    vitalidade_corporal: "Vitalidade Corporal",
-};
-
 const TAMANHO = 520;
 const CENTRO = TAMANHO / 2;
 const RAIO = 150;
 const NIVEIS = 5;
 
-function pontoEixo(indice: number, raio: number) {
-    const angulo = (Math.PI * 2 * indice) / TRAITS.length - Math.PI / 2;
+/** Um eixo do radar. `valor` é de 0 a 10, mesma escala do peso das skills. */
+export interface EixoRadar {
+    label: string;
+    valor: number;
+}
+
+// Abaixo de três eixos não existe polígono: dois viram uma linha e um vira um
+// ponto. A tela chama isso de "poucas skills" em vez de desenhar algo torto.
+const EIXOS_MINIMOS = 3;
+
+function pontoEixo(indice: number, total: number, raio: number) {
+    const angulo = (Math.PI * 2 * indice) / total - Math.PI / 2;
     return {
         x: CENTRO + raio * Math.cos(angulo),
         y: CENTRO + raio * Math.sin(angulo),
     };
 }
 
-function pontosPoligono(raio: number) {
-    return TRAITS.map((_, indice) => pontoEixo(indice, raio))
+function pontosPoligono(total: number, raio: number) {
+    return Array.from({ length: total }, (_, indice) =>
+        pontoEixo(indice, total, raio),
+    )
         .map((ponto) => `${ponto.x},${ponto.y}`)
         .join(" ");
 }
 
-// Radar somente leitura do perfil comportamental (candidato avaliado ou o
-// ideal da vaga) — os 20 traços de types.ts, um por eixo. Não tem edição por
-// arraste; isso é só visualização.
-export function PerfilRadarChart({ perfil }: { perfil: PerfilComportamental }) {
-    const pontosDado = TRAITS.map((trait, indice) =>
-        pontoEixo(indice, (RAIO * perfil[trait]) / 10),
+/**
+ * Radar somente leitura. Os eixos vêm de quem chama — hoje são as hard e soft
+ * skills da vaga, com o peso de cada uma —, e não uma lista fixa: assim o
+ * gráfico reflete o que aquela vaga exige, em vez de dimensões genéricas que
+ * podem nem se aplicar à posição.
+ */
+export function PerfilRadarChart({
+    eixos,
+    descricao = "Radar de competências da vaga",
+}: {
+    eixos: EixoRadar[];
+    descricao?: string;
+}) {
+    if (eixos.length < EIXOS_MINIMOS) {
+        return (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+                O radar precisa de ao menos {EIXOS_MINIMOS} competências para
+                ser desenhado. Esta vaga tem {eixos.length}.
+            </p>
+        );
+    }
+
+    const total = eixos.length;
+    const pontosDado = eixos.map((eixo, indice) =>
+        // Prende de 0 a 10 para um peso fora da faixa não estourar o desenho.
+        pontoEixo(indice, total, (RAIO * Math.min(Math.max(eixo.valor, 0), 10)) / 10),
     );
 
     return (
@@ -55,22 +62,22 @@ export function PerfilRadarChart({ perfil }: { perfil: PerfilComportamental }) {
             viewBox={`0 0 ${TAMANHO} ${TAMANHO}`}
             className="mx-auto h-auto w-full max-w-[340px]"
             role="img"
-            aria-label="Radar do perfil comportamental"
+            aria-label={descricao}
         >
             {Array.from({ length: NIVEIS }, (_, nivel) => (
                 <polygon
                     key={nivel}
-                    points={pontosPoligono((RAIO * (nivel + 1)) / NIVEIS)}
+                    points={pontosPoligono(total, (RAIO * (nivel + 1)) / NIVEIS)}
                     fill="none"
                     className="stroke-border"
                 />
             ))}
 
-            {TRAITS.map((trait, indice) => {
-                const ponta = pontoEixo(indice, RAIO);
+            {eixos.map((eixo, indice) => {
+                const ponta = pontoEixo(indice, total, RAIO);
                 return (
                     <line
-                        key={trait}
+                        key={eixo.label}
                         x1={CENTRO}
                         y1={CENTRO}
                         x2={ponta.x}
@@ -80,24 +87,23 @@ export function PerfilRadarChart({ perfil }: { perfil: PerfilComportamental }) {
                 );
             })}
 
-            {TRAITS.map((trait, indice) => {
-                const ponto = pontoEixo(indice, RAIO + 16);
-                const angulo =
-                    (Math.PI * 2 * indice) / TRAITS.length - Math.PI / 2;
+            {eixos.map((eixo, indice) => {
+                const ponto = pontoEixo(indice, total, RAIO + 16);
+                const angulo = (Math.PI * 2 * indice) / total - Math.PI / 2;
                 const cos = Math.cos(angulo);
                 const ancora =
                     cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
 
                 return (
                     <text
-                        key={trait}
+                        key={eixo.label}
                         x={ponto.x}
                         y={ponto.y}
                         textAnchor={ancora}
                         dominantBaseline="middle"
                         className="fill-muted-foreground text-[9px]"
                     >
-                        {TRAIT_LABEL[trait]}
+                        {eixo.label}
                     </text>
                 );
             })}
@@ -110,7 +116,7 @@ export function PerfilRadarChart({ perfil }: { perfil: PerfilComportamental }) {
             />
             {pontosDado.map((ponto, indice) => (
                 <circle
-                    key={TRAITS[indice]}
+                    key={eixos[indice].label}
                     cx={ponto.x}
                     cy={ponto.y}
                     r={3}

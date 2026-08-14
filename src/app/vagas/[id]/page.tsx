@@ -359,6 +359,7 @@ export default function VagaDetalhePage({
 
             <CandidatoDetalheModal
                 candidato={candidatoSelecionado}
+                vaga={vaga}
                 open={candidatoSelecionado !== null}
                 onOpenChange={(open) => {
                     if (!open) setCandidatoSelecionado(null);
