@@ -1,8 +1,8 @@
 "use client";
 
-import { Briefcase, ExternalLink, Plus } from "lucide-react";
+import { Briefcase, ExternalLink, Plus, SearchX } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
     Avatar,
@@ -22,6 +22,12 @@ import {
 } from "@/_components/ui/card";
 import { ScrollArea } from "@/_components/ui/scroll-area";
 import { DivulgarVaga } from "@/_components/vagas/divulgar-vaga";
+import {
+    FILTROS_INICIAIS,
+    FiltrosVagasBarra,
+    filtrarVagas,
+    type FiltrosVagas,
+} from "@/_components/vagas/filtros-vagas";
 import { NovaVagaDialog } from "@/_components/vagas/nova-vaga-dialog";
 import { seedDadosTeste } from "@/lib/seed";
 import { getCandidatosByVaga, getVagas } from "@/lib/storage";
@@ -63,11 +69,18 @@ export default function VagasPage() {
         carregarVagasComCandidatos().then(setDados);
     }, []);
 
+    const [filtros, setFiltros] = useState<FiltrosVagas>(FILTROS_INICIAIS);
+
     const carregando = dados === null;
     const { vagas, candidatosPorVaga } = dados ?? {
         vagas: [],
         candidatosPorVaga: {},
     };
+
+    const vagasVisiveis = useMemo(
+        () => filtrarVagas(vagas, candidatosPorVaga, filtros),
+        [vagas, candidatosPorVaga, filtros],
+    );
 
     return (
         <>
@@ -112,8 +125,41 @@ export default function VagasPage() {
                             </Button>
                         </div>
                     ) : (
+                        <>
+                        <FiltrosVagasBarra
+                            filtros={filtros}
+                            onChange={setFiltros}
+                            totalFiltrado={vagasVisiveis.length}
+                            totalGeral={vagas.length}
+                        />
+
+                        {/* Vazio por filtro é diferente de vazio por não haver
+                            vaga: aqui o caminho de saída é limpar a busca, não
+                            criar uma vaga. */}
+                        {vagasVisiveis.length === 0 ? (
+                        <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-border py-16 text-center">
+                            <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                <SearchX className="size-5" />
+                            </span>
+                            <div className="flex flex-col gap-1">
+                                <p className="font-heading text-lg font-medium">
+                                    Nenhuma vaga encontrada
+                                </p>
+                                <p className="max-w-sm text-sm text-muted-foreground">
+                                    Nenhuma das {vagas.length} vagas combina com
+                                    a busca e os filtros atuais.
+                                </p>
+                            </div>
+                            <Button
+                                variant="outline"
+                                onClick={() => setFiltros(FILTROS_INICIAIS)}
+                            >
+                                Limpar filtros
+                            </Button>
+                        </div>
+                        ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {vagas.map((vaga) => {
+                            {vagasVisiveis.map((vaga) => {
                                 const candidatos =
                                     candidatosPorVaga[vaga.id] ?? [];
                                 const badge = getResumoVagaBadge(candidatos);
@@ -236,6 +282,8 @@ export default function VagasPage() {
                                 );
                             })}
                         </div>
+                        )}
+                        </>
                     )}
                 </div>
             </ScrollArea>
