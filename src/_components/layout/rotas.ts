@@ -14,6 +14,7 @@ const ROUTE_PREFIXES = [
     "/",
     "/vagas",
     "/relatorios",
+    "/configuracoes",
     "/chat",
     "/login",
     "/cadastro",

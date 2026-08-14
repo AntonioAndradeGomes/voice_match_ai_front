@@ -8,6 +8,7 @@ import {
     Mic,
     PanelLeftClose,
     PanelLeftOpen,
+    Settings,
     type LucideIcon,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
@@ -33,11 +34,21 @@ import {
 } from "@/_components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+// Itens do dia a dia do recrutador, na ordem em que ele trabalha.
+const NAV_PRINCIPAL = [
     { href: "/", label: "Dashboard", icone: LayoutDashboard },
     { href: "/vagas", label: "Vagas", icone: Briefcase },
     { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
+
+// Configurações fica separada, e não no fim do array acima, para continuar
+// sendo a última mesmo quando alguém acrescentar uma aba nova: é manutenção,
+// não trabalho diário.
+const NAV_FINAL = [
+    { href: "/configuracoes", label: "Configurações", icone: Settings },
+];
+
+const NAV = [...NAV_PRINCIPAL, ...NAV_FINAL];
 
 interface NavLinkProps {
     href: string;
