@@ -89,10 +89,13 @@ function NavLink({
                     // de lugar e desliza em vez de sumir e reaparecer.
                     layoutId={`nav-indicador-${grupo}`}
                     className="absolute inset-0 rounded-lg bg-sidebar-primary/20"
+                    // Mola mais lenta e macia que o padrão: a troca acontece
+                    // junto com a do conteúdo da página, e a 420 de stiffness
+                    // o deslize terminava em ~200ms, passando despercebido.
                     transition={
                         semMovimento
                             ? { duration: 0 }
-                            : { type: "spring", stiffness: 420, damping: 34 }
+                            : { type: "spring", stiffness: 220, damping: 26 }
                     }
                 />
             )}
@@ -219,9 +222,15 @@ export function Sidebar() {
                             colapsado ? "flex-col" : "justify-between px-1",
                         )}
                     >
+                        {/* Sem `overflow-hidden`: a linha tem ~164px úteis e o
+                            ícone mais o nome já ocupam quase tudo. Com o corte
+                            ligado, qualquer coisa depois do nome era descartada
+                            silenciosamente — foi o que sumiu com a onda quando
+                            ela ficava em linha. Agora ela vai embaixo do nome,
+                            onde a largura não é disputada. */}
                         <Link
                             href="/"
-                            className="group flex items-center gap-2 overflow-hidden"
+                            className="group flex min-w-0 items-center gap-2"
                         >
                             <motion.span
                                 whileHover={{ scale: 1.08, rotate: -6 }}
@@ -238,15 +247,15 @@ export function Sidebar() {
                             {/* Recolhida, a sidebar tem 64px e só cabe o ícone;
                                 a onda entraria espremida contra a borda. */}
                             {!colapsado && (
-                                <>
-                                    <span className="font-heading text-lg font-semibold tracking-tight whitespace-nowrap">
+                                <span className="flex min-w-0 flex-col">
+                                    <span className="font-heading text-lg leading-tight font-semibold tracking-tight whitespace-nowrap">
                                         VoiceMatch
                                         <span className="text-sidebar-primary">
                                             Ai
                                         </span>
                                     </span>
-                                    <OndaSonora className="ml-0.5 shrink-0" />
-                                </>
+                                    <OndaSonora className="mt-1" />
+                                </span>
                             )}
                         </Link>
 
