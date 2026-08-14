@@ -99,6 +99,32 @@ function Campo({
     );
 }
 
+/**
+ * Lista de itens da triagem mostrada ao candidato. Some quando não há itens —
+ * a IA nem sempre devolve as duas listas, e um bloco com título e nada dentro
+ * dá a impressão de que a avaliação ficou incompleta.
+ */
+function ListaFeedbackTriagem({
+    titulo,
+    itens,
+}: {
+    titulo: string;
+    itens?: string[];
+}) {
+    if (!itens || itens.length === 0) return null;
+
+    return (
+        <div className="w-full max-w-md rounded-2xl border border-border/50 bg-muted/50 p-4 text-left text-xs leading-relaxed text-muted-foreground">
+            <p className="mb-1 font-semibold text-foreground">{titulo}</p>
+            <ul className="flex list-disc flex-col gap-1 pl-4">
+                {itens.map((item) => (
+                    <li key={item}>{item}</li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
 export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
     const [campos, setCampos] = useState<CamposCandidatura>(CAMPOS_INICIAIS);
     const [erros, setErros] = useState<ErrosCandidatura>({});
@@ -209,6 +235,18 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
                         </div>
                     )}
 
+                    {/* O parecer em prosa diz que não passou; estas listas
+                        dizem o porquê. Sem elas, a recusa fica opaca para
+                        quem recebeu. */}
+                    <ListaFeedbackTriagem
+                        titulo="Pontos fortes que identificamos"
+                        itens={triagem?.feedback?.pontos_fortes}
+                    />
+                    <ListaFeedbackTriagem
+                        titulo="O que faltou para esta vaga"
+                        itens={triagem?.feedback?.gaps}
+                    />
+
                     <div className="mt-3 flex w-full max-w-sm flex-col gap-2.5">
                         <Link
                             href="/"
@@ -272,6 +310,13 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
                         . Você já pode realizar a sua entrevista por voz agora mesmo!
                     </p>
                 </div>
+
+                {/* Só os pontos fortes aqui: quem foi aprovado não precisa
+                    levar a lista de lacunas para a entrevista. */}
+                <ListaFeedbackTriagem
+                    titulo="Pontos fortes que identificamos"
+                    itens={triagem?.feedback?.pontos_fortes}
+                />
 
                 {candidatoSalvo && (
                     <div className="mt-3 flex w-full max-w-sm flex-col gap-2.5">
