@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/_components/ui/card";
 import { DivulgarVaga } from "@/_components/vagas/divulgar-vaga";
 import { getCandidatosByVaga, getVagaById } from "@/lib/storage";
 import { cn } from "@/lib/utils";
+import { VagaDetalheSkeleton } from "@/_components/layout/skeletons";
 import { getCandidatoBadge } from "@/lib/vaga-status";
 import {
     MODALIDADE_LABEL,
@@ -164,7 +165,9 @@ export default function VagaDetalhePage({
         );
     }
 
-    if (!estado.vaga) return null;
+    // Antes devolvia null e a tela ficava em branco entre o clique na vaga e a
+    // resposta do backend, sem sinal nenhum de que algo estava vindo.
+    if (!estado.vaga) return <VagaDetalheSkeleton />;
 
     const { vaga, candidatos } = estado;
 
@@ -356,6 +359,7 @@ export default function VagaDetalhePage({
 
             <CandidatoDetalheModal
                 candidato={candidatoSelecionado}
+                vaga={vaga}
                 open={candidatoSelecionado !== null}
                 onOpenChange={(open) => {
                     if (!open) setCandidatoSelecionado(null);

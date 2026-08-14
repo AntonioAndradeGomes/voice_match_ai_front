@@ -65,7 +65,7 @@ export default function LoginPage() {
                 >
                     <div className="flex flex-col items-center gap-3 text-center lg:hidden">
                         <Image
-                            src="/logo/favicon.svg"
+                            src="/logo/icone.png"
                             alt="VoiceMatchAi"
                             width={44}
                             height={44}

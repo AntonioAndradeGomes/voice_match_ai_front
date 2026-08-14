@@ -27,14 +27,17 @@ import {
     DialogTitle,
 } from "@/_components/ui/dialog";
 import { ScrollArea } from "@/_components/ui/scroll-area";
-import { PerfilRadarChart } from "@/_components/candidatos/perfil-radar-chart";
+import {
+    PerfilRadarChart,
+    type EixoRadar,
+} from "@/_components/candidatos/perfil-radar-chart";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { baixarBlob, temCurriculo, obterCurriculo } from "@/lib/curriculos";
 import type {
     Candidato,
     FeedbackTriagem,
-    PerfilComportamental,
     StatusTriagem,
+    Vaga,
 } from "@/types";
 import { getCandidatoBadge } from "@/lib/vaga-status";
 
@@ -134,37 +137,17 @@ function formatarCPF(cpf: string) {
     return limpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 }
 
-// Perfil comportamental padrão quando o candidato ainda não tem avaliação no radar
-const PERFIL_PADRAO: PerfilComportamental = {
-    equipe: 8,
-    proatividade: 8,
-    resiliencia: 7,
-    foco_em_resultado: 8,
-    negociacao: 7,
-    relacao_hierarquica: 8,
-    resolucao_de_conflito: 7,
-    inovacao: 8,
-    acao_sob_pressao: 7,
-    assertividade: 8,
-    autenticidade: 9,
-    autonomia: 8,
-    comunicabilidade: 8,
-    cuidado: 8,
-    disciplina: 8,
-    empenho: 9,
-    flexibilidade: 8,
-    seguranca: 8,
-    tranquilidade: 7,
-    vitalidade_corporal: 8,
-};
 
 export function CandidatoDetalheModal({
     candidato,
+    vaga,
     open,
     onOpenChange,
     onVerChat,
 }: {
     candidato: Candidato | null;
+    /** Fonte dos eixos do radar — são as skills cadastradas nesta vaga. */
+    vaga: Vaga | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onVerChat: () => void;
@@ -290,7 +273,15 @@ export function CandidatoDetalheModal({
         parecer_acustico: "Comunicação clara, articulada e com boa cadência prosódica.",
     };
 
-    const perfilComportamental = candidato.perfilAvaliado || PERFIL_PADRAO;
+    // Eixos do radar: as hard e soft skills cadastradas nesta vaga, cada uma
+    // com o peso definido na criação. Antes eram 20 traços fixos de types.ts,
+    // iguais para toda vaga e sem relação com o que a posição realmente pede.
+    const eixosRadar: EixoRadar[] = vaga
+        ? [...vaga.hardSkills, ...vaga.softSkills].map((skill) => ({
+              label: skill.nome,
+              valor: skill.peso,
+          }))
+        : [];
 
     async function baixarCurriculo() {
         const arquivo = await obterCurriculo(candidato!.id);
@@ -604,20 +595,46 @@ export function CandidatoDetalheModal({
                             )}
                         </div>
 
-                        {/* 4. Perfil Comportamental Radar Chart */}
+                        {/* 4. Radar das competências exigidas pela vaga */}
                         <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
-                            <div className="flex items-center justify-between border-b border-border pb-3">
+                            <div className="flex items-center justify-between gap-2 border-b border-border pb-3">
                                 <span className="text-sm font-semibold text-foreground">
-                                    Perfil Comportamental (Radar de Competências)
+                                    Competências exigidas pela vaga
                                 </span>
-                                <Badge variant="secondary" className="text-xs">
-                                    20 Dimensões Avaliadas
-                                </Badge>
+                                {eixosRadar.length > 0 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                        {eixosRadar.length}{" "}
+                                        {eixosRadar.length === 1
+                                            ? "competência"
+                                            : "competências"}
+                                    </Badge>
+                                )}
                             </div>
 
                             <div className="py-2">
-                                <PerfilRadarChart perfil={perfilComportamental} />
+                                {eixosRadar.length === 0 ? (
+                                    <p className="py-6 text-center text-sm text-muted-foreground">
+                                        Esta vaga não tem hard nem soft skills
+                                        cadastradas.
+                                    </p>
+                                ) : (
+                                    <PerfilRadarChart
+                                        eixos={eixosRadar}
+                                        descricao="Radar das competências exigidas pela vaga, por peso"
+                                    />
+                                )}
                             </div>
+
+                            {/* O peso é o que a vaga pede, não a nota do
+                                candidato: o backend ainda não devolve avaliação
+                                por competência. Sem esta linha, o radar seria
+                                lido como desempenho da pessoa. */}
+                            {eixosRadar.length > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                    Cada eixo é o peso definido na criação da
+                                    vaga, de 0 a 10.
+                                </p>
+                            )}
                         </div>
 
                         {/* 5. Dados da Candidatura */}

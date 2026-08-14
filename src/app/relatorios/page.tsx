@@ -7,6 +7,7 @@ import { DistribuicaoNotas } from "@/_components/relatorios/distribuicao-notas";
 import { FunilStatus } from "@/_components/relatorios/funil-status";
 import { Card, CardContent } from "@/_components/ui/card";
 import { ScrollArea } from "@/_components/ui/scroll-area";
+import { RelatoriosSkeleton } from "@/_components/layout/skeletons";
 import {
     calcularResumo,
     contarCandidatosPorVaga,
@@ -101,7 +102,9 @@ export default function RelatoriosPage() {
                     </p>
                 </header>
 
-                {carregando ? null : (
+                {carregando ? (
+                    <RelatoriosSkeleton />
+                ) : (
                     <>
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <Indicador
