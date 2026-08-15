@@ -13,7 +13,11 @@ interface AuthContextValue {
     usuario: UsuarioAutenticado | null;
     carregando: boolean;
     autenticado: boolean;
-    entrar: (email: string, senha: string) => Promise<UsuarioAutenticado>;
+    entrar: (
+        email: string,
+        senha: string,
+        lembrar: boolean,
+    ) => Promise<UsuarioAutenticado>;
     sair: () => void;
 }
 
@@ -34,8 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
-    async function entrar(email: string, senha: string) {
-        const usuarioLogado = await autenticar(email, senha);
+    async function entrar(email: string, senha: string, lembrar: boolean) {
+        const usuarioLogado = await autenticar(email, senha, lembrar);
         setUsuario(usuarioLogado);
         return usuarioLogado;
     }

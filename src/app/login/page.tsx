@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { AuthBrandPanel } from "@/_components/auth/auth-brand-panel";
 import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
+import { Checkbox } from "@/_components/ui/checkbox";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
 import { useAuth } from "@/context/auth-provider";
@@ -23,6 +24,9 @@ interface LoginFormValues {
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
+    // Marcado por padrao: e o comportamento que o app ja tinha antes de existir
+    // a opcao, e o caso comum e a maquina de trabalho da propria pessoa.
+    const [lembrar, setLembrar] = useState(true);
     const router = useRouter();
     const { entrar } = useAuth();
 
@@ -37,7 +41,11 @@ export default function LoginPage() {
 
     async function onSubmit(values: LoginFormValues) {
         try {
-            const usuario = await entrar(values.email.trim(), values.password);
+            const usuario = await entrar(
+                values.email.trim(),
+                values.password,
+                lembrar,
+            );
 
             toast.success(`Bem-vindo, ${usuario.nome_completo.split(" ")[0]}!`);
             router.push("/");
@@ -77,13 +85,35 @@ export default function LoginPage() {
                         </h1>
                     </div>
 
-                    <div className="hidden flex-col gap-1 lg:flex">
-                        <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                            Bem-vindo de volta
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Entre com as credenciais da sua conta de recrutador.
-                        </p>
+                    <div className="hidden flex-col gap-4 lg:flex">
+                        {/* Versão com fundo, e não a `-nobg`: metade da marca é
+                            branca, e este lado da tela é claro — sem o fundo
+                            próprio, esse lado da arte sumiria. */}
+                        <div className="flex items-center gap-2">
+                            <Image
+                                src="/logo/icone.png"
+                                alt=""
+                                width={36}
+                                height={36}
+                                className="size-9 shrink-0 rounded-xl"
+                            />
+                            <span className="font-heading text-lg font-semibold tracking-tight">
+                                VoiceMatch
+                                <span className="text-sidebar-primary">
+                                    .Ai
+                                </span>
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                                Bem-vindo de volta
+                            </h1>
+                            <p className="text-sm text-muted-foreground">
+                                Entre com as credenciais da sua conta de
+                                recrutador.
+                            </p>
+                        </div>
                     </div>
 
                     <Card
@@ -194,6 +224,25 @@ export default function LoginPage() {
                                             {errors.password.message}
                                         </p>
                                     )}
+                                </div>
+
+                                {/* "Manter conectado", e não "lembrar senha":
+                                    a senha nunca é guardada em lugar nenhum —
+                                    o que fica salvo é o token da sessão. */}
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="lembrar"
+                                        checked={lembrar}
+                                        onCheckedChange={(marcado) =>
+                                            setLembrar(marcado === true)
+                                        }
+                                    />
+                                    <Label
+                                        htmlFor="lembrar"
+                                        className="font-normal text-muted-foreground"
+                                    >
+                                        Manter conectado neste dispositivo
+                                    </Label>
                                 </div>
 
                                 <Button
