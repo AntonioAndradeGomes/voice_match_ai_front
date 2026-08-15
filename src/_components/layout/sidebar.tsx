@@ -140,16 +140,19 @@ export function Sidebar() {
             {/* Mobile: barra superior com hambúrguer, sidebar vira um drawer */}
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground lg:hidden">
                 <Link href="/" className="flex items-center gap-2">
-                    {/* Sem `bg-sidebar-primary`: a arte da logo traz o próprio
-                        fundo, e o azul por baixo só apareceria nos cantos
-                        arredondados, virando uma borda azul indesejada. */}
-                    <Image
-                        src="/logo/icone.png"
-                        alt="VoiceMatchAi"
-                        width={28}
-                        height={28}
-                        className="size-7 shrink-0 rounded-xl"
-                    />
+                    {/* Fundo escuro atrás da logo sem fundo: metade da marca é
+                        branca, e a sidebar é quase branca no tema claro — sem
+                        essa base, esse lado sumiria. No tema escuro o mesmo
+                        tom apenas se funde com a barra. */}
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-xl bg-zinc-900 p-1">
+                        <Image
+                            src="/logo/icone-nobg.png"
+                            alt="VoiceMatchAi"
+                            width={24}
+                            height={24}
+                            className="size-full"
+                        />
+                    </span>
                     <span className="font-heading text-base font-semibold tracking-tight">
                         VoiceMatch
                         <span className="text-sidebar-primary">Ai</span>
@@ -246,14 +249,14 @@ export function Sidebar() {
                                     stiffness: 500,
                                     damping: 18,
                                 }}
-                                className="flex size-8 shrink-0 items-center justify-center"
+                                className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-zinc-900 p-1"
                             >
                                 <Image
-                                    src="/logo/icone.png"
+                                    src="/logo/icone-nobg.png"
                                     alt="VoiceMatchAi"
-                                    width={32}
-                                    height={32}
-                                    className="size-8 rounded-xl"
+                                    width={28}
+                                    height={28}
+                                    className="size-full"
                                 />
                             </motion.span>
                             {!colapsado && (

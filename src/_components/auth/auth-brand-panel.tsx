@@ -34,15 +34,16 @@ export function AuthBrandPanel({ headline }: { headline: string }) {
                 transition={{ duration: 0.5 }}
                 className="flex items-center gap-2"
             >
-                <span className="flex size-9 items-center justify-center rounded-xl bg-white/15 p-1.5">
-                    <Image
-                        src="/logo/icone.png"
-                        alt=""
-                        width={24}
-                        height={24}
-                        className="size-6 rounded-md"
-                    />
-                </span>
+                {/* Versão sem fundo, e sem o badge branco que existia antes: a
+                    marca é branca e azul, e o painel já é azul escuro — ela se
+                    apoia no próprio fundo do hero, sem precisar de moldura. */}
+                <Image
+                    src="/logo/icone-nobg.png"
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="size-10 shrink-0"
+                />
                 <span className="font-heading text-lg font-semibold tracking-tight">
                     VoiceMatchAi
                 </span>
