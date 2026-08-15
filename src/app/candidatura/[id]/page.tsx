@@ -74,7 +74,7 @@ export default function CandidaturaPage({
                 </span>
                 <span className="font-heading text-lg font-semibold tracking-tight">
                     VoiceMatch
-                    <span className="text-primary">Ai</span>
+                    <span className="text-primary">.Ai</span>
                 </span>
             </div>
 

@@ -147,7 +147,7 @@ export function Sidebar() {
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-xl bg-zinc-900 p-1">
                         <Image
                             src="/logo/icone-nobg.png"
-                            alt="VoiceMatchAi"
+                            alt="VoiceMatch.Ai"
                             width={24}
                             height={24}
                             className="size-full"
@@ -155,7 +155,7 @@ export function Sidebar() {
                     </span>
                     <span className="font-heading text-base font-semibold tracking-tight">
                         VoiceMatch
-                        <span className="text-sidebar-primary">Ai</span>
+                        <span className="text-sidebar-primary">.Ai</span>
                     </span>
                 </Link>
 
@@ -173,7 +173,7 @@ export function Sidebar() {
                         <SheetHeader className="border-b border-sidebar-border">
                             <SheetTitle>
                                 VoiceMatch
-                                <span className="text-sidebar-primary">Ai</span>
+                                <span className="text-sidebar-primary">.Ai</span>
                             </SheetTitle>
                         </SheetHeader>
 
@@ -253,7 +253,7 @@ export function Sidebar() {
                             >
                                 <Image
                                     src="/logo/icone-nobg.png"
-                                    alt="VoiceMatchAi"
+                                    alt="VoiceMatch.Ai"
                                     width={28}
                                     height={28}
                                     className="size-full"
@@ -263,7 +263,7 @@ export function Sidebar() {
                                 <span className="font-heading text-lg font-semibold tracking-tight whitespace-nowrap">
                                     VoiceMatch
                                     <span className="text-sidebar-primary">
-                                        Ai
+                                        .Ai
                                     </span>
                                 </span>
                             )}
