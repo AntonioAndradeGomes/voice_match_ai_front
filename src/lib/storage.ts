@@ -262,51 +262,73 @@ export async function getCandidatosByVaga(vagaId: string): Promise<Candidato[]> 
             if (response.ok) {
                 const candidaturas = await response.json();
                 if (Array.isArray(candidaturas)) {
-                    const lista: Candidato[] = [];
-                    for (const cand of candidaturas) {
+                    const promessas = candidaturas.map(async (cand) => {
                         try {
-                            const resCand = await apiFetch(`${API_BASE_URL}/candidatos/${cand.candidato_id}`);
-                            if (resCand.ok) {
-                                const dadosCand = await resCand.json();
-                                const statusFrontend = mapearStatusCandidatura(cand.status);
-                                const triagem = extrairTriagem(cand);
+                            const [resCand, resEntrevistas] = await Promise.all([
+                                apiFetch(`${API_BASE_URL}/candidatos/${cand.candidato_id}`),
+                                apiFetch(`${API_BASE_URL}/candidaturas/${cand.id}/entrevistas`).catch(() => null),
+                            ]);
 
-                                lista.push({
-                                    id: dadosCand.id,
-                                    vagaId: cand.vaga_id,
-                                    nome: dadosCand.nome,
-                                    avatarUrl: null,
-                                    status: statusFrontend,
-                                    triagem,
-                                    perfilAvaliado: null,
-                                    notaFinal: null,
-                                    pontosFortes: null,
-                                    pontosFracos: null,
-                                    melhorias: null,
-                                    createdAt: cand.data_candidatura || new Date().toISOString(),
-                                    inscricao: {
-                                        email: dadosCand.email,
-                                        cpf: null,
-                                        telefone: dadosCand.telefone || "",
-                                        linkedin: "",
-                                        curriculoNome: dadosCand.curriculo_url || "",
-                                    },
-                                });
+                            if (!resCand.ok) return null;
+                            const dadosCand = await resCand.json();
+                            let statusFrontend = mapearStatusCandidatura(cand.status);
+                            const triagem = extrairTriagem(cand);
+                            let notaFinal: number | null = null;
+                            let softSkillsAcusticas: any = null;
+
+                            if (resEntrevistas && resEntrevistas.ok) {
+                                const entrevistas = await resEntrevistas.json();
+                                if (Array.isArray(entrevistas) && entrevistas.length > 0) {
+                                    const ultimaEntrevista = entrevistas[0];
+                                    if (ultimaEntrevista.score_geral !== null && ultimaEntrevista.score_geral !== undefined) {
+                                        notaFinal = Number(ultimaEntrevista.score_geral);
+                                    }
+                                    if (ultimaEntrevista.status === "concluida" || notaFinal !== null) {
+                                        statusFrontend = "finalizado";
+                                    } else if (statusFrontend === "aguardando" && cand.status === "aprovada_triagem") {
+                                        statusFrontend = "em_entrevista";
+                                    }
+                                }
                             }
+
+                            const candidatoFormatado: Candidato = {
+                                id: dadosCand.id,
+                                vagaId: cand.vaga_id,
+                                nome: dadosCand.nome,
+                                avatarUrl: null,
+                                status: statusFrontend,
+                                triagem,
+                                perfilAvaliado: null,
+                                notaFinal,
+                                softSkillsAcusticas,
+                                pontosFortes: null,
+                                pontosFracos: null,
+                                melhorias: null,
+                                createdAt: cand.data_candidatura || new Date().toISOString(),
+                                inscricao: {
+                                    email: dadosCand.email,
+                                    cpf: null,
+                                    telefone: dadosCand.telefone || "",
+                                    linkedin: "",
+                                    curriculoNome: dadosCand.curriculo_url || "",
+                                },
+                            };
+                            return candidatoFormatado;
                         } catch (err) {
                             console.warn("Erro ao carregar dados do candidato:", cand.candidato_id, err);
+                            return null;
                         }
-                    }
+                    });
+
+                    const resultados = await Promise.all(promessas);
+                    const lista = resultados.filter((c): c is Candidato => c !== null);
 
                     const locais = getCandidatosByVagaLocal(vagaId);
                     const idsBackend = new Set(lista.map((c) => c.id));
                     const mescladas = [
                         ...lista,
                         ...locais.filter((c) => !idsBackend.has(c.id)),
-                    ].sort(
-                        (a, b) =>
-                            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-                    );
+                    ];
 
                     return mescladas;
                 }
