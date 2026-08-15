@@ -45,8 +45,13 @@ export default function RootLayout({
                 <AuthProvider>
                     <ThemeProvider
                         attribute="class"
-                        defaultTheme="system"
-                        enableSystem
+                        // Claro por padrão, e `enableSystem` desligado: com
+                        // "system" o app abria escuro para quem usa o Windows
+                        // no tema escuro, ignorando o padrão do produto. Quem
+                        // preferir escuro continua trocando pelo toggle da
+                        // sidebar, e a escolha fica salva.
+                        defaultTheme="light"
+                        enableSystem={false}
                         disableTransitionOnChange
                     >
                         <TooltipProvider>

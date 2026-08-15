@@ -94,20 +94,45 @@ interface RespostaLogin {
 
 // As funções abaixo checam `window` porque o módulo também é avaliado no
 // SSR, onde `localStorage` não existe.
+//
+// A sessão vai para um de dois lugares, conforme o "manter conectado" do
+// login: `localStorage` sobrevive a fechar o navegador; `sessionStorage`
+// morre junto com a aba. O backend emite um token de validade fixa (7 dias) e
+// não aceita pedir outra, então a diferença entre lembrar e não lembrar é
+// esta escolha de onde guardar — não dá para encurtar o token em si.
 
-export function guardarToken(token: string): void {
+function storageDaSessao(): Storage | null {
+    if (typeof window === "undefined") return null;
+    if (window.localStorage.getItem(CHAVE_TOKEN)) return window.localStorage;
+    if (window.sessionStorage.getItem(CHAVE_TOKEN)) return window.sessionStorage;
+    return null;
+}
+
+export function guardarToken(token: string, lembrar: boolean): void {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(CHAVE_TOKEN, token);
+    // Limpa os dois antes de gravar: sem isso, trocar de "lembrar" para "não
+    // lembrar" deixaria o token antigo no localStorage, e ele venceria na
+    // leitura — a sessão continuaria sobrevivendo ao fechar o navegador.
+    window.localStorage.removeItem(CHAVE_TOKEN);
+    window.sessionStorage.removeItem(CHAVE_TOKEN);
+    (lembrar ? window.localStorage : window.sessionStorage).setItem(
+        CHAVE_TOKEN,
+        token,
+    );
 }
 
 export function lerToken(): string | null {
     if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(CHAVE_TOKEN);
+    return (
+        window.localStorage.getItem(CHAVE_TOKEN) ??
+        window.sessionStorage.getItem(CHAVE_TOKEN)
+    );
 }
 
 export function limparToken(): void {
     if (typeof window === "undefined") return;
     window.localStorage.removeItem(CHAVE_TOKEN);
+    window.sessionStorage.removeItem(CHAVE_TOKEN);
 }
 
 // O backend não guarda sessão (JWT é stateless): o usuário devolvido no
@@ -117,12 +142,19 @@ export function limparToken(): void {
 // buscarUsuarioLogado abaixo).
 function guardarUsuario(usuario: UsuarioAutenticado): void {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(CHAVE_USUARIO, JSON.stringify(usuario));
+    // Acompanha onde o token foi parar, para o usuário cacheado não sobreviver
+    // mais que a própria sessão.
+    const destino = storageDaSessao() ?? window.localStorage;
+    window.localStorage.removeItem(CHAVE_USUARIO);
+    window.sessionStorage.removeItem(CHAVE_USUARIO);
+    destino.setItem(CHAVE_USUARIO, JSON.stringify(usuario));
 }
 
 export function lerUsuarioSalvo(): UsuarioAutenticado | null {
     if (typeof window === "undefined") return null;
-    const bruto = window.localStorage.getItem(CHAVE_USUARIO);
+    const bruto =
+        window.localStorage.getItem(CHAVE_USUARIO) ??
+        window.sessionStorage.getItem(CHAVE_USUARIO);
     if (!bruto) return null;
     try {
         return JSON.parse(bruto) as UsuarioAutenticado;
@@ -134,6 +166,7 @@ export function lerUsuarioSalvo(): UsuarioAutenticado | null {
 function limparUsuario(): void {
     if (typeof window === "undefined") return;
     window.localStorage.removeItem(CHAVE_USUARIO);
+    window.sessionStorage.removeItem(CHAVE_USUARIO);
 }
 
 // Login de demonstração: só entra em ação quando a chamada ao backend nem
@@ -148,6 +181,7 @@ const TOKEN_DEMO = "demo-token";
 function autenticarComoAdminDemo(
     email: string,
     senha: string,
+    lembrar: boolean,
 ): UsuarioAutenticado | null {
     if (email !== ADMIN_DEMO_EMAIL || senha !== ADMIN_DEMO_SENHA) return null;
 
@@ -160,7 +194,7 @@ function autenticarComoAdminDemo(
         recrutador: { empresa: "VoiceMatchAi (demo)" },
     };
 
-    guardarToken(TOKEN_DEMO);
+    guardarToken(TOKEN_DEMO, lembrar);
     guardarUsuario(usuario);
     return usuario;
 }
@@ -172,6 +206,7 @@ function autenticarComoAdminDemo(
 export async function entrar(
     email: string,
     senha: string,
+    lembrar: boolean,
 ): Promise<UsuarioAutenticado> {
     let resposta: Response;
     try {
@@ -181,7 +216,7 @@ export async function entrar(
             body: JSON.stringify({ email, senha }),
         });
     } catch {
-        const usuarioDemo = autenticarComoAdminDemo(email, senha);
+        const usuarioDemo = autenticarComoAdminDemo(email, senha, lembrar);
         if (usuarioDemo) return usuarioDemo;
         throw new Error(
             "Não foi possível conectar ao servidor. Tente novamente em instantes.",
@@ -198,7 +233,7 @@ export async function entrar(
     }
 
     const { access_token, user } = corpo as RespostaLogin;
-    guardarToken(access_token);
+    guardarToken(access_token, lembrar);
     guardarUsuario(user);
     return user;
 }

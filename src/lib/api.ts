@@ -23,7 +23,11 @@ export async function apiFetch(input: string | URL | Request, init?: RequestInit
     headers.set("ngrok-skip-browser-warning", "69420");
 
     if (typeof window !== "undefined") {
-        const token = window.localStorage.getItem(CHAVE_TOKEN);
+        // Procura nos dois: com "manter conectado" desmarcado no login, a
+        // sessão fica em sessionStorage (ver guardarToken em lib/usuarios.ts).
+        const token =
+            window.localStorage.getItem(CHAVE_TOKEN) ??
+            window.sessionStorage.getItem(CHAVE_TOKEN);
         if (token) {
             headers.set("Authorization", `Bearer ${token}`);
         }

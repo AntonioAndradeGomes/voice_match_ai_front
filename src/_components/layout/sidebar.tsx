@@ -5,13 +5,13 @@ import {
     ChartColumn,
     LayoutDashboard,
     Menu,
-    Mic,
     PanelLeftClose,
     PanelLeftOpen,
     Settings,
     type LucideIcon,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -140,12 +140,22 @@ export function Sidebar() {
             {/* Mobile: barra superior com hambúrguer, sidebar vira um drawer */}
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground lg:hidden">
                 <Link href="/" className="flex items-center gap-2">
-                    <span className="flex size-7 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-                        <Mic className="size-3.5" />
+                    {/* Fundo escuro atrás da logo sem fundo: metade da marca é
+                        branca, e a sidebar é quase branca no tema claro — sem
+                        essa base, esse lado sumiria. No tema escuro o mesmo
+                        tom apenas se funde com a barra. */}
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-xl bg-zinc-900 p-1">
+                        <Image
+                            src="/logo/icone-nobg.png"
+                            alt="VoiceMatch.Ai"
+                            width={24}
+                            height={24}
+                            className="size-full"
+                        />
                     </span>
                     <span className="font-heading text-base font-semibold tracking-tight">
                         VoiceMatch
-                        <span className="text-sidebar-primary">Ai</span>
+                        <span className="text-sidebar-primary">.Ai</span>
                     </span>
                 </Link>
 
@@ -163,7 +173,7 @@ export function Sidebar() {
                         <SheetHeader className="border-b border-sidebar-border">
                             <SheetTitle>
                                 VoiceMatch
-                                <span className="text-sidebar-primary">Ai</span>
+                                <span className="text-sidebar-primary">.Ai</span>
                             </SheetTitle>
                         </SheetHeader>
 
@@ -227,6 +237,10 @@ export function Sidebar() {
                             href="/"
                             className="flex items-center gap-2 overflow-hidden"
                         >
+                            {/* A mola fica no wrapper, e não na <Image>: o
+                                componente do Next repassa className mas não
+                                props de motion, então animar a imagem direto
+                                exigiria motion.create(Image) sem ganho nenhum. */}
                             <motion.span
                                 whileHover={{ scale: 1.08, rotate: -6 }}
                                 whileTap={{ scale: 0.94 }}
@@ -235,15 +249,21 @@ export function Sidebar() {
                                     stiffness: 500,
                                     damping: 18,
                                 }}
-                                className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground"
+                                className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-zinc-900 p-1"
                             >
-                                <Mic className="size-4" />
+                                <Image
+                                    src="/logo/icone-nobg.png"
+                                    alt="VoiceMatch.Ai"
+                                    width={28}
+                                    height={28}
+                                    className="size-full"
+                                />
                             </motion.span>
                             {!colapsado && (
                                 <span className="font-heading text-lg font-semibold tracking-tight whitespace-nowrap">
                                     VoiceMatch
                                     <span className="text-sidebar-primary">
-                                        Ai
+                                        .Ai
                                     </span>
                                 </span>
                             )}

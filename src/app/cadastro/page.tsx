@@ -238,14 +238,14 @@ export default function CadastroPage() {
                     <div className="flex flex-col items-center gap-3 text-center lg:hidden">
                         <Image
                             src="/logo/icone.png"
-                            alt="VoiceMatchAi"
+                            alt="VoiceMatch.Ai"
                             width={44}
                             height={44}
                             className="size-11 rounded-2xl"
                         />
                         <h1 className="font-heading text-2xl font-semibold tracking-tight">
                             Criar conta na VoiceMatch
-                            <span className="text-sidebar-primary">Ai</span>
+                            <span className="text-sidebar-primary">.Ai</span>
                         </h1>
                     </div>
 
