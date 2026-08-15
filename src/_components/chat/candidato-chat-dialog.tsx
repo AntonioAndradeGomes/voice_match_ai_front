@@ -20,9 +20,11 @@ export function CandidatoChatDialog({
 }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="h-[85vh] w-full max-w-3xl gap-0 overflow-hidden p-0 sm:max-w-3xl">
+            <DialogContent className="flex h-[85vh] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
                 {candidatoId && (
-                    <ChatConversa vagaId={vagaId} candidatoId={candidatoId} />
+                    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+                        <ChatConversa vagaId={vagaId} candidatoId={candidatoId} />
+                    </div>
                 )}
             </DialogContent>
         </Dialog>

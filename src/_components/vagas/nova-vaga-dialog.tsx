@@ -380,7 +380,7 @@ export function NovaVagaDialog({
                     <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/20 p-3.5">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="scoreMinimoTriagem" className="font-medium">
-                                Nota mínima para aprovação na triagem por IA: <span className="font-bold text-primary">{campos.scoreMinimoTriagem.toFixed(1)}</span> / 10
+                                Nota mínima para aprovação na triagem pela Iris: <span className="font-bold text-primary">{campos.scoreMinimoTriagem.toFixed(1)}</span> / 10
                             </Label>
                             <span className="text-xs text-muted-foreground">
                                 Threshold de aprovação
@@ -398,7 +398,7 @@ export function NovaVagaDialog({
                             }}
                         />
                         <p className="text-xs text-muted-foreground">
-                            Candidatos com nota calculada pela IA abaixo deste valor serão automaticamente reprovados na triagem e não avançarão para a entrevista por voz.
+                            Candidatos com nota calculada pela Iris abaixo deste valor serão automaticamente reprovados na triagem e não avançarão para a entrevista por voz.
                         </p>
                     </div>
                 </div>

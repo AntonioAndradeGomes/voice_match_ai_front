@@ -10,12 +10,16 @@ import type { StatusCandidato } from "@/types";
 interface ChatFooterProps {
     status: StatusCandidato;
     perguntaAtualId?: string;
+    isFinalizada?: boolean;
+    etapaAtual?: number;
     onRespostaEnviada?: () => void;
 }
 
 export function ChatFooter({
     status,
     perguntaAtualId,
+    isFinalizada,
+    etapaAtual = 1,
     onRespostaEnviada,
 }: ChatFooterProps) {
     const [gravando, setGravando] = useState(false);
@@ -28,19 +32,41 @@ export function ChatFooter({
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
 
-    useEffect(() => {
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach((track) => track.stop());
-            }
-        };
-    }, []);
+    const desativarMicrofone = () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+            try {
+                mediaRecorderRef.current.stop();
+            } catch {}
+        }
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+        }
+        setGravando(false);
+        setAudioBlob(null);
+    };
 
-    if (status === "finalizado") {
+    useEffect(() => {
+        if (status === "finalizado" || isFinalizada) {
+            desativarMicrofone();
+        }
+        return () => {
+            desativarMicrofone();
+        };
+    }, [status, isFinalizada]);
+
+    if (status === "finalizado" || isFinalizada) {
         return (
-            <div className="border-t border-border px-6 py-3.5 text-center text-sm text-muted-foreground bg-muted/20">
-                Entrevista finalizada — veja o scorecard na página da vaga.
+            <div className="border-t border-border px-6 py-4 text-center bg-card/60 backdrop-blur-sm">
+                <div className="mx-auto flex max-w-xl items-center justify-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs sm:text-sm font-medium text-emerald-800 dark:text-emerald-300 shadow-sm">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                        ✓
+                    </span>
+                    <span>
+                        Sessão de entrevista concluída com sucesso! O microfone foi desativado automaticamente.
+                    </span>
+                </div>
             </div>
         );
     }
@@ -157,7 +183,7 @@ export function ChatFooter({
                 {enviando ? (
                     <div className="flex w-full items-center justify-center gap-3 py-2 text-sm text-primary">
                         <Loader2 className="size-5 animate-spin" />
-                        <span>Enviando áudio e analisando prosódia com IA...</span>
+                        <span>Enviando áudio e analisando com a Iris...</span>
                     </div>
                 ) : gravando ? (
                     <div className="flex w-full items-center justify-between gap-3">
@@ -196,16 +222,22 @@ export function ChatFooter({
                     <div className="flex w-full items-center justify-between gap-3">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Mic className="size-4 text-primary" />
-                            <span>Grave sua resposta por áudio para continuar a entrevista</span>
+                            <span>
+                                {etapaAtual === 1
+                                    ? "Grave sua resposta por voz para a Etapa 1/3 (Apresentação Pessoal)"
+                                    : etapaAtual === 2
+                                    ? "Grave sua resposta por voz para a Etapa 2/3 (Fit Cultural)"
+                                    : "Grave sua resposta por voz para a Etapa 3/3 (Desafio Técnico)"}
+                            </span>
                         </div>
 
                         <Button
                             onClick={iniciarGravacao}
-                            className="gap-2 font-medium"
+                            className="gap-2 font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
                             size="default"
                         >
                             <Mic className="size-4" />
-                            Iniciar Gravação
+                            Gravar Etapa {Math.min(etapaAtual, 3)}/3
                         </Button>
                     </div>
                 )}

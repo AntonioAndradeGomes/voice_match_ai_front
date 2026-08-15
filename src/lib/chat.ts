@@ -110,6 +110,9 @@ export async function carregarConversa(
                                 );
 
                                 for (const p of perguntasOrdenadas) {
+                                    const etapaNome: "pessoal" | "fit_cultural" | "tecnica" =
+                                        p.ordem === 1 ? "pessoal" : p.ordem === 2 ? "fit_cultural" : "tecnica";
+
                                     // Pergunta da Iris (IA)
                                     mensagens.push({
                                         id: p.id,
@@ -117,6 +120,8 @@ export async function carregarConversa(
                                         autor: "ia",
                                         tipo: "texto",
                                         conteudo: p.pergunta_texto,
+                                        ordem: p.ordem,
+                                        etapa: etapaNome,
                                         timestamp: entrevistaDet.data_inicio || new Date().toISOString(),
                                     });
 
@@ -134,27 +139,57 @@ export async function carregarConversa(
                                             autor: "candidato",
                                             tipo: p.resposta.audio_url ? "audio" : "texto",
                                             conteudo: p.resposta.transcricao || "(Resposta gravada por áudio)",
+                                            ordem: p.ordem,
+                                            etapa: etapaNome,
                                             audioUrl: audioUrlBackend,
                                             timestamp: p.resposta.data_resposta || new Date().toISOString(),
                                         });
                                     }
                                 }
 
+                                const totalRespostas = perguntasOrdenadas.filter((p) => p.resposta).length;
+                                const isFinalizada =
+                                    entrevistaDet.status === "concluida" || totalRespostas >= 3;
+
+                                // Se finalizada, adicionar a mensagem do parecer consolidado
+                                if (isFinalizada) {
+                                    const feedbackTexto =
+                                        entrevistaDet.feedback_candidato ||
+                                        "Agradecemos profundamente sua participação e dedicação na entrevista de voz do VoiceMatch AI! Todas as suas respostas para as etapas de Apresentação Pessoal, Fit Cultural e Avaliação Técnica foram registradas com sucesso.";
+
+                                    mensagens.push({
+                                        id: `parecer-final-${entrevistaDet.id}`,
+                                        candidatoId,
+                                        autor: "ia",
+                                        tipo: "texto",
+                                        conteudo: feedbackTexto,
+                                        etapa: "conclusao",
+                                        isParecerConsolidado: true,
+                                        timestamp: entrevistaDet.data_fim || new Date().toISOString(),
+                                    });
+                                }
+
                                 if (mensagens.length > 0) {
                                     return {
-                                        candidato: candidato ?? {
-                                            id: candidatoId,
-                                            vagaId,
-                                            nome: "Candidato",
-                                            avatarUrl: null,
-                                            status: "em_entrevista",
-                                            perfilAvaliado: null,
-                                            notaFinal: null,
-                                            pontosFortes: null,
-                                            pontosFracos: null,
-                                            melhorias: null,
-                                            createdAt: new Date().toISOString(),
-                                        },
+                                        candidato: candidato
+                                            ? {
+                                                  ...candidato,
+                                                  status: isFinalizada ? "finalizado" : "em_entrevista",
+                                                  notaFinal: entrevistaDet.score_geral !== null ? Number(entrevistaDet.score_geral) : candidato.notaFinal,
+                                              }
+                                            : {
+                                                  id: candidatoId,
+                                                  vagaId,
+                                                  nome: "Candidato",
+                                                  avatarUrl: null,
+                                                  status: isFinalizada ? "finalizado" : "em_entrevista",
+                                                  perfilAvaliado: null,
+                                                  notaFinal: entrevistaDet.score_geral !== null ? Number(entrevistaDet.score_geral) : null,
+                                                  pontosFortes: null,
+                                                  pontosFracos: null,
+                                                  melhorias: null,
+                                                  createdAt: new Date().toISOString(),
+                                              },
                                         vaga,
                                         mensagens,
                                     };
@@ -186,7 +221,9 @@ export async function carregarConversa(
             candidatoId: candidato.id,
             autor: "ia",
             tipo: "texto",
-            conteudo: `Olá ${candidato.nome}! Seja bem-vindo(a) à entrevista do VoiceMatch. Para começarmos, por favor se apresente e conte sobre sua trajetória profissional e principais experiências.`,
+            etapa: "pessoal",
+            ordem: 1,
+            conteudo: `Olá ${candidato.nome}! Seja bem-vindo(a) à entrevista de voz do VoiceMatch AI. Para iniciarmos nossa primeira etapa (Apresentação Pessoal), por favor se apresente e compartilhe sobre sua trajetória profissional e motivações.`,
             timestamp: new Date().toISOString(),
         });
     }

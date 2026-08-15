@@ -7,7 +7,7 @@ import Image from "next/image";
 const DESTAQUES = [
     {
         icone: MessagesSquare,
-        texto: "Entrevistas conduzidas por IA, direto pelo chat",
+        texto: "Entrevistas conduzidas pela Iris, direto pelo chat",
     },
     {
         icone: Briefcase,

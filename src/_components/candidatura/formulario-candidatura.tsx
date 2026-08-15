@@ -224,7 +224,7 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
                             <strong className="font-medium text-foreground">
                                 {vaga.titulo}
                             </strong>
-                            . Nossa triagem automática por IA analisou seu currículo em relação aos requisitos mínimos da posição e identificou que o perfil não atingiu a pontuação mínima de corte no momento.
+                            . Nossa triagem automática pela Iris analisou seu currículo em relação aos requisitos mínimos da posição e identificou que o perfil não atingiu a pontuação mínima de corte no momento.
                         </p>
                     </div>
 

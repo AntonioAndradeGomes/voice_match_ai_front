@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
     Activity,
     AlertCircle,
+    AlertTriangle,
     Brain,
     CheckCircle2,
     Download,
@@ -19,6 +20,7 @@ import {
 import { Avatar, AvatarFallback } from "@/_components/ui/avatar";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
+import { AudioPlayer } from "@/_components/ui/audio-player";
 import {
     Dialog,
     DialogContent,
@@ -265,13 +267,65 @@ export function CandidatoDetalheModal({
         gapsTriagem.length > 0 ||
         Boolean(parecerTriagem);
 
-    const softSkills = candidato.softSkillsAcusticas || {
+    // Extrair métricas acústicas reais consolidadas de todas as respostas com Librosa
+    let softSkills = {
         oratoria_e_clareza: 8.5,
         firmeza_e_confianca: 8.0,
         controle_de_estresse: 8.8,
         entusiasmo_e_engajamento: 8.2,
         parecer_acustico: "Comunicação clara, articulada e com boa cadência prosódica.",
+        isReal: false,
     };
+
+    if (dadosBackend?.entrevista?.perguntas && Array.isArray(dadosBackend.entrevista.perguntas)) {
+        const respostasComAcustica = dadosBackend.entrevista.perguntas
+            .map((p: any) => p.resposta?.metricas?.acustica)
+            .filter(Boolean);
+
+        if (respostasComAcustica.length > 0) {
+            let totalOratoria = 0;
+            let totalFirmeza = 0;
+            let totalEstresse = 0;
+            let totalEntusiasmo = 0;
+            let count = 0;
+            let ultimoParecer = "";
+
+            for (const ac of respostasComAcustica) {
+                const s = ac.soft_skills_acusticas;
+                if (s) {
+                    totalOratoria += Number(s.oratoria_e_clareza ?? 8.0);
+                    totalFirmeza += Number(s.firmeza_e_confianca ?? 8.0);
+                    totalEstresse += Number(s.controle_de_estresse ?? 8.0);
+                    totalEntusiasmo += Number(s.entusiasmo_e_engajamento ?? 8.0);
+                    count++;
+                }
+                if (ac.parecer_acustico) {
+                    ultimoParecer = ac.parecer_acustico;
+                }
+            }
+
+            if (count > 0) {
+                softSkills = {
+                    oratoria_e_clareza: Number((totalOratoria / count).toFixed(1)),
+                    firmeza_e_confianca: Number((totalFirmeza / count).toFixed(1)),
+                    controle_de_estresse: Number((totalEstresse / count).toFixed(1)),
+                    entusiasmo_e_engajamento: Number((totalEntusiasmo / count).toFixed(1)),
+                    parecer_acustico: ultimoParecer || "Análise acústica média consolidada das respostas gravadas.",
+                    isReal: true,
+                };
+            }
+        }
+    } else if (candidato.softSkillsAcusticas) {
+        softSkills = {
+            ...candidato.softSkillsAcusticas,
+            oratoria_e_clareza: candidato.softSkillsAcusticas.oratoria_e_clareza ?? 8.5,
+            firmeza_e_confianca: candidato.softSkillsAcusticas.firmeza_e_confianca ?? 8.0,
+            controle_de_estresse: candidato.softSkillsAcusticas.controle_de_estresse ?? 8.8,
+            entusiasmo_e_engajamento: candidato.softSkillsAcusticas.entusiasmo_e_engajamento ?? 8.2,
+            parecer_acustico: candidato.softSkillsAcusticas.parecer_acustico ?? "Comunicação clara.",
+            isReal: true,
+        };
+    }
 
     // Eixos do radar: as hard e soft skills cadastradas nesta vaga, cada uma
     // com o peso definido na criação. Antes eram 20 traços fixos de types.ts,
@@ -367,14 +421,14 @@ export function CandidatoDetalheModal({
 
                 <div className="flex-1 overflow-y-auto max-h-[70vh] pr-2 space-y-6">
                     <div className="flex flex-col gap-6 p-1">
-                        {/* 1. Parecer Executivo Final da IA (Exibido quando a entrevista é finalizada) */}
+                        {/* 1. Parecer Executivo Final da Iris (Exibido quando a entrevista é finalizada) */}
                         {parecerFinal && (
                             <div className="flex flex-col gap-3.5 rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm">
                                 <div className="flex items-center justify-between border-b border-primary/20 pb-3">
                                     <div className="flex items-center gap-2">
                                         <Brain className="size-4 text-primary" />
                                         <span className="text-sm font-bold text-foreground">
-                                            Parecer Executivo Final da IA (Groq Llama 3.3 70B)
+                                            Parecer Executivo Final da Iris
                                         </span>
                                     </div>
                                     {scoreGeral !== null && (
@@ -451,13 +505,13 @@ export function CandidatoDetalheModal({
                             </div>
                         )}
 
-                        {/* 2. Scorecard da Triagem por IA */}
+                        {/* 2. Scorecard da Triagem pela Iris */}
                         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
                                 <div className="flex items-center gap-2">
                                     <Sparkles className="size-4 text-primary" />
                                     <span className="text-sm font-semibold text-foreground">
-                                        Scorecard da Triagem por IA (Análise de Currículo)
+                                        Scorecard da Triagem pela Iris (Análise de Currículo)
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -490,7 +544,7 @@ export function CandidatoDetalheModal({
                             {!temAlgumDadoDeTriagem && (
                                 <p className="text-xs text-muted-foreground">
                                     Este candidato ainda não passou pela triagem
-                                    de currículo por IA.
+                                    de currículo pela Iris.
                                 </p>
                             )}
 
@@ -507,7 +561,7 @@ export function CandidatoDetalheModal({
                             {parecerTriagem && (
                                 <div className="flex flex-col gap-1 rounded-xl bg-muted/60 p-3 text-xs">
                                     <span className="font-semibold text-muted-foreground">
-                                        Parecer da IA
+                                        Parecer da Iris
                                     </span>
                                     <p className="leading-relaxed text-foreground/90">
                                         {parecerTriagem}
@@ -520,28 +574,38 @@ export function CandidatoDetalheModal({
                             <div className="grid gap-3 sm:grid-cols-2">
                                 {pontosFortesTriagem.length > 0 && (
                                 <div className="flex flex-col gap-2 rounded-xl bg-emerald-500/10 p-3 text-xs dark:bg-emerald-950/20">
-                                    <span className="flex items-center gap-1.5 font-semibold text-emerald-600 dark:text-emerald-400">
-                                        <CheckCircle2 className="size-3.5" /> Pontos Fortes
-                                    </span>
-                                    <ul className="flex flex-col gap-1 text-emerald-950 dark:text-emerald-200">
-                                        {pontosFortesTriagem.map((item, idx) => (
-                                            <li key={idx} className="flex items-start gap-1">
-                                                <span>•</span> <span>{item}</span>
-                                            </li>
-                                        ))}
+                                    <div className="flex items-center gap-1.5 font-semibold text-emerald-800 dark:text-emerald-300">
+                                        <CheckCircle2 className="size-3.5" />
+                                        <span>Pontos Fortes Identificados</span>
+                                    </div>
+                                    <ul className="flex list-disc flex-col gap-1 pl-4 text-emerald-950/90 marker:text-emerald-600 dark:text-emerald-100/90 dark:marker:text-emerald-400">
+                                        {pontosFortesTriagem.map(
+                                            (ponto, i) => (
+                                                <li
+                                                    key={`forte-${i}`}
+                                                    className="leading-relaxed"
+                                                >
+                                                    {ponto}
+                                                </li>
+                                            ),
+                                        )}
                                     </ul>
                                 </div>
                                 )}
 
                                 {gapsTriagem.length > 0 && (
                                 <div className="flex flex-col gap-2 rounded-xl bg-amber-500/10 p-3 text-xs dark:bg-amber-950/20">
-                                    <span className="flex items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400">
-                                        <AlertCircle className="size-3.5" /> Gaps Identificados
-                                    </span>
-                                    <ul className="flex flex-col gap-1 text-amber-950 dark:text-amber-200">
-                                        {gapsTriagem.map((item, idx) => (
-                                            <li key={idx} className="flex items-start gap-1">
-                                                <span>•</span> <span>{item}</span>
+                                    <div className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
+                                        <AlertTriangle className="size-3.5" />
+                                        <span>Gaps em Relação à Vaga</span>
+                                    </div>
+                                    <ul className="flex list-disc flex-col gap-1 pl-4 text-amber-950/90 marker:text-amber-600 dark:text-amber-100/90 dark:marker:text-amber-400">
+                                        {gapsTriagem.map((gap, i) => (
+                                            <li
+                                                key={`gap-${i}`}
+                                                className="leading-relaxed"
+                                            >
+                                                {gap}
                                             </li>
                                         ))}
                                     </ul>
@@ -551,7 +615,87 @@ export function CandidatoDetalheModal({
                             )}
                         </div>
 
-                        {/* 3. Relatório de Soft Skills Acústicas (Librosa) */}
+                        {/* 3. Ciclo das 3 Perguntas e Áudios da Entrevista */}
+                        {dadosBackend?.entrevista?.perguntas && dadosBackend.entrevista.perguntas.length > 0 && (
+                            <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+                                <div className="flex items-center justify-between border-b border-border pb-3">
+                                    <div className="flex items-center gap-2">
+                                        <Volume2 className="size-4 text-primary" />
+                                        <span className="text-sm font-semibold text-foreground">
+                                            Ciclo de 3 Fases da Entrevista de Voz
+                                        </span>
+                                    </div>
+                                    <Badge variant="outline" className="text-xs">
+                                        {dadosBackend.entrevista.perguntas.filter((p: any) => p.resposta).length}/3 Respondidas
+                                    </Badge>
+                                </div>
+
+                                <div className="flex flex-col gap-3 pt-1">
+                                    {dadosBackend.entrevista.perguntas
+                                        .sort((a: any, b: any) => a.ordem - b.ordem)
+                                        .map((p: any) => {
+                                            const etapaNome =
+                                                p.ordem === 1
+                                                    ? "Etapa 1: Apresentação Pessoal"
+                                                    : p.ordem === 2
+                                                    ? "Etapa 2: Fit Cultural & Equipe"
+                                                    : "Etapa 3: Desafio Técnico";
+
+                                            const audioUrl = p.resposta?.audio_url
+                                                ? p.resposta.audio_url.startsWith("http")
+                                                    ? p.resposta.audio_url
+                                                    : `${API_BASE_URL}${p.resposta.audio_url}`
+                                                : null;
+
+                                            return (
+                                                <div
+                                                    key={p.id}
+                                                    className="flex flex-col gap-2 rounded-xl border border-border/60 bg-muted/30 p-3 text-xs"
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="font-bold text-primary">
+                                                            {etapaNome}
+                                                        </span>
+                                                        {p.resposta ? (
+                                                            <Badge variant="success" className="text-[10px]">
+                                                                Respondida
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="secondary" className="text-[10px]">
+                                                                Pendente
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+
+                                                    <p className="font-medium text-foreground/90 leading-relaxed">
+                                                        💬 {p.pergunta_texto}
+                                                    </p>
+
+                                                    {p.resposta ? (
+                                                        <div className="mt-1 flex flex-col gap-1.5 rounded-lg bg-card p-2.5 ring-1 ring-border/50">
+                                                            {audioUrl && (
+                                                                <AudioPlayer
+                                                                    src={audioUrl}
+                                                                    seed={p.resposta.id}
+                                                                />
+                                                            )}
+                                                            <p className="italic text-muted-foreground leading-relaxed">
+                                                                &ldquo;{p.resposta.transcricao || "(Áudio gravado)"}&rdquo;
+                                                            </p>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="italic text-muted-foreground/70">
+                                                            Aguardando gravação de áudio do candidato para esta etapa...
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. Relatório de Soft Skills Acústicas (Librosa) */}
                         <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
                             <div className="flex items-center justify-between border-b border-border pb-3">
                                 <div className="flex items-center gap-2">
@@ -560,8 +704,8 @@ export function CandidatoDetalheModal({
                                         Análise Prosódica de Soft Skills (Librosa)
                                     </span>
                                 </div>
-                                <Badge variant="secondary" className="gap-1 text-xs">
-                                    <Volume2 className="size-3" /> Sinal Acústico
+                                <Badge variant={softSkills.isReal ? "success" : "secondary"} className="gap-1 text-xs">
+                                    <Volume2 className="size-3" /> {softSkills.isReal ? "Sinal Acústico Real (Librosa)" : "Sinal Estimado"}
                                 </Badge>
                             </div>
 
@@ -595,12 +739,17 @@ export function CandidatoDetalheModal({
                             )}
                         </div>
 
-                        {/* 4. Radar das competências exigidas pela vaga */}
+                        {/* 5. Radar das competências exigidas pela vaga */}
                         <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
                             <div className="flex items-center justify-between gap-2 border-b border-border pb-3">
-                                <span className="text-sm font-semibold text-foreground">
-                                    Competências exigidas pela vaga
-                                </span>
+                                <div>
+                                    <span className="text-sm font-semibold text-foreground block">
+                                        Perfil de Exigência da Vaga (Pesos das Competências)
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground">
+                                        Parâmetros definidos pelo recrutador na abertura da posição
+                                    </span>
+                                </div>
                                 {eixosRadar.length > 0 && (
                                     <Badge variant="secondary" className="text-xs">
                                         {eixosRadar.length}{" "}

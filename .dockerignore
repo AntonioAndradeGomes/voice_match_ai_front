@@ -1,3 +1,8 @@
 .next
 node_modules
 .git
+.vscode
+.idea
+.agents
+docs
+PLANO_DE_IMPLEMENTACAO.md

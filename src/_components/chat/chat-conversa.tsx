@@ -73,10 +73,19 @@ export function ChatConversa({
         carregarConversa(candidatoId, vagaId).then((res) => setConversa(res));
     };
 
-    const ultimasIAPerguntas = conversa?.mensagens.filter((m) => m.autor === "ia");
-    const perguntaAtualId = ultimasIAPerguntas && ultimasIAPerguntas.length > 0
-        ? ultimasIAPerguntas[ultimasIAPerguntas.length - 1].id
-        : undefined;
+    const totalRespostas = conversa?.mensagens.filter((m) => m.autor === "candidato").length || 0;
+    const temParecer = conversa?.mensagens.some((m) => m.isParecerConsolidado) || false;
+    const isFinalizada =
+        conversa?.candidato.status === "finalizado" || totalRespostas >= 3 || temParecer;
+    const etapaAtual = isFinalizada ? 3 : Math.min(3, totalRespostas + 1);
+
+    const ultimasIAPerguntas = conversa?.mensagens.filter(
+        (m) => m.autor === "ia" && !m.isParecerConsolidado
+    );
+    const perguntaAtualId =
+        ultimasIAPerguntas && ultimasIAPerguntas.length > 0
+            ? ultimasIAPerguntas[ultimasIAPerguntas.length - 1].id
+            : undefined;
 
     return (
         <motion.div
@@ -84,13 +93,20 @@ export function ChatConversa({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
-            className="flex h-full flex-col"
+            className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
         >
-            <ChatHeader candidato={conversa.candidato} vaga={conversa.vaga} />
+            <ChatHeader
+                candidato={conversa.candidato}
+                vaga={conversa.vaga}
+                etapaAtual={etapaAtual}
+                isFinalizada={isFinalizada}
+            />
             <ChatMensagens mensagens={conversa.mensagens} />
             <ChatFooter
                 status={conversa.candidato.status}
                 perguntaAtualId={perguntaAtualId}
+                etapaAtual={etapaAtual}
+                isFinalizada={isFinalizada}
                 onRespostaEnviada={recarregarConversa}
             />
         </motion.div>
