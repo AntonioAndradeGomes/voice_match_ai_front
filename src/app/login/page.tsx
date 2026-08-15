@@ -85,35 +85,13 @@ export default function LoginPage() {
                         </h1>
                     </div>
 
-                    <div className="hidden flex-col gap-4 lg:flex">
-                        {/* Versão com fundo, e não a `-nobg`: metade da marca é
-                            branca, e este lado da tela é claro — sem o fundo
-                            próprio, esse lado da arte sumiria. */}
-                        <div className="flex items-center gap-2">
-                            <Image
-                                src="/logo/icone.png"
-                                alt=""
-                                width={36}
-                                height={36}
-                                className="size-9 shrink-0 rounded-xl"
-                            />
-                            <span className="font-heading text-lg font-semibold tracking-tight">
-                                VoiceMatch
-                                <span className="text-sidebar-primary">
-                                    .Ai
-                                </span>
-                            </span>
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                            <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                                Bem-vindo de volta
-                            </h1>
-                            <p className="text-sm text-muted-foreground">
-                                Entre com as credenciais da sua conta de
-                                recrutador.
-                            </p>
-                        </div>
+                    <div className="hidden flex-col gap-1 lg:flex">
+                        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                            Bem-vindo de volta
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Entre com as credenciais da sua conta de recrutador.
+                        </p>
                     </div>
 
                     <Card
