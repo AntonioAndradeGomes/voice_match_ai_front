@@ -134,17 +134,22 @@ export interface CandidatoSalvoResultado {
     triagem?: ResultadoTriagemCandidatura | null;
 }
 
+export type EtapaEntrevista = "pessoal" | "fit_cultural" | "tecnica" | "conclusao";
+
 export interface MensagemChat {
     id: string;
     candidatoId: string;
     autor: AutorMensagem;
     tipo: TipoMensagem;
     conteudo: string;
+    etapa?: EtapaEntrevista;
+    ordem?: number;
     perguntaRelacionada?: Trait[];
     timestamp: string;
     duracaoAudio?: number;
     /** URL do arquivo de áudio (ex.: "/audio/arquivo.wav"). Sem isso, o
      * player mostra a onda como decoração — não tem o que tocar. */
     audioUrl?: string;
+    isParecerConsolidado?: boolean;
 }
 

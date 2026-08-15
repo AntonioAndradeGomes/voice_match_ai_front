@@ -278,13 +278,13 @@ export default function VagaDetalhePage({
                                 <Sparkles className="size-3.5" />
                             </span>
                             <span className="font-heading text-base font-medium">
-                                Iris · IA entrevistadora
+                                Iris · Entrevistadora Virtual
                             </span>
                         </CardContent>
                         <CardContent className="text-sm text-muted-foreground">
-                            A Iris é uma IA que entrevista candidatos por áudio,
-                            por meio de um agente, e devolve um relatório pra
-                            todo mundo: Recrutador e Candidato.
+                            A Iris conduz entrevistas dinâmicas por voz em 3
+                            fases com os candidatos e gera um parecer completo
+                            para o Recrutador e o Candidato.
                         </CardContent>
                     </Card>
                 </div>

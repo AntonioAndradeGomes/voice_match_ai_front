@@ -59,7 +59,7 @@ export default function RootLayout({
                             <RouteGuard>
                                 <div className="flex h-svh flex-col lg:flex-row">
                                     <Sidebar />
-                                    <main className="flex-1 overflow-hidden">
+                                    <main className="flex-1 min-h-0 overflow-y-auto">
                                         {children}
                                     </main>
                                 </div>
