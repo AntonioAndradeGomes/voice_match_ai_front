@@ -227,7 +227,7 @@ export function ChatFooter({
                                     ? "Grave sua resposta por voz para a Etapa 1/3 (Apresentação Pessoal)"
                                     : etapaAtual === 2
                                     ? "Grave sua resposta por voz para a Etapa 2/3 (Fit Cultural)"
-                                    : "Grave sua resposta por voz para a Etapa 3/3 (Desafio Técnico)"}
+                                    : "Grave sua resposta por voz para a Etapa 3/3 (Pergunta Técnica)"}
                             </span>
                         </div>
 

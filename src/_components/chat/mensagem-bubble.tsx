@@ -15,7 +15,7 @@ function formatHora(timestamp: string) {
 const ETAPA_LABEL: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
     pessoal: { label: "Etapa 1: Apresentação Pessoal", variant: "secondary" },
     fit_cultural: { label: "Etapa 2: Fit Cultural & Equipe", variant: "secondary" },
-    tecnica: { label: "Etapa 3: Desafio Técnico", variant: "secondary" },
+    tecnica: { label: "Etapa 3: Pergunta Técnica", variant: "secondary" },
 };
 
 export function MensagemBubble({

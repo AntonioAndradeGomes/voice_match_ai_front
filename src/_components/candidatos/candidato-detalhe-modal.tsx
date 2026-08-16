@@ -57,20 +57,17 @@ const STATUS_TRIAGEM_LABEL: Record<
 function BarraSoftSkill({
     label,
     valor,
-    iconeEmoji,
 }: {
     label: string;
     valor: number;
-    iconeEmoji: string;
 }) {
     const porcentagem = Math.min(100, Math.max(0, (valor / 10) * 100));
 
     return (
         <div className="flex flex-col gap-1.5 rounded-xl bg-muted/40 p-3 text-xs">
             <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-medium text-foreground">
-                    <span>{iconeEmoji}</span>
-                    <span>{label}</span>
+                <span className="font-medium text-foreground">
+                    {label}
                 </span>
                 <span className="font-bold text-primary">{valor.toFixed(1)} / 10</span>
             </div>
@@ -156,7 +153,6 @@ export function CandidatoDetalheModal({
 }) {
     const [curriculoDisponivel, setCurriculoDisponivel] = useState(false);
     const [dadosBackend, setDadosBackend] = useState<any>(null);
-    const [carregandoParecer, setCarregandoParecer] = useState(false);
     const candidatoId = candidato?.id;
 
     const carregarDadosDoBackend = async () => {
@@ -347,57 +343,6 @@ export function CandidatoDetalheModal({
         baixarBlob(arquivo.blob, arquivo.nome);
     }
 
-    async function handleFinalizarEntrevista() {
-        setCarregandoParecer(true);
-        try {
-            let entrevistaId = dadosBackend?.entrevista?.id;
-
-            if (!entrevistaId) {
-                const res = await apiFetch(`${API_BASE_URL}/candidaturas`);
-                if (res.ok) {
-                    const candidaturas = await res.json();
-                    if (Array.isArray(candidaturas) && candidaturas.length > 0) {
-                        let item = candidaturas.find((c: any) => c.candidato_id === candidato!.id);
-                        if (!item) {
-                            item = candidaturas[candidaturas.length - 1];
-                        }
-                        if (item) {
-                            const resE = await apiFetch(`${API_BASE_URL}/candidaturas/${item.id}/entrevistas`);
-                            if (resE.ok) {
-                                const entrevistas = await resE.json();
-                                if (Array.isArray(entrevistas) && entrevistas.length > 0) {
-                                    entrevistaId = entrevistas[0].id;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (entrevistaId) {
-                const resFin = await apiFetch(`${API_BASE_URL}/entrevistas/${entrevistaId}/finalizar`, {
-                    method: "POST",
-                });
-                if (resFin.ok) {
-                    const dadosFin = await resFin.json();
-                    setDadosBackend((prev: any) => ({
-                        ...prev,
-                        entrevista: dadosFin,
-                    }));
-                    toast.success(`Entrevista finalizada! Score Consolidado: ${dadosFin.score_geral}/10`);
-                    setCarregandoParecer(false);
-                    return;
-                }
-            }
-
-            toast.error("Não foi possível encontrar a entrevista do candidato no backend.");
-        } catch (e) {
-            toast.error("Falha ao se conectar com a API de finalização.");
-        } finally {
-            setCarregandoParecer(false);
-        }
-    }
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-6 sm:max-w-2xl">
@@ -450,31 +395,19 @@ export function CandidatoDetalheModal({
                                     </div>
                                 )}
 
-                                {/* B. Resumo Geral do Recrutador */}
+                                {/* B. Resumo Detalhado do Candidato para Análise do Recrutador */}
                                 {(parecerFinal.feedback_geral || parecerFinal.summary) && (
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-1 rounded-xl border border-border/60 bg-card p-3 text-xs">
                                         <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                            Feedback Geral do Candidato (Recrutador)
+                                            Resumo Executivo do Desempenho (Análise do Recrutador)
                                         </span>
-                                        <p className="text-xs font-medium leading-relaxed text-foreground/90">
+                                        <p className="text-xs font-medium leading-relaxed text-foreground/90 whitespace-pre-line">
                                             {parecerFinal.feedback_geral || parecerFinal.summary}
                                         </p>
                                     </div>
                                 )}
 
-                                {/* C. Feedback Pronto para Envio ao Candidato em caso de Reprovação */}
-                                {parecerFinal.feedback_candidato && (
-                                    <div className="flex flex-col gap-1 rounded-xl border border-border bg-muted/60 p-3 text-xs">
-                                        <span className="flex items-center gap-1 font-bold text-muted-foreground">
-                                            ✉️ Feedback Personalizado de Retorno para o Candidato
-                                        </span>
-                                        <p className="italic leading-relaxed text-muted-foreground">
-                                            &ldquo;{parecerFinal.feedback_candidato}&rdquo;
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* D. Pontos Fortes e Gaps */}
+                                {/* C. Pontos Fortes e Gaps */}
                                 <div className="grid gap-3 pt-1 sm:grid-cols-2">
                                     {parecerFinal.strengths && parecerFinal.strengths.length > 0 && (
                                         <div className="flex flex-col gap-1.5 rounded-xl bg-emerald-500/10 p-3 text-xs dark:bg-emerald-950/20">
@@ -639,7 +572,7 @@ export function CandidatoDetalheModal({
                                                     ? "Etapa 1: Apresentação Pessoal"
                                                     : p.ordem === 2
                                                     ? "Etapa 2: Fit Cultural & Equipe"
-                                                    : "Etapa 3: Desafio Técnico";
+                                                    : "Etapa 3: Pergunta Técnica";
 
                                             const audioUrl = p.resposta?.audio_url
                                                 ? p.resposta.audio_url.startsWith("http")
@@ -701,11 +634,11 @@ export function CandidatoDetalheModal({
                                 <div className="flex items-center gap-2">
                                     <Activity className="size-4 text-primary" />
                                     <span className="text-sm font-semibold text-foreground">
-                                        Análise Prosódica de Soft Skills (Librosa)
+                                        Análise Acústica de Soft Skills (Iris)
                                     </span>
                                 </div>
                                 <Badge variant={softSkills.isReal ? "success" : "secondary"} className="gap-1 text-xs">
-                                    <Volume2 className="size-3" /> {softSkills.isReal ? "Sinal Acústico Real (Librosa)" : "Sinal Estimado"}
+                                    <Volume2 className="size-3" /> {softSkills.isReal ? "Áudios Reais Analisados" : "Sinal Estimado"}
                                 </Badge>
                             </div>
 
@@ -713,28 +646,29 @@ export function CandidatoDetalheModal({
                                 <BarraSoftSkill
                                     label="Oratória & Didática"
                                     valor={softSkills.oratoria_e_clareza ?? 8.5}
-                                    iconeEmoji="🗣️"
                                 />
                                 <BarraSoftSkill
                                     label="Firmeza & Confiança Vocal"
                                     valor={softSkills.firmeza_e_confianca ?? 8.0}
-                                    iconeEmoji="🦁"
                                 />
                                 <BarraSoftSkill
                                     label="Controle de Estresse / Fluência"
                                     valor={softSkills.controle_de_estresse ?? 8.8}
-                                    iconeEmoji="😌"
                                 />
                                 <BarraSoftSkill
                                     label="Entusiasmo & Engajamento"
                                     valor={softSkills.entusiasmo_e_engajamento ?? 8.2}
-                                    iconeEmoji="🔥"
                                 />
                             </div>
 
                             {softSkills.parecer_acustico && (
-                                <div className="mt-2 rounded-xl bg-muted/50 p-3 text-xs italic text-muted-foreground">
-                                    &ldquo;{softSkills.parecer_acustico}&rdquo;
+                                <div className="mt-3 flex flex-col gap-1 rounded-xl border border-border/60 bg-muted/30 p-3 text-xs">
+                                    <span className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                                        Parecer Acústico e Fluência Verbal
+                                    </span>
+                                    <p className="leading-relaxed text-foreground/90 font-normal">
+                                        {softSkills.parecer_acustico}
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -842,19 +776,9 @@ export function CandidatoDetalheModal({
                     </div>
                 </div>
 
-                <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        className="gap-2"
-                        disabled={carregandoParecer}
-                        onClick={handleFinalizarEntrevista}
-                    >
-                        <Sparkles className="size-4 text-primary" />
-                        {carregandoParecer ? "Gerando Parecer com IA..." : "Finalizar e Gerar Parecer da IA"}
-                    </Button>
-                    <Button type="button" onClick={onVerChat}>
-                        <MessagesSquare data-icon="inline-start" />
+                <DialogFooter className="flex items-center justify-end">
+                    <Button type="button" onClick={onVerChat} className="gap-2">
+                        <MessagesSquare className="size-4" />
                         Ver chat da entrevista
                     </Button>
                 </DialogFooter>
