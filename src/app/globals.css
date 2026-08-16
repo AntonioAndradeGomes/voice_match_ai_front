@@ -121,6 +121,186 @@
     --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+/* ---------------------------------------------------------------------------
+   Acessibilidade
+
+   As duas classes abaixo são ligadas no <html> pelo botão flutuante
+   (ver `src/lib/acessibilidade.ts` e `botao-acessibilidade.tsx`). Ficam depois
+   do `.dark` de propósito: `.dark.alto-contraste` precisa vencer o `.dark` na
+   cascata, e empate de especificidade é resolvido pela ordem.
+   --------------------------------------------------------------------------- */
+
+/* Texto maior mexe só no tamanho da raiz. Tipografia, espaçamento e raios do
+   projeto são todos em rem, então a tela inteira cresce junto e proporcional,
+   sem precisar tocar em componente nenhum. 112,5% = 18px de base. */
+.texto-maior {
+    font-size: 112.5%;
+}
+
+/* Alto contraste redefine os mesmos tokens do tema — nenhum componente sabe
+   que este modo existe, exatamente como acontece com o tema escuro. Preto no
+   branco, cinza-médio só onde o texto é secundário (ainda acima de 7:1), e
+   borda sólida no lugar dos contornos de 5% de opacidade do tema padrão. */
+.alto-contraste {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0 0 0);
+    --primary: oklch(0.35 0.16 264);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.93 0 0);
+    --secondary-foreground: oklch(0 0 0);
+    --muted: oklch(0.93 0 0);
+    --muted-foreground: oklch(0.32 0 0);
+    --accent: oklch(0.88 0 0);
+    --accent-foreground: oklch(0 0 0);
+    --destructive: oklch(0.42 0.19 27.325);
+    --border: oklch(0 0 0);
+    --input: oklch(0.3 0 0);
+    --ring: oklch(0 0 0);
+    /* Os tons do gráfico saem do azul monocromático para matizes separadas:
+       no tema padrão eles se distinguem pela luminosidade, que é justamente o
+       que se perde quando a pessoa não enxerga bem. */
+    --chart-1: oklch(0.45 0.2 264);
+    --chart-2: oklch(0.48 0.18 145);
+    --chart-3: oklch(0.5 0.19 45);
+    --chart-4: oklch(0.4 0.19 320);
+    --chart-5: oklch(0.28 0 0);
+    --sidebar: oklch(1 0 0);
+    --sidebar-foreground: oklch(0 0 0);
+    --sidebar-primary: oklch(0.35 0.16 264);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.88 0 0);
+    --sidebar-accent-foreground: oklch(0 0 0);
+    --sidebar-border: oklch(0 0 0);
+    --sidebar-ring: oklch(0 0 0);
+}
+
+.dark.alto-contraste {
+    --background: oklch(0 0 0);
+    --foreground: oklch(1 0 0);
+    --card: oklch(0 0 0);
+    --card-foreground: oklch(1 0 0);
+    --popover: oklch(0 0 0);
+    --popover-foreground: oklch(1 0 0);
+    /* Claro sobre fundo preto, com o texto do botão em preto: no escuro quem
+       precisa saltar é o azul, não o rótulo. */
+    --primary: oklch(0.78 0.15 250);
+    --primary-foreground: oklch(0 0 0);
+    --secondary: oklch(0.2 0 0);
+    --secondary-foreground: oklch(1 0 0);
+    --muted: oklch(0.2 0 0);
+    --muted-foreground: oklch(0.85 0 0);
+    --accent: oklch(0.28 0 0);
+    --accent-foreground: oklch(1 0 0);
+    --destructive: oklch(0.75 0.18 22.216);
+    --border: oklch(1 0 0);
+    --input: oklch(0.75 0 0);
+    --ring: oklch(1 0 0);
+    --chart-1: oklch(0.78 0.15 250);
+    --chart-2: oklch(0.8 0.19 145);
+    --chart-3: oklch(0.82 0.17 75);
+    --chart-4: oklch(0.75 0.19 330);
+    --chart-5: oklch(0.9 0 0);
+    --sidebar: oklch(0 0 0);
+    --sidebar-foreground: oklch(1 0 0);
+    --sidebar-primary: oklch(0.78 0.15 250);
+    --sidebar-primary-foreground: oklch(0 0 0);
+    --sidebar-accent: oklch(0.28 0 0);
+    --sidebar-accent-foreground: oklch(1 0 0);
+    --sidebar-border: oklch(1 0 0);
+    --sidebar-ring: oklch(1 0 0);
+}
+
+/* Só trocar os tokens não basta: metade dos componentes desenha a separação
+   com `border-transparent` ou um anel de 5% de opacidade, que continuaria
+   invisível. Estas regras ficam fora de `@layer` de propósito — assim vencem
+   os utilitários do Tailwind, que moram na camada `utilities`. */
+.alto-contraste [data-slot="button"],
+.alto-contraste [data-slot="input"],
+.alto-contraste [data-slot="textarea"],
+.alto-contraste [data-slot="select-trigger"],
+.alto-contraste [data-slot="tabs-trigger"],
+.alto-contraste [data-slot="card"],
+.alto-contraste [data-slot="popover-content"],
+.alto-contraste [data-slot="dialog-content"] {
+    border-width: 1px;
+    border-color: var(--border);
+}
+
+.alto-contraste :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+}
+
+/* Modo daltonismo.
+ *
+ * O app comunica estado por cor em três lugares: verde = aprovado, âmbar =
+ * pendente, vermelho = reprovado/erro. Verde e vermelho são exatamente o par
+ * que some nas duas formas mais comuns de daltonismo (deuteranopia e
+ * protanopia, ~8% dos homens) — as duas viram o mesmo marrom-amarelado.
+ *
+ * A troca é essa: o verde vira azul, que nenhuma forma de daltonismo confunde
+ * com quente, e o âmbar vira amarelo puro, para abrir distância do vermelho,
+ * que fica onde está. Resultado: azul / amarelo / vermelho-escuro, separáveis
+ * por matiz E por luminosidade.
+ *
+ * Funciona sem tocar em componente nenhum porque no Tailwind v4 as classes de
+ * paleta compilam para `var(--color-emerald-500)` e afins — redefinir a
+ * variável aqui redireciona toda ocorrência de `bg-emerald-*`,
+ * `text-emerald-*`, `border-emerald-*` e as versões com opacidade. Apontar
+ * para a variável da outra cor, em vez de repetir os valores oklch, evita que
+ * isto saia do lugar quando o Tailwind ajustar a paleta.
+ *
+ * Fora de `@layer` de propósito: o `@theme` do Tailwind define estas mesmas
+ * variáveis em `:root`, dentro de uma camada — CSS sem camada vence. */
+.daltonismo {
+    --color-emerald-50: var(--color-blue-50);
+    --color-emerald-100: var(--color-blue-100);
+    --color-emerald-200: var(--color-blue-200);
+    --color-emerald-300: var(--color-blue-300);
+    --color-emerald-400: var(--color-blue-400);
+    --color-emerald-500: var(--color-blue-500);
+    --color-emerald-600: var(--color-blue-600);
+    --color-emerald-700: var(--color-blue-700);
+    --color-emerald-800: var(--color-blue-800);
+    --color-emerald-900: var(--color-blue-900);
+    --color-emerald-950: var(--color-blue-950);
+    --color-green-50: var(--color-blue-50);
+    --color-green-100: var(--color-blue-100);
+    --color-green-200: var(--color-blue-200);
+    --color-green-300: var(--color-blue-300);
+    --color-green-400: var(--color-blue-400);
+    --color-green-500: var(--color-blue-500);
+    --color-green-600: var(--color-blue-600);
+    --color-green-700: var(--color-blue-700);
+    --color-green-800: var(--color-blue-800);
+    --color-green-900: var(--color-blue-900);
+    --color-green-950: var(--color-blue-950);
+    --color-amber-50: var(--color-yellow-50);
+    --color-amber-100: var(--color-yellow-100);
+    --color-amber-200: var(--color-yellow-200);
+    --color-amber-300: var(--color-yellow-300);
+    --color-amber-400: var(--color-yellow-400);
+    --color-amber-500: var(--color-yellow-500);
+    --color-amber-600: var(--color-yellow-600);
+    --color-amber-700: var(--color-yellow-700);
+    --color-amber-800: var(--color-yellow-800);
+    --color-amber-900: var(--color-yellow-900);
+    --color-amber-950: var(--color-yellow-950);
+    /* Os gráficos dos relatórios se distinguem só por luminosidade dentro do
+       mesmo azul. Isso é ruim para todo mundo, e pior aqui: quatro matizes
+       separadas do conjunto de Okabe-Ito, que é desenhado para sobreviver às
+       três formas de daltonismo. */
+    --chart-1: oklch(0.65 0.14 240);
+    --chart-2: oklch(0.75 0.15 75);
+    --chart-3: oklch(0.7 0.12 190);
+    --chart-4: oklch(0.6 0.15 350);
+    --chart-5: oklch(0.45 0.02 260);
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;

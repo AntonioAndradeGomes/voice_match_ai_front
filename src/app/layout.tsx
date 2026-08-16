@@ -6,9 +6,12 @@ import { AuthProvider } from "@/context/auth-provider";
 import { ThemeProvider } from "@/context/theme-provider";
 import { TooltipProvider } from "@/_components/ui/tooltip";
 import { Toaster } from "@/_components/ui/sonner";
+import { BotaoAcessibilidade } from "@/_components/layout/botao-acessibilidade";
 import { FloatingThemeToggle } from "@/_components/layout/floating-theme-toggle";
+import { InlineScript } from "@/_components/layout/inline-script";
 import { RouteGuard } from "@/_components/layout/route-guard";
 import { Sidebar } from "@/_components/layout/sidebar";
+import { SCRIPT_ACESSIBILIDADE } from "@/lib/acessibilidade";
 
 // Família única do projeto. O token `--font-heading` continua existindo, mas
 // aponta para esta mesma pilha em `globals.css` — assim as 29 ocorrências do
@@ -41,6 +44,14 @@ export default function RootLayout({
             className={cn("h-full", "antialiased", inter.variable)}
             suppressHydrationWarning
         >
+            <head>
+                {/* Aplica as preferências de acessibilidade enquanto o browser
+                    ainda lê o HTML, antes da primeira pintura. Sem isso a
+                    página apareceria no visual padrão e só mudaria depois da
+                    hidratação — piscando na cara de quem ligou alto contraste
+                    justamente por não enxergar bem. */}
+                <InlineScript html={SCRIPT_ACESSIBILIDADE} />
+            </head>
             <body className="h-full font-sans" suppressHydrationWarning>
                 <AuthProvider>
                     <ThemeProvider
@@ -56,6 +67,11 @@ export default function RootLayout({
                     >
                         <TooltipProvider>
                             <FloatingThemeToggle />
+                            {/* Fora do RouteGuard: vale em toda rota, inclusive
+                                nas públicas (/candidatura e /chat), que é onde
+                                está o candidato — quem mais precisa do recurso
+                                e quem não tem conta para salvar preferência. */}
+                            <BotaoAcessibilidade />
                             <RouteGuard>
                                 <div className="flex h-svh flex-col lg:flex-row">
                                     <Sidebar />
