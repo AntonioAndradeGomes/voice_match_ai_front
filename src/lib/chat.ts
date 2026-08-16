@@ -223,7 +223,7 @@ export async function carregarConversa(
             tipo: "texto",
             etapa: "pessoal",
             ordem: 1,
-            conteudo: `Olá ${candidato.nome}! Seja bem-vindo(a) à entrevista de voz do VoiceMatch AI. Para iniciarmos nossa primeira etapa (Apresentação Pessoal), por favor se apresente e compartilhe sobre sua trajetória profissional e motivações.`,
+            conteudo: `Olá, ${candidato.nome}! Eu sou a Iris, a inteligência artificial do VoiceMatch AI, e vou conduzir a sua entrevista de voz. Para iniciarmos nossa primeira etapa (Apresentação Pessoal), por favor se apresente e compartilhe sobre sua trajetória profissional e motivações.`,
             timestamp: new Date().toISOString(),
         });
     }
