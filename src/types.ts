@@ -108,6 +108,7 @@ export interface Candidato {
         entusiasmo_e_engajamento?: number;
         parecer_acustico?: string;
     } | null;
+    dataConclusaoEntrevista?: string | null;
     createdAt: string;
 }
 
