@@ -107,9 +107,9 @@ export function CardGrafico({
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {tabela.linhas.map((linha) => (
+                                        {tabela.linhas.map((linha, indexLinha) => (
                                             <tr
-                                                key={String(linha[0])}
+                                                key={`${String(linha[0])}-${indexLinha}`}
                                                 className="border-t border-border"
                                             >
                                                 {linha.map((celula, indice) => (
