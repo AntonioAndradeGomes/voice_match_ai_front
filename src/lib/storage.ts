@@ -275,6 +275,7 @@ export async function getCandidatosByVaga(vagaId: string): Promise<Candidato[]> 
                             const triagem = extrairTriagem(cand);
                             let notaFinal: number | null = null;
                             let softSkillsAcusticas: any = null;
+                            let dataConclusaoEntrevista: string | null = null;
 
                             if (resEntrevistas && resEntrevistas.ok) {
                                 const entrevistas = await resEntrevistas.json();
@@ -283,6 +284,7 @@ export async function getCandidatosByVaga(vagaId: string): Promise<Candidato[]> 
                                     if (ultimaEntrevista.score_geral !== null && ultimaEntrevista.score_geral !== undefined) {
                                         notaFinal = Number(ultimaEntrevista.score_geral);
                                     }
+                                    dataConclusaoEntrevista = ultimaEntrevista.data_fim || ultimaEntrevista.data_criacao || null;
                                     if (ultimaEntrevista.status === "concluida" || notaFinal !== null) {
                                         statusFrontend = "finalizado";
                                     } else if (statusFrontend === "aguardando" && cand.status === "aprovada_triagem") {
@@ -301,6 +303,7 @@ export async function getCandidatosByVaga(vagaId: string): Promise<Candidato[]> 
                                 perfilAvaliado: null,
                                 notaFinal,
                                 softSkillsAcusticas,
+                                dataConclusaoEntrevista,
                                 pontosFortes: null,
                                 pontosFracos: null,
                                 melhorias: null,
