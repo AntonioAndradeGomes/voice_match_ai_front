@@ -4,6 +4,7 @@ import { Plus, RotateCcw, Sparkles, Wrench, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { GruposHabilidadesSection } from "@/_components/habilidades/grupos-habilidades-section";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import {
@@ -202,6 +203,11 @@ export default function ConfiguracoesPage() {
                         />
                     </div>
                 </section>
+
+                {/* Depois da gestão de habilidades de propósito: o grupo é
+                    montado a partir das listas acima, então ler nesta ordem é
+                    ler na ordem em que as coisas se constroem. */}
+                <GruposHabilidadesSection />
             </div>
         </ScrollArea>
     );
