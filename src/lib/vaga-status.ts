@@ -53,7 +53,7 @@ export function getResumoVagaBadge(candidatos: Candidato[]): ResumoVagaBadge {
 export function getCandidatoBadge(candidato: Candidato): ResumoVagaBadge {
     if (candidato.status === "finalizado") {
         return candidato.notaFinal !== null
-            ? { label: `Nota ${candidato.notaFinal}/100`, variant: "default" }
+            ? { label: `Nota ${Number(candidato.notaFinal).toFixed(1)} / 10`, variant: "default" }
             : { label: "Finalizado", variant: "outline" };
     }
 

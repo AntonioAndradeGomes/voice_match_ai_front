@@ -66,15 +66,26 @@ function ordenarPorRanking(candidatos: Candidato[]): Candidato[] {
         const notaA = a.notaFinal !== null && a.notaFinal !== undefined ? Number(a.notaFinal) : null;
         const notaB = b.notaFinal !== null && b.notaFinal !== undefined ? Number(b.notaFinal) : null;
 
-        if (notaA !== null && notaB !== null) return notaB - notaA;
+        if (notaA !== null && notaB !== null) {
+            if (notaA !== notaB) return notaB - notaA;
+            // Desempate 1: Nota da triagem de currículo
+            const triagemA = a.triagem?.score !== null && a.triagem?.score !== undefined ? Number(a.triagem.score) : 0;
+            const triagemB = b.triagem?.score !== null && b.triagem?.score !== undefined ? Number(b.triagem.score) : 0;
+            if (triagemA !== triagemB) return triagemB - triagemA;
+            // Desempate 2: Data de candidatura mais recente
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
         if (notaA !== null) return -1;
         if (notaB !== null) return 1;
 
-        // 2. Score da triagem de currículo (0 a 10)
+        // 2. Score da triagem de currículo (para quem ainda não concluiu a entrevista)
         const triagemA = a.triagem?.score !== null && a.triagem?.score !== undefined ? Number(a.triagem.score) : null;
         const triagemB = b.triagem?.score !== null && b.triagem?.score !== undefined ? Number(b.triagem.score) : null;
 
-        if (triagemA !== null && triagemB !== null) return triagemB - triagemA;
+        if (triagemA !== null && triagemB !== null) {
+            if (triagemA !== triagemB) return triagemB - triagemA;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
         if (triagemA !== null) return -1;
         if (triagemB !== null) return 1;
 
