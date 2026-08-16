@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, RotateCcw, Sparkles, Wrench, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/_components/ui/badge";
@@ -17,6 +17,7 @@ import { Input } from "@/_components/ui/input";
 import { ScrollArea } from "@/_components/ui/scroll-area";
 import {
     adicionarHabilidade,
+    fetchCatalogoAPI,
     getCatalogo,
     removerHabilidade,
     restaurarPadrao,
@@ -117,10 +118,13 @@ function ListaHabilidades({
 }
 
 export default function ConfiguracoesPage() {
-    // Inicializador preguiçoso: `getCatalogo` roda uma vez, na montagem, já no
-    // cliente. As funções de escrita devolvem o catálogo novo, então o estado
-    // sai direto delas — sem efeito e sem reler o storage a cada mudança.
     const [catalogo, setCatalogo] = useState<CatalogoHabilidades>(getCatalogo);
+
+    useEffect(() => {
+        fetchCatalogoAPI().then((cat) => {
+            if (cat) setCatalogo(cat);
+        });
+    }, []);
 
     function handleAdicionar(tipo: TipoHabilidade, nome: string) {
         const atualizado = adicionarHabilidade(tipo, nome);
