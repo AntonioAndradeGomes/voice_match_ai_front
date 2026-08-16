@@ -153,8 +153,11 @@ function ehStatusDeTriagem(status: string): status is StatusTriagem {
  * uma visão mais grossa (só aguardando / em entrevista / finalizado). Os
  * estados de triagem entram como "aguardando" porque a entrevista ainda não
  * começou — quem detalha essa fase é o campo `triagem`.
+ *
+ * Exportada porque os Relatórios fazem a mesma tradução ao agregar as
+ * candidaturas do backend — a regra tem que ser uma só.
  */
-function mapearStatusCandidatura(status: string): StatusCandidato {
+export function mapearStatusCandidatura(status: string): StatusCandidato {
     if (status === "em_entrevista") return "em_entrevista";
     if (status === "avaliada" || status === "aprovada" || status === "rejeitada") {
         return "finalizado";
@@ -274,7 +277,11 @@ export async function getCandidatosByVaga(vagaId: string): Promise<Candidato[]> 
                             let statusFrontend = mapearStatusCandidatura(cand.status);
                             const triagem = extrairTriagem(cand);
                             let notaFinal: number | null = null;
-                            let softSkillsAcusticas: any = null;
+                            // Nunca preenchida neste caminho — as soft skills
+                            // acústicas só chegam pelo detalhe da entrevista
+                            // (ver lib/chat.ts), não pela listagem.
+                            const softSkillsAcusticas: Candidato["softSkillsAcusticas"] =
+                                null;
                             let dataConclusaoEntrevista: string | null = null;
 
                             if (resEntrevistas && resEntrevistas.ok) {

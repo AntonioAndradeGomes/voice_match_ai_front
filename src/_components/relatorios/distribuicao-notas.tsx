@@ -21,9 +21,13 @@ import { cn } from "@/lib/utils";
 export function DistribuicaoNotas({
     faixas,
     semNota,
+    // A escala acompanha a fonte dos dados: 0–10 quando as notas vêm das
+    // entrevistas do backend, 0–100 no modo local (ver lib/relatorios.ts).
+    notaMaxima = NOTA_MAXIMA,
 }: {
     faixas: FaixaDeNota[];
     semNota: number;
+    notaMaxima?: number;
 }) {
     const [ativa, setAtiva] = useState<string | null>(null);
 
@@ -33,7 +37,7 @@ export function DistribuicaoNotas({
     return (
         <CardGrafico
             titulo="Distribuição das notas finais"
-            descricao={`Notas dos candidatos já avaliados, em faixas de 0 a ${NOTA_MAXIMA}.`}
+            descricao={`Notas dos candidatos já avaliados, em faixas de 0 a ${notaMaxima}.`}
             vazio={avaliados === 0}
             mensagemVazio="Nenhum candidato foi avaliado ainda — as notas aparecem aqui quando as entrevistas forem concluídas."
             tabela={{
