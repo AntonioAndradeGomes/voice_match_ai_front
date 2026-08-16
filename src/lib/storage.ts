@@ -117,11 +117,63 @@ export async function saveVaga(vaga: Vaga): Promise<Vaga> {
             const data = await response.json();
             vaga.id = data.id;
             vaga.createdAt = data.data_criacao;
+
+            // Sincroniza VagaHabilidade estruturada no banco com pesos (1 a 10)
+            try {
+                const resHab = await apiFetch(`${API_BASE_URL}/habilidades/?limit=200`);
+                if (resHab.ok) {
+                    const listaHab = await resHab.json();
+                    const mapaHab = new Map<string, string>(
+                        listaHab.map((h: { nome: string; id: string }) => [
+                            h.nome.toLowerCase().trim(),
+                            h.id,
+                        ]),
+                    );
+
+                    const vinculos: Array<{
+                        habilidade_id: string;
+                        peso: number;
+                        obrigatoriedade: "OBRIGATORIA" | "DESEJAVEL";
+                    }> = [];
+
+                    for (const h of vaga.hardSkills || []) {
+                        const id = mapaHab.get(h.nome.toLowerCase().trim());
+                        if (id) {
+                            vinculos.push({
+                                habilidade_id: id,
+                                peso: Math.min(10, Math.max(1, Math.round(h.peso))),
+                                obrigatoriedade: "OBRIGATORIA",
+                            });
+                        }
+                    }
+
+                    for (const s of vaga.softSkills || []) {
+                        const id = mapaHab.get(s.nome.toLowerCase().trim());
+                        if (id) {
+                            vinculos.push({
+                                habilidade_id: id,
+                                peso: Math.min(10, Math.max(1, Math.round(s.peso))),
+                                obrigatoriedade: "DESEJAVEL",
+                            });
+                        }
+                    }
+
+                    if (vinculos.length > 0) {
+                        await apiFetch(`${API_BASE_URL}/vagas/${vaga.id}/habilidades`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(vinculos),
+                        });
+                    }
+                }
+            } catch (errVinculo) {
+                console.warn("Falha ao sincronizar vaga_habilidade no backend:", errVinculo);
+            }
         } else {
-            console.warn("API indisponível ou erro no túnel ngrok. Salvando vaga localmente.");
+            console.warn("API indisponível ou erro no backend. Salvando vaga localmente.");
         }
     } catch (e) {
-        console.warn("Falha ao se conectar com a API (ngrok/backend). Salvando vaga localmente.", e);
+        console.warn("Falha ao se conectar com a API. Salvando vaga localmente.", e);
     }
 
     const vagas = readList<Vaga>(KEYS.vagas);

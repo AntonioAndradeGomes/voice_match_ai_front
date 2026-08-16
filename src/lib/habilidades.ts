@@ -1,90 +1,72 @@
-// Catálogo de habilidades oferecidas na criação de vaga.
-//
-// Persiste em localStorage, e não no backend, porque hoje não existe endpoint
-// de habilidades (os routers cobrem vaga, candidato, candidatura, entrevista,
-// usuário e áudio). Quando existir, troque o corpo destas funções mantendo as
-// assinaturas — mesma estratégia do resto de lib/storage.ts.
+import { apiFetch, API_BASE_URL } from "@/lib/api";
 
 const CHAVE = "voicematch:habilidades";
 
 export type TipoHabilidade = "hard" | "soft";
 
-/**
- * Lista base, usada enquanto o recrutador não personaliza nada. Também é o
- * alvo do "restaurar padrão".
- */
-export const HARD_SKILLS_PADRAO = [
-    "Excel avançado",
-    "SQL",
-    "Inglês avançado",
-    "Gestão de projetos",
-    "CRM (Salesforce/HubSpot)",
-    "Copywriting",
-    "SEO",
-    "Análise de dados",
-    "Programação (JavaScript/Python)",
-    "Design gráfico",
-    "Contabilidade",
-    "Recrutamento e seleção",
-    "Atendimento ao cliente",
-    "Negociação comercial",
-    "Edição de vídeo",
-    "Marketing digital",
-    "Gestão financeira",
-    "Power BI",
-    "Vendas B2B",
-];
-
-export const SOFT_SKILLS_PADRAO = [
-    "Comunicação",
-    "Trabalho em equipe",
-    "Proatividade",
-    "Resiliência",
-    "Liderança",
-    "Adaptabilidade",
-    "Pensamento crítico",
-    "Organização",
-    "Empatia",
-    "Criatividade",
-    "Autonomia",
-    "Foco em resultado",
-    "Inteligência emocional",
-    "Gestão do tempo",
-];
+export interface HabilidadeBackend {
+    id: string;
+    nome: string;
+    tipo: "HARD" | "SOFT";
+    categoria: string;
+    empresa_id: string | null;
+}
 
 export interface CatalogoHabilidades {
     hard: string[];
     soft: string[];
+    itensDetalhados?: HabilidadeBackend[];
 }
+
+export const HARD_SKILLS_PADRAO = [
+    "React",
+    "Next.js",
+    "TypeScript",
+    "JavaScript (ES6+)",
+    "Vue.js",
+    "Angular",
+    "HTML5 / CSS3",
+    "Tailwind CSS",
+    "Redux / Zustand",
+    "Consumo de APIs (REST / GraphQL)",
+    "Node.js (Express / NestJS)",
+    "Python (FastAPI / Django)",
+    "Java (Spring Boot)",
+    "C# (.NET Core)",
+    "Go (Golang)",
+    "PHP (Laravel)",
+    "Criação de APIs RESTful e WebSockets",
+    "PostgreSQL",
+    "MySQL",
+    "MongoDB",
+    "Redis",
+    "Docker & Docker Compose",
+    "Kubernetes",
+    "AWS (S3, EC2, Lambda)",
+    "CI/CD (GitHub Actions / GitLab)",
+    "Git & Git Flow",
+    "Linux & Nginx",
+    "Clean Architecture & SOLID",
+    "Testes Automatizados (Jest, Pytest, Cypress)",
+];
+
+export const SOFT_SKILLS_PADRAO = [
+    "Comunicação Clara e Articulada",
+    "Resolução de Problemas sob Pressão",
+    "Trabalho em Equipe e Colaboração",
+    "Adaptabilidade e Aprendizado Rápido",
+    "Organização e Gestão de Tempo",
+    "Pensamento Crítico e Análise",
+    "Liderança e Mentoria Técnica",
+    "Gestão de Conflitos e Inteligência Emocional",
+];
 
 function isBrowser() {
     return typeof window !== "undefined";
 }
 
 function padrao(): CatalogoHabilidades {
-    return { hard: [...HARD_SKILLS_PADRAO], soft: [...SOFT_SKILLS_PADRAO] };
-}
-
-/**
- * Catálogo atual. Cai no padrão quando não há nada salvo, quando o JSON está
- * corrompido ou quando falta uma das listas — assim uma gravação parcial
- * antiga não deixa a criação de vaga sem opções.
- */
-export function getCatalogo(): CatalogoHabilidades {
-    if (!isBrowser()) return padrao();
-
-    const bruto = window.localStorage.getItem(CHAVE);
-    if (!bruto) return padrao();
-
-    try {
-        const salvo = JSON.parse(bruto) as Partial<CatalogoHabilidades>;
-        return {
-            hard: Array.isArray(salvo.hard) ? salvo.hard : [...HARD_SKILLS_PADRAO],
-            soft: Array.isArray(salvo.soft) ? salvo.soft : [...SOFT_SKILLS_PADRAO],
-        };
-    } catch {
-        return padrao();
-    }
+    return { hard: [...HARD_SKILLS_PADRAO], soft: [...SOFT_SKILLS_PADRAO], itensDetalhados: [] };
 }
 
 function salvar(catalogo: CatalogoHabilidades) {
@@ -96,7 +78,6 @@ function normalizar(nome: string) {
     return nome.trim();
 }
 
-/** Comparação usada contra duplicata: ignora caixa e acento. */
 function chaveComparacao(nome: string) {
     return nome
         .trim()
@@ -115,20 +96,91 @@ export function existeHabilidade(
 }
 
 /**
- * Acrescenta ao fim da lista e devolve o catálogo novo. Devolve `null` quando
- * o nome está vazio ou já existe, para a tela distinguir "não fiz nada" de
- * "salvei" sem precisar comparar as listas.
+ * Catálogo em cache síncrono local.
  */
-export function adicionarHabilidade(
+export function getCatalogo(): CatalogoHabilidades {
+    if (!isBrowser()) return padrao();
+
+    const bruto = window.localStorage.getItem(CHAVE);
+    if (!bruto) return padrao();
+
+    try {
+        const salvo = JSON.parse(bruto) as Partial<CatalogoHabilidades>;
+        return {
+            hard: Array.isArray(salvo.hard) && salvo.hard.length > 0 ? salvo.hard : [...HARD_SKILLS_PADRAO],
+            soft: Array.isArray(salvo.soft) && salvo.soft.length > 0 ? salvo.soft : [...SOFT_SKILLS_PADRAO],
+            itensDetalhados: salvo.itensDetalhados || [],
+        };
+    } catch {
+        return padrao();
+    }
+}
+
+/**
+ * Busca a lista completa de habilidades diretamente do Backend via API.
+ */
+export async function fetchCatalogoAPI(): Promise<CatalogoHabilidades> {
+    try {
+        const res = await apiFetch(`${API_BASE_URL}/habilidades/?limit=200`);
+        if (res.ok) {
+            const data: HabilidadeBackend[] = await res.json();
+            const hard = data.filter((h) => h.tipo === "HARD").map((h) => h.nome);
+            const soft = data.filter((h) => h.tipo === "SOFT").map((h) => h.nome);
+
+            const catalogo: CatalogoHabilidades = {
+                hard: hard.length > 0 ? hard : [...HARD_SKILLS_PADRAO],
+                soft: soft.length > 0 ? soft : [...SOFT_SKILLS_PADRAO],
+                itensDetalhados: data,
+            };
+            salvar(catalogo);
+            return catalogo;
+        }
+    } catch (e) {
+        console.warn("Falha ao buscar habilidades da API. Usando cache local:", e);
+    }
+    return getCatalogo();
+}
+
+/**
+ * Adiciona habilidade via API no backend e atualiza o cache local.
+ */
+export async function adicionarHabilidadeAPI(
     tipo: TipoHabilidade,
     nome: string,
-): CatalogoHabilidades | null {
+    categoria: string = "Geral",
+): Promise<CatalogoHabilidades | null> {
     const limpo = normalizar(nome);
     if (!limpo) return null;
 
     const catalogo = getCatalogo();
     if (existeHabilidade(catalogo, tipo, limpo)) return null;
 
+    try {
+        const res = await apiFetch(`${API_BASE_URL}/habilidades/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                nome: limpo,
+                tipo: tipo.toUpperCase(),
+                categoria,
+            }),
+        });
+
+        if (res.ok) {
+            const novaHab: HabilidadeBackend = await res.json();
+            const atualizado: CatalogoHabilidades = {
+                ...catalogo,
+                [tipo]: [...catalogo[tipo], limpo],
+                itensDetalhados: [...(catalogo.itensDetalhados || []), novaHab],
+            };
+            salvar(atualizado);
+            return atualizado;
+        }
+    } catch (e) {
+        console.warn("Falha ao salvar habilidade na API. Salvando localmente:", e);
+    }
+
+    // Fallback local
     const atualizado: CatalogoHabilidades = {
         ...catalogo,
         [tipo]: [...catalogo[tipo], limpo],
@@ -137,16 +189,63 @@ export function adicionarHabilidade(
     return atualizado;
 }
 
-export function removerHabilidade(
+/**
+ * Remove habilidade via API no backend e atualiza o cache local.
+ */
+export async function removerHabilidadeAPI(
     tipo: TipoHabilidade,
     nome: string,
-): CatalogoHabilidades {
+): Promise<CatalogoHabilidades> {
+    const catalogo = getCatalogo();
+    const itemDetalhado = catalogo.itensDetalhados?.find(
+        (h) => h.nome.toLowerCase() === nome.toLowerCase() && h.tipo.toLowerCase() === tipo,
+    );
+
+    if (itemDetalhado?.id) {
+        try {
+            await apiFetch(`${API_BASE_URL}/habilidades/${itemDetalhado.id}`, {
+                method: "DELETE",
+            });
+        } catch (e) {
+            console.warn("Falha ao remover habilidade da API:", e);
+        }
+    }
+
+    const atualizado: CatalogoHabilidades = {
+        ...catalogo,
+        [tipo]: catalogo[tipo].filter((item) => item !== nome),
+        itensDetalhados: catalogo.itensDetalhados?.filter(
+            (h) => !(h.nome.toLowerCase() === nome.toLowerCase() && h.tipo.toLowerCase() === tipo),
+        ),
+    };
+    salvar(atualizado);
+    return atualizado;
+}
+
+export function adicionarHabilidade(tipo: TipoHabilidade, nome: string): CatalogoHabilidades | null {
+    const limpo = normalizar(nome);
+    if (!limpo) return null;
+    const catalogo = getCatalogo();
+    if (existeHabilidade(catalogo, tipo, limpo)) return null;
+    const atualizado: CatalogoHabilidades = {
+        ...catalogo,
+        [tipo]: [...catalogo[tipo], limpo],
+    };
+    salvar(atualizado);
+    // Dispara criação assíncrona em background
+    adicionarHabilidadeAPI(tipo, nome).catch(console.error);
+    return atualizado;
+}
+
+export function removerHabilidade(tipo: TipoHabilidade, nome: string): CatalogoHabilidades {
     const catalogo = getCatalogo();
     const atualizado: CatalogoHabilidades = {
         ...catalogo,
         [tipo]: catalogo[tipo].filter((item) => item !== nome),
     };
     salvar(atualizado);
+    // Dispara remoção assíncrona em background
+    removerHabilidadeAPI(tipo, nome).catch(console.error);
     return atualizado;
 }
 
@@ -156,11 +255,6 @@ export function restaurarPadrao(): CatalogoHabilidades {
     return novo;
 }
 
-/**
- * As vagas guardam o nome da habilidade, não uma referência ao catálogo.
- * Remover uma daqui não altera vaga nenhuma já criada — é só a lista de
- * sugestões do formulário. A tela avisa isso ao usuário.
- */
 export function getHardSkills() {
     return getCatalogo().hard;
 }
