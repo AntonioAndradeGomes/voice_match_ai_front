@@ -52,9 +52,7 @@ export function getResumoVagaBadge(candidatos: Candidato[]): ResumoVagaBadge {
 // "default"); os demais estados são só informativos.
 export function getCandidatoBadge(candidato: Candidato): ResumoVagaBadge {
     if (candidato.status === "finalizado") {
-        return candidato.notaFinal !== null
-            ? { label: `Nota ${Number(candidato.notaFinal).toFixed(1)} / 10`, variant: "default" }
-            : { label: "Finalizado", variant: "outline" };
+        return { label: "Entrevista Concluída", variant: "outline" };
     }
 
     if (candidato.status === "em_entrevista") {
