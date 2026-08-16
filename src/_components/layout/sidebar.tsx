@@ -8,6 +8,7 @@ import {
     PanelLeftClose,
     PanelLeftOpen,
     Settings,
+    UsersRound,
     type LucideIcon,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
@@ -34,10 +35,16 @@ import {
 } from "@/_components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-// Itens do dia a dia do recrutador, na ordem em que ele trabalha.
+// Itens do dia a dia do recrutador, na ordem em que ele trabalha: abre a vaga,
+// olha as pessoas, confere os números.
+//
+// "Talentos" e não "Banco de Talentos": o rótulo aparece na sidebar recolhida
+// como tooltip e ao lado de itens de uma palavra só. O nome completo fica no
+// <h1> da página.
 const NAV_PRINCIPAL = [
     { href: "/", label: "Dashboard", icone: LayoutDashboard },
     { href: "/vagas", label: "Vagas", icone: Briefcase },
+    { href: "/talentos", label: "Talentos", icone: UsersRound },
     { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
 
