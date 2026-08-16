@@ -1,5 +1,6 @@
 "use client";
 
+import { Layers } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +26,11 @@ import {
 } from "@/_components/ui/select";
 import { Slider } from "@/_components/ui/slider";
 import { Textarea } from "@/_components/ui/textarea";
+import {
+    getGrupos,
+    mesclarSkills,
+    type GrupoHabilidades,
+} from "@/lib/grupos-habilidades";
 import { getCatalogo, type CatalogoHabilidades } from "@/lib/habilidades";
 import { saveVaga } from "@/lib/storage";
 import {
@@ -74,6 +80,28 @@ export function NovaVagaDialog({
         () => (open ? getCatalogo() : { hard: [], soft: [] }),
         [open],
     );
+
+    // Mesma leitura em tempo de abertura: criar um grupo em /configuracoes e
+    // voltar para cá já mostra o grupo novo na lista.
+    const grupos: GrupoHabilidades[] = useMemo(
+        () => (open ? getGrupos() : []),
+        [open],
+    );
+
+    function aplicarGrupo(grupoId: string) {
+        const grupo = grupos.find((item) => item.id === grupoId);
+        if (!grupo) return;
+
+        setCampos((prev) => ({
+            ...prev,
+            hardSkills: mesclarSkills(prev.hardSkills, grupo.hardSkills),
+            softSkills: mesclarSkills(prev.softSkills, grupo.softSkills),
+        }));
+
+        toast.success(`Grupo "${grupo.nome}" aplicado`, {
+            description: `${grupo.hardSkills.length} hard e ${grupo.softSkills.length} soft skills preenchidas.`,
+        });
+    }
 
     function handleOpenChange(nextOpen: boolean) {
         onOpenChange(nextOpen);
@@ -249,6 +277,45 @@ export function NovaVagaDialog({
                             </div>
                         </div>
                     </div>
+
+                    {/* Só aparece quando há grupo salvo: um seletor vazio seria
+                        só um controle morto no meio do formulário. */}
+                    {grupos.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-muted/20 p-3.5">
+                            <Layers className="size-4 shrink-0 text-primary" />
+                            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                <span className="text-sm font-medium">
+                                    Aplicar grupo de habilidades
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                    Preenche as skills e os pesos do template. O
+                                    que você já escolheu à mão é mantido.
+                                </span>
+                            </div>
+                            <div className="w-full shrink-0 sm:w-64">
+                                <Select
+                                    value={null}
+                                    onValueChange={(value) => {
+                                        if (value) aplicarGrupo(String(value));
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Escolher grupo..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {grupos.map((grupo) => (
+                                            <SelectItem
+                                                key={grupo.id}
+                                                value={grupo.id}
+                                            >
+                                                {grupo.nome}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <SkillPicker
