@@ -1,9 +1,9 @@
 "use client";
 
-import { XIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { SkillPicker } from "@/_components/habilidades/skill-picker";
 import { Button } from "@/_components/ui/button";
 import {
     Dialog,
@@ -42,8 +42,6 @@ import {
 
 const NIVEIS_EXPERIENCIA = ["1 a 2 anos", "3 a 5 anos", "Mais de 5 anos"];
 
-const PESO_INICIAL = 5;
-
 const CAMPOS_INICIAIS = {
     titulo: "",
     descricao: "",
@@ -59,111 +57,6 @@ interface NovaVagaDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onVagaCriada: () => void;
-}
-
-interface SkillPickerProps {
-    label: string;
-    opcoes: string[];
-    skills: SkillComPeso[];
-    onChange: (skills: SkillComPeso[]) => void;
-}
-
-function SkillPicker({ label, opcoes, skills, onChange }: SkillPickerProps) {
-    const opcoesDisponiveis = opcoes.filter(
-        (opcao) => !skills.some((skill) => skill.nome === opcao),
-    );
-
-    function adicionarSkill(nome: string) {
-        onChange([...skills, { nome, peso: PESO_INICIAL }]);
-    }
-
-    function removerSkill(nome: string) {
-        onChange(skills.filter((skill) => skill.nome !== nome));
-    }
-
-    function atualizarPeso(nome: string, peso: number) {
-        onChange(
-            skills.map((skill) =>
-                skill.nome === nome ? { ...skill, peso } : skill,
-            ),
-        );
-    }
-
-    return (
-        <div className="flex flex-col gap-2">
-            <Label>{label}</Label>
-            <div className="flex flex-col gap-3 rounded-2xl border border-border p-3">
-                {skills.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                        Nenhuma skill selecionada.
-                    </p>
-                ) : (
-                    <div className="flex flex-col gap-3">
-                        {skills.map((skill) => (
-                            <div
-                                key={skill.nome}
-                                className="flex flex-wrap items-center gap-x-3 gap-y-1.5"
-                            >
-                                <span className="min-w-32 flex-1 truncate text-sm">
-                                    {skill.nome}
-                                </span>
-                                <div className="flex shrink-0 items-center gap-2">
-                                    <div className="w-20">
-                                        <Slider
-                                            min={1}
-                                            max={10}
-                                            step={1}
-                                            value={[skill.peso]}
-                                            onValueChange={(value) =>
-                                                atualizarPeso(
-                                                    skill.nome,
-                                                    Array.isArray(value)
-                                                        ? value[0]
-                                                        : value,
-                                                )
-                                            }
-                                        />
-                                    </div>
-                                    <span className="w-5 shrink-0 text-right text-xs text-muted-foreground">
-                                        {skill.peso}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            removerSkill(skill.nome)
-                                        }
-                                        className="shrink-0 rounded-full p-0.5 text-muted-foreground hover:bg-foreground/10"
-                                        aria-label={`Remover ${skill.nome}`}
-                                    >
-                                        <XIcon className="size-3.5" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                <Select
-                    value={null}
-                    onValueChange={(value) => {
-                        if (value) adicionarSkill(String(value));
-                    }}
-                    disabled={opcoesDisponiveis.length === 0}
-                >
-                    <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Adicionar skill..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {opcoesDisponiveis.map((opcao) => (
-                            <SelectItem key={opcao} value={opcao}>
-                                {opcao}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-        </div>
-    );
 }
 
 export function NovaVagaDialog({
