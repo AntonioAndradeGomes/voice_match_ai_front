@@ -13,6 +13,7 @@ const PREFIXOS_SEM_NAV = ["/chat", "/candidatura"];
 const ROUTE_PREFIXES = [
     "/",
     "/vagas",
+    "/talentos",
     "/relatorios",
     "/configuracoes",
     "/chat",

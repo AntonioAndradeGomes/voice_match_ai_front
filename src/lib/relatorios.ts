@@ -2,7 +2,20 @@
 // devolve números prontos para desenhar — não toca em localStorage nem em React,
 // então continua valendo quando `storage.ts` virar chamada de API.
 
-import type { Candidato, StatusCandidato, Vaga } from "@/types";
+import type { StatusCandidato, Vaga } from "@/types";
+
+/**
+ * O mínimo que as agregações precisam saber de um candidato. `Candidato`
+ * completo encaixa aqui por estrutura, mas a página de Relatórios também monta
+ * estas linhas direto das candidaturas do backend — uma linha por candidatura,
+ * que é a unidade certa: a mesma pessoa em duas vagas conta duas vezes no
+ * funil e no gráfico por vaga.
+ */
+export interface CandidatoRelatorio {
+    vagaId: string;
+    status: StatusCandidato;
+    notaFinal: number | null;
+}
 
 // Ordem do funil: aguardando → em entrevista → finalizado. É ordinal (trocar a
 // ordem muda o significado), por isso a cor destas etapas usa rampa de um tom só.
@@ -18,10 +31,12 @@ export const STATUS_LABEL: Record<StatusCandidato, string> = {
     finalizado: "Finalizado",
 };
 
-// A escala de `notaFinal` não está fixada em `types.ts` — `calculateScore` ainda
-// é stub. Assumimos 0–100 aqui; se o backend devolver outra escala, muda só esta
-// constante e as faixas abaixo se ajustam sozinhas.
+// Escala dos dados locais (o seed guarda notas como 87, 92…). O backend real
+// dá `score_geral` de 0 a 10 — por isso a escala é parâmetro de
+// `distribuirNotas`, e esta constante ficou como padrão do modo local.
 export const NOTA_MAXIMA = 100;
+/** Escala do `score_geral` das entrevistas do backend. */
+export const NOTA_MAXIMA_BACKEND = 10;
 const FAIXAS_DE_NOTA = 5;
 
 export interface ResumoRelatorio {
@@ -34,7 +49,7 @@ export interface ResumoRelatorio {
 
 export function calcularResumo(
     vagas: Vaga[],
-    candidatos: Candidato[],
+    candidatos: CandidatoRelatorio[],
 ): ResumoRelatorio {
     const notas = candidatos
         .map((candidato) => candidato.notaFinal)
@@ -60,7 +75,7 @@ export interface EtapaFunil {
     fracao: number;
 }
 
-export function montarFunil(candidatos: Candidato[]): EtapaFunil[] {
+export function montarFunil(candidatos: CandidatoRelatorio[]): EtapaFunil[] {
     return STATUS_ORDEM.map((status) => {
         const total = candidatos.filter(
             (candidato) => candidato.status === status,
@@ -86,7 +101,7 @@ export interface TotalPorVaga {
  */
 export function contarCandidatosPorVaga(
     vagas: Vaga[],
-    candidatos: Candidato[],
+    candidatos: CandidatoRelatorio[],
     limite?: number,
 ): TotalPorVaga[] {
     const ordenadas = vagas
@@ -124,8 +139,11 @@ export interface FaixaDeNota {
  * Histograma das notas finais em faixas de largura fixa. Candidatos sem nota
  * (ainda não avaliados) ficam de fora — entram na contagem de "sem nota".
  */
-export function distribuirNotas(candidatos: Candidato[]): FaixaDeNota[] {
-    const largura = NOTA_MAXIMA / FAIXAS_DE_NOTA;
+export function distribuirNotas(
+    candidatos: CandidatoRelatorio[],
+    notaMaxima: number = NOTA_MAXIMA,
+): FaixaDeNota[] {
+    const largura = notaMaxima / FAIXAS_DE_NOTA;
     const notas = candidatos
         .map((candidato) => candidato.notaFinal)
         .filter((nota): nota is number => nota !== null);
@@ -147,7 +165,7 @@ export function distribuirNotas(candidatos: Candidato[]): FaixaDeNota[] {
     });
 }
 
-export function contarSemNota(candidatos: Candidato[]): number {
+export function contarSemNota(candidatos: CandidatoRelatorio[]): number {
     return candidatos.filter((candidato) => candidato.notaFinal === null)
         .length;
 }

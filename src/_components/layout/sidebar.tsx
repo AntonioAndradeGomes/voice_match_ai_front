@@ -8,6 +8,7 @@ import {
     PanelLeftClose,
     PanelLeftOpen,
     Settings,
+    UsersRound,
     type LucideIcon,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
@@ -34,10 +35,16 @@ import {
 } from "@/_components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-// Itens do dia a dia do recrutador, na ordem em que ele trabalha.
+// Itens do dia a dia do recrutador, na ordem em que ele trabalha: abre a vaga,
+// olha as pessoas, confere os números.
+//
+// "Talentos" e não "Banco de Talentos": o rótulo aparece na sidebar recolhida
+// como tooltip e ao lado de itens de uma palavra só. O nome completo fica no
+// <h1> da página.
 const NAV_PRINCIPAL = [
     { href: "/", label: "Dashboard", icone: LayoutDashboard },
     { href: "/vagas", label: "Vagas", icone: Briefcase },
+    { href: "/talentos", label: "Talentos", icone: UsersRound },
     { href: "/relatorios", label: "Relatórios", icone: ChartColumn },
 ];
 
@@ -140,17 +147,26 @@ export function Sidebar() {
             {/* Mobile: barra superior com hambúrguer, sidebar vira um drawer */}
             <header className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground lg:hidden">
                 <Link href="/" className="flex items-center gap-2">
-                    {/* Fundo escuro atrás da logo sem fundo: metade da marca é
-                        branca, e a sidebar é quase branca no tema claro — sem
-                        essa base, esse lado sumiria. No tema escuro o mesmo
-                        tom apenas se funde com a barra. */}
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-xl bg-zinc-900 p-1">
+                    {/* Logo sem chip de fundo, direto na barra. A marca tem
+                        metade branca, invisível na sidebar clara — por isso
+                        existem duas versões trocadas por tema, como o sol/lua
+                        do ThemeToggle: traço escuro no claro (o -escuro é
+                        gerado do original recolorindo só os pixels claros) e
+                        a original no escuro. */}
+                    <span className="flex size-7 shrink-0 items-center justify-center">
+                        <Image
+                            src="/logo/icone-nobg-escuro.png"
+                            alt="VoiceMatch.Ai"
+                            width={28}
+                            height={28}
+                            className="size-full dark:hidden"
+                        />
                         <Image
                             src="/logo/icone-nobg.png"
                             alt="VoiceMatch.Ai"
-                            width={24}
-                            height={24}
-                            className="size-full"
+                            width={28}
+                            height={28}
+                            className="hidden size-full dark:block"
                         />
                     </span>
                     <span className="font-heading text-base font-semibold tracking-tight">
@@ -249,14 +265,23 @@ export function Sidebar() {
                                     stiffness: 500,
                                     damping: 18,
                                 }}
-                                className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-zinc-900 p-1"
+                                className="flex size-8 shrink-0 items-center justify-center"
                             >
+                                {/* Mesmo par de versões por tema do header
+                                    mobile — ver comentário lá. */}
+                                <Image
+                                    src="/logo/icone-nobg-escuro.png"
+                                    alt="VoiceMatch.Ai"
+                                    width={32}
+                                    height={32}
+                                    className="size-full dark:hidden"
+                                />
                                 <Image
                                     src="/logo/icone-nobg.png"
                                     alt="VoiceMatch.Ai"
-                                    width={28}
-                                    height={28}
-                                    className="size-full"
+                                    width={32}
+                                    height={32}
+                                    className="hidden size-full dark:block"
                                 />
                             </motion.span>
                             {!colapsado && (
