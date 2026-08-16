@@ -62,7 +62,7 @@ export default function LoginPage() {
 
     return (
         <div className="grid h-full lg:grid-cols-2">
-            <AuthBrandPanel headline="Entrevistas por chat com match de perfil comportamental." />
+            <AuthBrandPanel headline="Entrevistas por voz com match de perfil comportamental." />
 
             <div className="flex items-center justify-center px-6 py-10">
                 <motion.div

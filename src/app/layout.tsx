@@ -29,8 +29,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-    title: "VoiceMatchAi",
-    description: "Entrevistas por chat com match de perfil comportamental",
+    title: "VoiceMatch.Ai",
+    description: "Entrevistas por voz com match de perfil comportamental",
+    icons: {
+        icon: "/favicon.ico",
+        shortcut: "/favicon.ico",
+        apple: "/logo/icone-nobg.png",
+    },
 };
 
 export default function RootLayout({
