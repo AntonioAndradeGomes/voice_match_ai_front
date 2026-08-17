@@ -128,6 +128,8 @@ export interface CamposCandidatura {
     telefone: string;
     linkedin: string;
     curriculo: File | null;
+    /** Só vira `true` depois de a pessoa ler os termos até o fim e confirmar. */
+    aceitouTermos: boolean;
 }
 
 export type ErrosCandidatura = Partial<Record<keyof CamposCandidatura, string>>;
@@ -167,6 +169,12 @@ export function validarCandidatura(
     } else {
         const problema = curriculoInvalido(campos.curriculo);
         if (problema) erros.curriculo = problema;
+    }
+
+    // Rede de segurança: a UI já bloqueia o envio sem aceite, mas a regra mora
+    // aqui junto das outras, para valer também se o formulário mudar.
+    if (!campos.aceitouTermos) {
+        erros.aceitouTermos = "É preciso ler e aceitar os Termos de Uso.";
     }
 
     return erros;

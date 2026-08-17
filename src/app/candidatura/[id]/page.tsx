@@ -1,8 +1,11 @@
 "use client";
 
-import { Briefcase, MapPin, Mic } from "lucide-react";
+import { Briefcase, MapPin } from "lucide-react";
+import { motion } from "motion/react";
+import Image from "next/image";
 import { use, useEffect, useState } from "react";
 
+import { BotaoLiquido } from "@/_components/layout/botao-liquido";
 import { CompartilharVaga } from "@/_components/candidatura/compartilhar-vaga";
 import { FormularioCandidatura } from "@/_components/candidatura/formulario-candidatura";
 import { Badge } from "@/_components/ui/badge";
@@ -69,8 +72,27 @@ export default function CandidaturaPage({
             {/* Sem barra de navegação: a página é do candidato, e qualquer link
                 daqui levaria para a área interna. Fica só a marca. */}
             <div className="mx-auto flex max-w-6xl items-center gap-2 px-6 pt-8">
-                <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                    <Mic className="size-4" />
+                {/* Duas versões trocadas por tema, como na sidebar: metade do
+                    traço da marca é branca e sumiria neste fundo claro. A
+                    `-escuro` é gerada do próprio icone-nobg.png recolorindo só
+                    os pixels quase-brancos — se a arte mudar, regerar. */}
+                <span className="flex size-9 shrink-0 items-center justify-center">
+                    <Image
+                        src="/logo/icone-nobg-escuro.png"
+                        alt="VoiceMatch.Ai"
+                        width={36}
+                        height={36}
+                        className="size-full dark:hidden"
+                        priority
+                    />
+                    <Image
+                        src="/logo/icone-nobg.png"
+                        alt="VoiceMatch.Ai"
+                        width={36}
+                        height={36}
+                        className="hidden size-full dark:block"
+                        priority
+                    />
                 </span>
                 <span className="font-heading text-lg font-semibold tracking-tight">
                     VoiceMatch
@@ -79,19 +101,33 @@ export default function CandidaturaPage({
             </div>
 
             {carregando ? null : vaga === null ? (
-                <div className="mx-auto flex max-w-md flex-col items-center gap-4 px-6 py-24 text-center">
-                    <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                        <Briefcase className="size-5" />
-                    </span>
-                    <div className="flex flex-col gap-1">
-                        <h1 className="font-heading text-lg font-medium">
+                // Mesma linguagem visual da 404: o bloco flutuante, o texto
+                // curto e o mesmo botão de volta. Para quem recebeu um link
+                // quebrado, os dois casos são a mesma decepção.
+                <div className="mx-auto flex max-w-md flex-col items-center gap-8 px-6 py-24 text-center">
+                    <motion.span
+                        animate={{ y: [0, -8, 0] }}
+                        transition={{
+                            duration: 2.4,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                        }}
+                        className="flex size-20 items-center justify-center rounded-3xl bg-muted"
+                    >
+                        <Briefcase className="size-9 text-muted-foreground/60" />
+                    </motion.span>
+
+                    <div className="flex flex-col items-center gap-2">
+                        <h1 className="font-heading text-2xl font-semibold tracking-tight">
                             Vaga não encontrada
                         </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Esta vaga pode ter sido encerrada ou o link está
-                            incorreto.
+                        <p className="max-w-sm text-sm text-muted-foreground">
+                            Esta vaga pode ter sido encerrada, mudado de
+                            endereço ou o link está incorreto.
                         </p>
                     </div>
+
+                    <BotaoLiquido href="/">Voltar para o início</BotaoLiquido>
                 </div>
             ) : (
                 <main className="mx-auto grid max-w-6xl gap-10 px-6 py-10 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-12">
