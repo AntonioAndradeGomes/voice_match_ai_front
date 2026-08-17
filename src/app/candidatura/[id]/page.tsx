@@ -1,6 +1,7 @@
 "use client";
 
-import { Briefcase, MapPin, Mic } from "lucide-react";
+import { Briefcase, MapPin } from "lucide-react";
+import Image from "next/image";
 import { use, useEffect, useState } from "react";
 
 import { CompartilharVaga } from "@/_components/candidatura/compartilhar-vaga";
@@ -69,8 +70,27 @@ export default function CandidaturaPage({
             {/* Sem barra de navegação: a página é do candidato, e qualquer link
                 daqui levaria para a área interna. Fica só a marca. */}
             <div className="mx-auto flex max-w-6xl items-center gap-2 px-6 pt-8">
-                <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                    <Mic className="size-4" />
+                {/* Duas versões trocadas por tema, como na sidebar: metade do
+                    traço da marca é branca e sumiria neste fundo claro. A
+                    `-escuro` é gerada do próprio icone-nobg.png recolorindo só
+                    os pixels quase-brancos — se a arte mudar, regerar. */}
+                <span className="flex size-9 shrink-0 items-center justify-center">
+                    <Image
+                        src="/logo/icone-nobg-escuro.png"
+                        alt="VoiceMatch.Ai"
+                        width={36}
+                        height={36}
+                        className="size-full dark:hidden"
+                        priority
+                    />
+                    <Image
+                        src="/logo/icone-nobg.png"
+                        alt="VoiceMatch.Ai"
+                        width={36}
+                        height={36}
+                        className="hidden size-full dark:block"
+                        priority
+                    />
                 </span>
                 <span className="font-heading text-lg font-semibold tracking-tight">
                     VoiceMatch
