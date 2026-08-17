@@ -448,11 +448,12 @@ export default function DashboardPage() {
                                                     // diferentes deixariam os
                                                     // cartões da mesma linha
                                                     // desalinhados no rodapé.
-                                                    className="block h-full rounded-[min(var(--radius-4xl),24px)] outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-ring/30"
+                                                    className="block h-full rounded-[min(var(--radius-4xl),24px)] outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
                                                 >
                                                     <Card
                                                         size="sm"
-                                                        className="h-full transition-shadow hover:shadow-md"
+                                                        interactive
+                                                        className="h-full"
                                                     >
                                                         <CardHeader className="grid-cols-[1fr_auto] items-center">
                                                             <div className="flex min-w-0 flex-col gap-1">

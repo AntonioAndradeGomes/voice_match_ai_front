@@ -173,8 +173,9 @@ function CandidatoCardRanking({
         >
             <Card
                 size="sm"
+                interactive
                 className={cn(
-                    "relative overflow-hidden transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md",
+                    "relative",
                     posicao === 1 && "border-amber-500/40 bg-gradient-to-br from-amber-500/5 via-card to-card ring-1 ring-amber-500/20",
                     posicao === 2 && "border-slate-400/30 bg-card",
                     posicao === 3 && "border-amber-700/20 bg-card"
@@ -258,7 +259,13 @@ function CandidatoLinhaRanking({
         >
             <div
                 className={cn(
-                    "flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md",
+                    // Mesma resposta do `interactive` do Card — esta linha é um
+                    // cartão desenhado à mão, e não o componente, mas quem usa
+                    // a tela não sabe disso: as duas listas da mesma página
+                    // precisam levantar e afundar igual. `transition` no lugar
+                    // de `transition-all` para não animar também as
+                    // propriedades de layout no meio do caminho.
+                    "flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 transition duration-200 ease-out group-hover:-translate-y-0.5 group-hover:shadow-md group-active:translate-y-0 group-active:shadow-sm group-active:duration-75",
                     posicao === 1 && "border-amber-500/40 bg-gradient-to-r from-amber-500/5 via-card to-card ring-1 ring-amber-500/20"
                 )}
             >

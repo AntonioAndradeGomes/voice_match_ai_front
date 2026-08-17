@@ -161,7 +161,8 @@ export default function VagasPage() {
                                 return (
                                     <Card
                                         key={vaga.id}
-                                        className="relative h-full transition-shadow hover:shadow-md"
+                                        interactive
+                                        className="relative h-full"
                                     >
                                         {/* O link cobre o card em overlay em vez de
                                             envolvê-lo: os ícones de divulgação são
