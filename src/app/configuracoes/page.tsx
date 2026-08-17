@@ -149,7 +149,10 @@ export default function ConfiguracoesPage() {
 
     return (
         <ScrollArea className="h-full">
-            <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
+            {/* Mesmo palco largo do Dashboard e dos Relatórios (7xl), com
+                padding crescendo por breakpoint para o mobile não perder
+                largura útil. */}
+            <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
                 <header className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-semibold tracking-tight">

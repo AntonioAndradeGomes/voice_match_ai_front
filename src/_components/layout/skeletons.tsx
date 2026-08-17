@@ -82,8 +82,9 @@ export function DashboardSkeleton() {
 
             <section className="flex flex-col gap-4">
                 <Skeleton className="h-6 w-40" />
-                <div className="flex flex-col gap-3">
-                    {Array.from({ length: 3 }, (_, indice) => (
+                {/* Grade 2×2, como a lista real de vagas recentes. */}
+                <div className="grid gap-3 md:grid-cols-2">
+                    {Array.from({ length: 4 }, (_, indice) => (
                         <LinhaVaga key={indice} />
                     ))}
                 </div>
@@ -125,15 +126,15 @@ export function RelatoriosSkeleton() {
             <FaixaMetricas />
 
             {/* Os gráficos são altos e fixos; um bloco baixo aqui deixaria a
-                página pular quando eles entrassem. */}
-            <div className="grid gap-4 lg:grid-cols-2">
-                {Array.from({ length: 2 }, (_, indice) => (
-                    <CartaoGrafico key={indice} />
-                ))}
+                página pular quando eles entrassem. Mesma grade da página real:
+                2 + 1 inteiro em lg, três lado a lado em xl. */}
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                <CartaoGrafico />
+                <CartaoGrafico />
+                <div className="lg:col-span-2 xl:col-span-1">
+                    <CartaoGrafico />
+                </div>
             </div>
-
-            {/* Distribuição de notas, que ocupa a largura inteira embaixo. */}
-            <CartaoGrafico />
         </div>
     );
 }

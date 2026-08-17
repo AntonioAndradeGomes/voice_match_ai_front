@@ -216,7 +216,10 @@ export default function RelatoriosPage() {
 
     return (
         <ScrollArea className="h-full">
-            <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
+            {/* Mesmo palco largo do Dashboard (7xl): em notebook o conteúdo
+                ficava concentrado no meio. O padding cresce por breakpoint
+                para o mobile não perder largura útil. */}
+            <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
                 <header className="flex flex-col gap-1">
                     <h1 className="text-2xl font-semibold tracking-tight">
                         Relatórios
@@ -271,16 +274,22 @@ export default function RelatoriosPage() {
                             />
                         </div>
 
-                        <div className="grid gap-4 lg:grid-cols-2">
+                        {/* Em xl os três gráficos dividem uma linha: espalha o
+                            conteúdo e, de quebra, adensa o histograma — em
+                            largura inteira as cinco colunas de 24px ficavam
+                            perdidas num oceano de vão. Em lg volta ao arranjo
+                            antigo (2 + 1 inteiro), e no mobile empilha. */}
+                        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
                             <FunilStatus etapas={funil} />
                             <CandidatosPorVaga vagas={porVaga} />
+                            <div className="lg:col-span-2 xl:col-span-1">
+                                <DistribuicaoNotas
+                                    faixas={faixas}
+                                    semNota={semNota}
+                                    notaMaxima={notaMaxima}
+                                />
+                            </div>
                         </div>
-
-                        <DistribuicaoNotas
-                            faixas={faixas}
-                            semNota={semNota}
-                            notaMaxima={notaMaxima}
-                        />
                     </>
                 )}
             </div>

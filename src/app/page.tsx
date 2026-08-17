@@ -279,7 +279,11 @@ export default function DashboardPage() {
 
     return (
         <ScrollArea className="h-full">
-            <div className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-10">
+            {/* Mais largo que as outras telas de propósito (7xl, não 5xl): é a
+                página principal, e numa tela de notebook o conteúdo ficava
+                espremido no meio com margens enormes. O padding cresce por
+                breakpoint para o mobile continuar respirando. */}
+            <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
                 <header className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex flex-col gap-1">
                         {/* A data muda com o fuso de quem abre; o servidor
@@ -422,7 +426,10 @@ export default function DashboardPage() {
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="flex flex-col gap-3">
+                                // Grade em vez de pilha: quatro cartões em 2×2
+                                // ocupam a largura que a lista vertical
+                                // desperdiçava. No mobile volta a ser coluna.
+                                <div className="grid gap-3 md:grid-cols-2">
                                     {vagas
                                         .slice(0, VAGAS_RECENTES)
                                         .map((vaga) => {
@@ -436,11 +443,16 @@ export default function DashboardPage() {
                                                 <Link
                                                     key={vaga.id}
                                                     href={`/vagas/${vaga.id}`}
-                                                    className="block rounded-[min(var(--radius-4xl),24px)] outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-ring/30"
+                                                    // h-full nos dois: numa grade,
+                                                    // descrições de tamanhos
+                                                    // diferentes deixariam os
+                                                    // cartões da mesma linha
+                                                    // desalinhados no rodapé.
+                                                    className="block h-full rounded-[min(var(--radius-4xl),24px)] outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-ring/30"
                                                 >
                                                     <Card
                                                         size="sm"
-                                                        className="transition-shadow hover:shadow-md"
+                                                        className="h-full transition-shadow hover:shadow-md"
                                                     >
                                                         <CardHeader className="grid-cols-[1fr_auto] items-center">
                                                             <div className="flex min-w-0 flex-col gap-1">
