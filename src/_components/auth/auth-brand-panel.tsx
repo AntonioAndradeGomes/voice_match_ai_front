@@ -4,6 +4,11 @@ import { Briefcase, ChartColumn, MessagesSquare } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 
+import {
+    LinhasAnimadas,
+    type LinhaAnimada,
+} from "@/_components/layout/linhas-animadas";
+
 const DESTAQUES = [
     {
         icone: MessagesSquare,
@@ -24,14 +29,10 @@ const DESTAQUES = [
 const ONDA = [30, 55, 40, 75, 50, 90, 45, 65, 35, 80, 50, 60, 30, 70, 40];
 
 /**
- * Linhas que atravessam o painel na diagonal. Valores fixos, e não sorteados:
- * um Math.random() aqui geraria posições diferentes no servidor e no cliente,
- * e a hidratação acusaria a divergência.
- *
  * As durações são propositalmente distintas e sem divisor comum — assim as
  * linhas nunca se realinham em um padrão perceptível.
  */
-const LINHAS = [
+const LINHAS: readonly LinhaAnimada[] = [
     { topo: "8%", largura: "70%", duracao: 19, atraso: 0, opacidade: 0.10 },
     { topo: "26%", largura: "45%", duracao: 23, atraso: 2.5, opacidade: 0.07 },
     { topo: "44%", largura: "85%", duracao: 17, atraso: 1.2, opacidade: 0.12 },
@@ -40,43 +41,22 @@ const LINHAS = [
 ];
 
 /**
- * Camada decorativa do fundo. Fica atrás do conteúdo e não é anunciada para
- * leitores de tela.
- *
- * O movimento é só de `x`, de propósito: transform é composto na GPU, então a
- * animação não força recálculo de layout a cada quadro numa tela que fica
- * aberta enquanto a pessoa digita.
+ * Camada decorativa do fundo: as linhas compartilhadas mais dois halos parados,
+ * que dão profundidade ao gradiente e impedem que a área fique uma chapada de
+ * azul.
  */
-function LinhasAnimadas() {
+function FundoDecorativo() {
     return (
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-            {LINHAS.map((linha, indice) => (
-                <motion.span
-                    key={indice}
-                    initial={{ x: "-120%" }}
-                    animate={{ x: "120%" }}
-                    transition={{
-                        duration: linha.duracao,
-                        delay: linha.atraso,
-                        repeat: Infinity,
-                        ease: "linear",
-                    }}
-                    style={{
-                        top: linha.topo,
-                        width: linha.largura,
-                        opacity: linha.opacidade,
-                    }}
-                    // Gradiente nas pontas para a linha surgir e sumir em vez
-                    // de aparecer cortada na borda do painel.
-                    className="absolute h-px -rotate-12 bg-linear-to-r from-transparent via-white to-transparent"
-                />
-            ))}
-
-            {/* Dois halos parados: dão profundidade ao gradiente do fundo e
-                impedem que a área fique uma chapada de azul. */}
-            <div className="absolute -top-24 -left-16 size-80 rounded-full bg-sky-400/10 blur-3xl" />
-            <div className="absolute -right-24 bottom-0 size-96 rounded-full bg-blue-500/10 blur-3xl" />
-        </div>
+        <>
+            <LinhasAnimadas linhas={LINHAS} cor="via-white" />
+            <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 overflow-hidden"
+            >
+                <div className="absolute -top-24 -left-16 size-80 rounded-full bg-sky-400/10 blur-3xl" />
+                <div className="absolute -right-24 bottom-0 size-96 rounded-full bg-blue-500/10 blur-3xl" />
+            </div>
+        </>
     );
 }
 
@@ -92,7 +72,7 @@ export function AuthBrandPanel({ headline }: { headline: string }) {
         // regras para `from-[oklch(...)]` — a classe ia para o HTML sem CSS
         // correspondente, e o fundo ficava sem gradiente nenhum.
         <div className="relative hidden flex-col justify-between overflow-hidden bg-linear-to-br from-slate-950 via-blue-950 to-blue-900 px-12 py-12 text-white lg:flex">
-            <LinhasAnimadas />
+            <FundoDecorativo />
 
             {/* Todo o conteúdo sobe para z-10: as linhas são `absolute inset-0`
                 e cobririam o texto sem isso. */}
