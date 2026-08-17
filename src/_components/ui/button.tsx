@@ -3,13 +3,31 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+// `duration-150 ease-out` no lugar do padrão do Tailwind: sem duração
+// declarada, `transition-all` usa 150ms com `ease` (in-out), que arranca
+// devagar e faz o botão parecer preguiçoso na cor do hover. `ease-out` entrega
+// quase toda a mudança no primeiro terço do tempo.
+//
+// O afundar do clique corre em 75ms e a volta em 150ms: a pressão precisa ser
+// imediata para parecer causada pelo dedo, enquanto a soltura mais lenta é o
+// que dá a sensação de mola. Igualar os dois deixa o botão emborrachado.
 const buttonVariants = cva(
-    "group/button inline-flex shrink-0 items-center justify-center rounded-2xl border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+    "group/button inline-flex shrink-0 items-center justify-center rounded-2xl border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all duration-150 ease-out outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px active:not-aria-[haspopup]:duration-75 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     {
         variants: {
             variant: {
+                // A sombra só no hover, e só aqui: as variantes de fundo neutro
+                // já anunciam o hover trocando de fundo, e o primário é o único
+                // que fica sozinho na tela como ação principal.
+                //
+                // A sombra de repouso é declarada como valor, e não com
+                // `shadow-transparent`: o utilitário de cor grava
+                // `--tw-shadow-color`, que continuaria valendo no hover e
+                // deixaria a sombra `md` invisível. Já `box-shadow: none` não
+                // é interpolável — a sombra apareceria pronta no primeiro
+                // quadro em vez de crescer.
                 default:
-                    "bg-primary text-primary-foreground hover:bg-primary/80",
+                    "bg-primary text-primary-foreground shadow-[0_0_0_0_transparent] hover:bg-primary/80 hover:shadow-md",
                 outline:
                     "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-transparent dark:hover:bg-input/30",
                 secondary:
