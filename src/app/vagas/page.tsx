@@ -29,7 +29,6 @@ import {
     type FiltrosVagas,
 } from "@/_components/vagas/filtros-vagas";
 import { NovaVagaDialog } from "@/_components/vagas/nova-vaga-dialog";
-import { seedDadosTeste } from "@/lib/seed";
 import { getCandidatosByVaga, getVagas } from "@/lib/storage";
 import { VagasSkeleton } from "@/_components/layout/skeletons";
 import { getResumoVagaBadge } from "@/lib/vaga-status";
@@ -39,11 +38,7 @@ async function carregarVagasComCandidatos(): Promise<{
     vagas: Vaga[];
     candidatosPorVaga: Record<string, Candidato[]>;
 }> {
-    let vagasSalvas = await getVagas();
-    if (vagasSalvas.length === 0) {
-        seedDadosTeste();
-        vagasSalvas = await getVagas();
-    }
+    const vagasSalvas = await getVagas();
 
     const candidatosEntries = await Promise.all(
         vagasSalvas.map(async (vaga) => [vaga.id, await getCandidatosByVaga(vaga.id)] as const)

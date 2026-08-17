@@ -145,7 +145,8 @@ async function carregarDoBackend(): Promise<DadosRelatorio> {
     };
 }
 
-/** O caminho antigo, intacto: localStorage com seed de demonstração. */
+/** Queda para o que estiver no localStorage. Sem backend e sem nada salvo, a
+ *  tela fica vazia — que é a verdade, e melhor do que número inventado. */
 async function carregarLocal(): Promise<DadosRelatorio> {
     const vagas = await getVagas();
     const candidatos = await getCandidatos();

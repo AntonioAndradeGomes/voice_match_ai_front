@@ -72,18 +72,11 @@ export async function getVagas(): Promise<Vaga[]> {
         console.warn("API do backend indisponível, utilizando dados locais.", e);
     }
 
-    let localVagas = getVagasLocal();
-    if (localVagas.length === 0) {
-        // Import dinâmico, e não estático no topo do arquivo, por dois
-        // motivos: seed.ts importa `saveMensagem` daqui, então um import
-        // estático fecharia um ciclo entre os dois módulos na inicialização;
-        // e são 400+ linhas de dados de teste que não precisam entrar no
-        // bundle de quem já tem vagas salvas.
-        const { seedDadosTeste } = await import("@/lib/seed");
-        seedDadosTeste();
-        localVagas = getVagasLocal();
-    }
-    return localVagas;
+    // Sem backend, devolve o que houver localmente — e nada mais. Aqui existia
+    // um seed de demonstração que entrava sozinho quando a lista vinha vazia:
+    // com a API fora do ar, o recrutador via vagas e candidatos inventados com
+    // cara de dado real, avisado apenas por um console.warn.
+    return getVagasLocal();
 }
 
 export async function getVagaById(id: string): Promise<Vaga | null> {

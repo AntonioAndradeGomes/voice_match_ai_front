@@ -42,7 +42,10 @@ export function ChatConversa({
         );
     }
 
-    if (conversa.entrevistaDisponivel === false) {
+    // `!conversa.candidato` entra aqui junto: candidatura não encontrada é um
+    // caso de entrevista indisponível como qualquer outro, e a checagem também
+    // estreita o tipo para o resto do componente.
+    if (conversa.entrevistaDisponivel === false || !conversa.candidato) {
         return (
             <div className="flex h-full flex-col items-center justify-center p-6 text-center">
                 <div className="flex max-w-md flex-col items-center gap-4 rounded-3xl bg-card p-8 shadow-sm ring-1 ring-foreground/5 dark:ring-foreground/10">
