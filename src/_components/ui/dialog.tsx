@@ -31,7 +31,12 @@ function DialogOverlay({
         <DialogPrimitive.Backdrop
             data-slot="dialog-overlay"
             className={cn(
-                "fixed inset-0 isolate z-50 bg-black/30 duration-100 supports-backdrop-filter:backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+                // 200ms para entrar, 150 para sair — a mesma proporção do
+                // conteúdo, para o fundo não terminar de escurecer depois que
+                // o diálogo já está lá. Fade puro, sem `motion-safe`: opacidade
+                // não desloca nada na tela e não é o que a preferência de
+                // movimento reduzido pede para cortar.
+                "fixed inset-0 isolate z-50 bg-black/30 duration-200 ease-out supports-backdrop-filter:backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 data-closed:duration-150",
                 className,
             )}
             {...props}
@@ -53,7 +58,26 @@ function DialogContent({
             <DialogPrimitive.Popup
                 data-slot="dialog-content"
                 className={cn(
-                    "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-[min(var(--radius-4xl),24px)] bg-popover p-6 text-sm text-popover-foreground shadow-xl ring-1 ring-foreground/5 duration-100 outline-none sm:max-w-md dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+                    // 100ms era curto demais para o olho ler de onde o
+                    // diálogo veio: com o zoom resolvendo em três quadros, ele
+                    // simplesmente aparece. 200ms na entrada, 150 na saída
+                    // (fechar é confirmação de algo já decidido, não precisa
+                    // de encenação) e `ease-out`, que entrega quase todo o
+                    // movimento no começo.
+                    //
+                    // Escala e deslocamento ficam sob `motion-safe`, o fade
+                    // não: quem pediu movimento reduzido continua vendo o
+                    // diálogo surgir, só que sem nada saindo do lugar. É por
+                    // isso que `animate-in`/`animate-out` seguem fora do
+                    // gate — sem eles não haveria nem o fade, e o Base UI
+                    // ainda espera a animação terminar para desmontar.
+                    //
+                    // O `slide-in-from-bottom-2` compõe com os
+                    // `-translate-*-1/2` da centralização em vez de brigar com
+                    // eles: no Tailwind v4 os utilitários de translate usam a
+                    // propriedade `translate`, e a animação mexe em
+                    // `transform`.
+                    "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-[min(var(--radius-4xl),24px)] bg-popover p-6 text-sm text-popover-foreground shadow-xl ring-1 ring-foreground/5 duration-200 ease-out outline-none sm:max-w-md dark:ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 data-closed:duration-150 motion-safe:data-open:zoom-in-95 motion-safe:data-open:slide-in-from-bottom-2 motion-safe:data-closed:zoom-out-95",
                     className,
                 )}
                 {...props}
