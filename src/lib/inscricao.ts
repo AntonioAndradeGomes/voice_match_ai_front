@@ -2,6 +2,8 @@
 // nada de React aqui, para que as regras possam ser testadas e reaproveitadas
 // por uma validação de servidor quando existir backend.
 
+import type { TipoDeficiencia } from "@/types";
+
 export const TAMANHO_MAXIMO_CURRICULO = 5 * 1024 * 1024; // 5 MB
 export const EXTENSAO_CURRICULO = ".pdf";
 export const MIME_CURRICULO = "application/pdf";
@@ -120,6 +122,37 @@ export function curriculoInvalido(arquivo: File): string | null {
     return null;
 }
 
+/**
+ * Rótulos dos tipos de deficiência, na linha da Lei Brasileira de Inclusão
+ * (Lei 13.146/2015).
+ *
+ * Não existe opção "múltipla": a seleção é de marcação múltipla, então marcar
+ * mais de uma já diz isso, e com mais precisão do que um rótulo agregado.
+ */
+export const TIPOS_DEFICIENCIA: { valor: TipoDeficiencia; label: string }[] = [
+    { valor: "fisica", label: "Física" },
+    { valor: "auditiva", label: "Auditiva" },
+    { valor: "visual", label: "Visual" },
+    { valor: "intelectual", label: "Intelectual" },
+    { valor: "psicossocial", label: "Psicossocial" },
+    { valor: "outra", label: "Outra" },
+];
+
+/**
+ * Deficiências que colidem de frente com uma entrevista conduzida por voz.
+ * Quando alguma delas é marcada, a tela oferece o caminho alternativo em vez
+ * de deixar a pessoa descobrir a barreira dentro da sala.
+ */
+export const DEFICIENCIAS_AFETADAS_POR_AUDIO: TipoDeficiencia[] = [
+    "auditiva",
+    "intelectual",
+    "psicossocial",
+];
+
+export function precisaAlternativaAoAudio(tipos: TipoDeficiencia[]): boolean {
+    return tipos.some((tipo) => DEFICIENCIAS_AFETADAS_POR_AUDIO.includes(tipo));
+}
+
 export interface CamposCandidatura {
     nome: string;
     cpf: string;
@@ -128,6 +161,11 @@ export interface CamposCandidatura {
     telefone: string;
     linkedin: string;
     curriculo: File | null;
+    /** Declaração voluntária. Nada aqui é exigido para se candidatar. */
+    ehPCD: boolean;
+    tiposDeficiencia: TipoDeficiencia[];
+    outraDeficiencia: string;
+    adaptacoesNecessarias: string;
     /** Só vira `true` depois de a pessoa ler os termos até o fim e confirmar. */
     aceitouTermos: boolean;
 }
@@ -169,6 +207,20 @@ export function validarCandidatura(
     } else {
         const problema = curriculoInvalido(campos.curriculo);
         if (problema) erros.curriculo = problema;
+    }
+
+    // Declarar-se PCD é opcional. Mas quem declara e não diz nada além disso
+    // não deu à equipe nada com que trabalhar — e o objetivo do campo é
+    // justamente viabilizar a participação, não contabilizar.
+    if (campos.ehPCD) {
+        if (campos.tiposDeficiencia.length === 0) {
+            erros.tiposDeficiencia = "Selecione ao menos um tipo.";
+        } else if (
+            campos.tiposDeficiencia.includes("outra") &&
+            campos.outraDeficiencia.trim() === ""
+        ) {
+            erros.outraDeficiencia = "Descreva brevemente.";
+        }
     }
 
     // Rede de segurança: a UI já bloqueia o envio sem aceite, mas a regra mora

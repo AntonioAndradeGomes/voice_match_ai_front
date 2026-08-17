@@ -65,6 +65,33 @@ export interface Vaga {
 
 export type StatusCandidato = "aguardando" | "em_entrevista" | "finalizado";
 
+export type TipoDeficiencia =
+    | "fisica"
+    | "auditiva"
+    | "visual"
+    | "intelectual"
+    | "psicossocial"
+    | "outra";
+
+/**
+ * Declaração de deficiência, sempre voluntária.
+ *
+ * Existe por um motivo operacional concreto: a entrevista do processo é por
+ * voz, e há deficiências que tornam esse formato inviável ou injusto. Sem
+ * saber disso antes, a pessoa só descobre a barreira quando já está na sala.
+ *
+ * É dado sensível pela LGPD (art. 5º, II — dado referente à saúde). Só deve
+ * ser usado para viabilizar a participação no processo, nunca como critério
+ * de avaliação.
+ */
+export interface DadosPCD {
+    tipos: TipoDeficiencia[];
+    /** Preenchido quando "outra" está entre os tipos. */
+    outraDescricao: string;
+    /** O que a pessoa precisa para participar, nas palavras dela. */
+    adaptacoesNecessarias: string;
+}
+
 /**
  * O que o próprio candidato preenche na página pública da vaga. Separado do
  * resto de `Candidato` porque é dado de inscrição, não de avaliação.
@@ -80,6 +107,8 @@ export interface DadosInscricao {
      * existir backend, aqui entra a URL do currículo no storage remoto.
      */
     curriculoNome: string;
+    /** `null` quando a pessoa não se declarou PCD — que é o padrão. */
+    pcd?: DadosPCD | null;
 }
 
 export interface Candidato {

@@ -6,7 +6,9 @@
 // automatizada, retenção e compartilhamento, que envolvem obrigações da LGPD.
 // Trocar o conteúdo daqui não exige mexer em componente nenhum.
 
-export const TERMOS_VERSAO = "1.0";
+// Muda a cada alteração do texto: a versão aceita é o que dá sentido a um
+// registro de aceite. A 1.1 acrescentou a declaração voluntária de PCD.
+export const TERMOS_VERSAO = "1.1";
 export const TERMOS_ATUALIZADO_EM = "16 de agosto de 2026";
 
 export interface SecaoTermos {
@@ -34,7 +36,8 @@ export const SECOES_TERMOS: SecaoTermos[] = [
         paragrafos: [
             "Para a inscrição: nome completo, CPF (ou a indicação de que você não é brasileiro), e-mail, telefone, endereço do seu perfil no LinkedIn e o arquivo do seu currículo.",
             "Durante a entrevista: as gravações de áudio das suas respostas, a transcrição desses áudios e as métricas extraídas da sua fala, como clareza, fluência e ritmo.",
-            "Não solicitamos dados sensíveis. Se você incluir no currículo informações que não deseja compartilhar — como estado de saúde, filiação sindical, religião ou opinião política —, recomendamos removê-las antes de anexar.",
+            "Se você optar por se declarar pessoa com deficiência: o tipo de deficiência e as adaptações que você descrever. Esse é um dado sensível pela LGPD, o preenchimento é totalmente voluntário e ele é usado com uma única finalidade — adaptar o processo para que você possa participar. Não entra na avaliação, e deixar em branco não prejudica sua candidatura em nada.",
+            "Fora isso, não solicitamos dados sensíveis. Se você incluir no currículo informações que não deseja compartilhar — como estado de saúde, filiação sindical, religião ou opinião política —, recomendamos removê-las antes de anexar.",
         ],
     },
     {
