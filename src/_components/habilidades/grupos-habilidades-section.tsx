@@ -134,7 +134,10 @@ export function GruposHabilidadesSection() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                    {/* Três colunas quando o palco de 7xl abre espaço: os
+                        cartões de grupo são compactos e em duas colunas
+                        sobrava vão. */}
                     {lista.map((grupo) => (
                         <Card key={grupo.id} size="sm">
                             <CardContent className="flex flex-col gap-3">

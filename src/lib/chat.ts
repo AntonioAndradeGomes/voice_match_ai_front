@@ -1,5 +1,4 @@
 import { API_BASE_URL, apiFetch } from "@/lib/api";
-import { MOCK_CANDIDATO, MOCK_MENSAGENS, MOCK_VAGA } from "@/lib/chat-mock";
 import {
     getCandidatoById,
     getMensagensByCandidato,
@@ -9,7 +8,8 @@ import {
 import type { Candidato, MensagemChat, Vaga } from "@/types";
 
 export interface Conversa {
-    candidato: Candidato;
+    /** `null` quando a candidatura não foi encontrada — ver `carregarConversa`. */
+    candidato: Candidato | null;
     vaga: Vaga | null;
     mensagens: MensagemChat[];
     entrevistaDisponivel?: boolean;
@@ -205,12 +205,16 @@ export async function carregarConversa(
     }
 
     if (!candidato) {
-        // MOCK: candidato ainda não existe no storage — mostra a conversa de
-        // demonstração só para visualizar o layout (ver src/lib/chat-mock.ts).
+        // Antes daqui saía uma conversa de demonstração, o que fazia um link
+        // quebrado abrir uma entrevista falsa com nome de outra pessoa. Agora
+        // reusa o mesmo estado de bloqueio das entrevistas indisponíveis.
         return {
-            candidato: MOCK_CANDIDATO,
-            vaga: MOCK_VAGA,
-            mensagens: MOCK_MENSAGENS,
+            candidato: null,
+            vaga,
+            mensagens: [],
+            entrevistaDisponivel: false,
+            motivoBloqueio:
+                "Não encontramos esta candidatura. Verifique se o link recebido está completo e correto.",
         };
     }
 

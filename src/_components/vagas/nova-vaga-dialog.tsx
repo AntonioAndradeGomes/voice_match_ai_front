@@ -120,6 +120,8 @@ export function NovaVagaDialog({
                 id: crypto.randomUUID(),
                 titulo: campos.titulo.trim(),
                 descricao: campos.descricao.trim(),
+                // Mesmo valor que saveVaga manda ao backend no POST.
+                status: "ativa",
                 hardSkills: campos.hardSkills,
                 softSkills: campos.softSkills,
                 experienciaPrevia: campos.experienciaPrevia,

@@ -20,11 +20,14 @@ import { Button } from "@/_components/ui/button";
 import { Checkbox } from "@/_components/ui/checkbox";
 import { Input } from "@/_components/ui/input";
 import { Label } from "@/_components/ui/label";
+import { Textarea } from "@/_components/ui/textarea";
 import {
     EXTENSAO_CURRICULO,
     formatarCPF,
     formatarTelefoneBR,
     normalizarLinkedin,
+    precisaAlternativaAoAudio,
+    TIPOS_DEFICIENCIA,
     validarCandidatura,
     type CamposCandidatura,
     type ErrosCandidatura,
@@ -42,6 +45,10 @@ const CAMPOS_INICIAIS: CamposCandidatura = {
     telefone: "",
     linkedin: "",
     curriculo: null,
+    ehPCD: false,
+    tiposDeficiencia: [],
+    outraDeficiencia: "",
+    adaptacoesNecessarias: "",
     aceitouTermos: false,
 };
 
@@ -184,6 +191,17 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
                 telefone: campos.telefone.trim(),
                 linkedin: normalizarLinkedin(campos.linkedin),
                 curriculoNome: campos.curriculo?.name ?? "",
+                // `null` quando não houve declaração — e não um objeto vazio,
+                // para "não declarou" não se confundir com "declarou e não
+                // preencheu".
+                pcd: campos.ehPCD
+                    ? {
+                          tipos: campos.tiposDeficiencia,
+                          outraDescricao: campos.outraDeficiencia.trim(),
+                          adaptacoesNecessarias:
+                              campos.adaptacoesNecessarias.trim(),
+                      }
+                    : null,
             },
         };
 
@@ -552,6 +570,183 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
                     </Button>
                 )}
             </Campo>
+
+            {/* Declaração voluntária, e o texto diz isso antes de qualquer
+                pergunta. A tela não usa nada disso para avaliar — serve para a
+                pessoa conseguir participar, principalmente da entrevista por
+                voz, que é a etapa com maior chance de virar barreira. */}
+            <div className="flex flex-col gap-3 rounded-2xl border border-border bg-muted/20 p-3.5">
+                <div className="flex items-start gap-2.5">
+                    <Checkbox
+                        id="ehPCD"
+                        checked={campos.ehPCD}
+                        onCheckedChange={(marcado) => {
+                            // Desmarcar limpa o resto: dado sensível não deve
+                            // ficar pendurado num campo que a pessoa fechou.
+                            const proximos: CamposCandidatura = marcado === true
+                                ? { ...campos, ehPCD: true }
+                                : {
+                                      ...campos,
+                                      ehPCD: false,
+                                      tiposDeficiencia: [],
+                                      outraDeficiencia: "",
+                                      adaptacoesNecessarias: "",
+                                  };
+                            setCampos(proximos);
+                            if (tentouEnviar)
+                                setErros(validarCandidatura(proximos));
+                        }}
+                        className="mt-0.5"
+                    />
+                    <div className="flex flex-col gap-0.5">
+                        <Label htmlFor="ehPCD" className="font-normal">
+                            Sou pessoa com deficiência (PCD)
+                        </Label>
+                        <span className="text-xs text-muted-foreground">
+                            Opcional. Serve só para adaptarmos o processo a
+                            você — não influencia a avaliação.
+                        </span>
+                    </div>
+                </div>
+
+                {campos.ehPCD && (
+                    <div className="flex flex-col gap-4 border-t border-border pt-3.5">
+                        <fieldset className="flex flex-col gap-2">
+                            <legend className="text-sm font-medium">
+                                Tipo de deficiência
+                                <span className="text-primary" aria-hidden>
+                                    {" "}
+                                    *
+                                </span>
+                            </legend>
+                            <p className="text-xs text-muted-foreground">
+                                Marque quantas se aplicarem.
+                            </p>
+
+                            <div className="grid gap-2 sm:grid-cols-2">
+                                {TIPOS_DEFICIENCIA.map(({ valor, label }) => (
+                                    <div
+                                        key={valor}
+                                        className="flex items-center gap-2.5"
+                                    >
+                                        <Checkbox
+                                            id={`deficiencia-${valor}`}
+                                            checked={campos.tiposDeficiencia.includes(
+                                                valor,
+                                            )}
+                                            onCheckedChange={(marcado) => {
+                                                const tipos =
+                                                    marcado === true
+                                                        ? [
+                                                              ...campos.tiposDeficiencia,
+                                                              valor,
+                                                          ]
+                                                        : campos.tiposDeficiencia.filter(
+                                                              (t) => t !== valor,
+                                                          );
+                                                const proximos: CamposCandidatura =
+                                                    {
+                                                        ...campos,
+                                                        tiposDeficiencia: tipos,
+                                                        outraDeficiencia:
+                                                            tipos.includes(
+                                                                "outra",
+                                                            )
+                                                                ? campos.outraDeficiencia
+                                                                : "",
+                                                    };
+                                                setCampos(proximos);
+                                                if (tentouEnviar)
+                                                    setErros(
+                                                        validarCandidatura(
+                                                            proximos,
+                                                        ),
+                                                    );
+                                            }}
+                                        />
+                                        <Label
+                                            htmlFor={`deficiencia-${valor}`}
+                                            className="font-normal"
+                                        >
+                                            {label}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {erros.tiposDeficiencia && (
+                                <p
+                                    role="alert"
+                                    className="text-xs text-destructive"
+                                >
+                                    {erros.tiposDeficiencia}
+                                </p>
+                            )}
+                        </fieldset>
+
+                        {campos.tiposDeficiencia.includes("outra") && (
+                            <Campo
+                                id="outraDeficiencia"
+                                label="Qual?"
+                                erro={erros.outraDeficiencia}
+                            >
+                                <Input
+                                    id="outraDeficiencia"
+                                    value={campos.outraDeficiencia}
+                                    onChange={(e) =>
+                                        alterar(
+                                            "outraDeficiencia",
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="Descreva brevemente"
+                                    aria-invalid={Boolean(
+                                        erros.outraDeficiencia,
+                                    )}
+                                    className="h-11 rounded-xl"
+                                />
+                            </Campo>
+                        )}
+
+                        {/* O aviso aparece assim que o tipo marcado conflita
+                            com a entrevista por voz. Descobrir isso aqui, e não
+                            dentro da sala de entrevista, é o ponto do campo. */}
+                        {precisaAlternativaAoAudio(campos.tiposDeficiencia) && (
+                            <div className="flex gap-2.5 rounded-xl bg-primary/10 p-3 text-xs leading-relaxed text-foreground">
+                                <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+                                <p>
+                                    A entrevista desta vaga é conduzida por voz.
+                                    Nossa equipe entrará em contato para
+                                    combinar um formato acessível a você antes
+                                    dessa etapa — você não precisa fazer a
+                                    entrevista por áudio.
+                                </p>
+                            </div>
+                        )}
+
+                        <Campo
+                            id="adaptacoesNecessarias"
+                            label="Precisa de alguma adaptação?"
+                            obrigatorio={false}
+                            dica="Só a equipe de recrutamento vê esta informação."
+                        >
+                            <Textarea
+                                id="adaptacoesNecessarias"
+                                rows={3}
+                                value={campos.adaptacoesNecessarias}
+                                onChange={(e) =>
+                                    alterar(
+                                        "adaptacoesNecessarias",
+                                        e.target.value,
+                                    )
+                                }
+                                placeholder="Ex.: intérprete de Libras, entrevista por escrito, leitor de tela, mais tempo para responder."
+                                className="rounded-xl"
+                            />
+                        </Campo>
+                    </div>
+                )}
+            </div>
 
             <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/20 p-3.5">
                 <div className="flex items-start gap-2.5">

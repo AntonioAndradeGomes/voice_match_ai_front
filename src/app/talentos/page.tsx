@@ -432,10 +432,26 @@ function TalentosSkeleton() {
 // Página
 // ---------------------------------------------------------------------------
 
+/**
+ * Filtro inicial vindo da URL (`/talentos?filtro=pendentes`) — é o que permite
+ * ao painel de atenção do Dashboard entregar a lista já recortada.
+ *
+ * Lê `window.location` num inicializador preguiçoso em vez de useSearchParams:
+ * no servidor devolve "todos", e a divergência nunca chega ao DOM porque o
+ * primeiro render é o skeleton, que não depende do filtro.
+ */
+function filtroInicial(): CategoriaFiltro {
+    if (typeof window === "undefined") return "todos";
+    const bruto = new URLSearchParams(window.location.search).get("filtro");
+    return FILTROS.some(({ chave }) => chave === bruto)
+        ? (bruto as CategoriaFiltro)
+        : "todos";
+}
+
 export default function TalentosPage() {
     const [talentos, setTalentos] = useState<Talento[] | null>(null);
     const [busca, setBusca] = useState("");
-    const [filtro, setFiltro] = useState<CategoriaFiltro>("todos");
+    const [filtro, setFiltro] = useState<CategoriaFiltro>(filtroInicial);
 
     useEffect(() => {
         Promise.all([

@@ -14,8 +14,10 @@
 import {
     criarPerfilNeutro,
     MODALIDADES,
+    STATUS_VAGA,
     type Modalidade,
     type SkillComPeso,
+    type StatusVaga,
     type Vaga,
 } from "@/types";
 
@@ -49,6 +51,14 @@ function normalizarSkills(valor: unknown): SkillComPeso[] {
         .filter((skill) => skill.nome !== "");
 }
 
+function normalizarStatus(valor: unknown): StatusVaga {
+    // Vaga local antiga não tinha status; o backend sempre manda. "ativa" é o
+    // único palpite que não esconde vaga de ninguém.
+    return STATUS_VAGA.includes(valor as StatusVaga)
+        ? (valor as StatusVaga)
+        : "ativa";
+}
+
 function normalizarModalidade(valor: unknown): Modalidade {
     // Vaga antiga não tinha modalidade. "presencial" é o padrão do formulário
     // de criação, então é o palpite que menos contraria o resto do app.
@@ -79,6 +89,7 @@ export function normalizarVaga(bruta: unknown): Vaga {
         titulo: texto(dados.titulo),
         // `descricaoFuncao` é o nome antigo do mesmo campo.
         descricao: texto(dados.descricao) || texto(dados.descricaoFuncao),
+        status: normalizarStatus(dados.status),
         hardSkills: normalizarSkills(hardRaw),
         softSkills: normalizarSkills(softRaw),
         experienciaPrevia: texto(dados.experienciaPrevia),
