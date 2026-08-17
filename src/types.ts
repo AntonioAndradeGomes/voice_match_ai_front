@@ -48,10 +48,15 @@ export const MODALIDADE_LABEL: Record<Modalidade, string> = {
     remoto: "Remoto",
 };
 
+export const STATUS_VAGA = ["ativa", "pausada", "encerrada"] as const;
+export type StatusVaga = (typeof STATUS_VAGA)[number];
+
 export interface Vaga {
     id: string;
     titulo: string;
     descricao: string;
+    /** Estado do anúncio, vindo do backend. Vaga local antiga entra como "ativa". */
+    status: StatusVaga;
     hardSkills: SkillComPeso[];
     softSkills: SkillComPeso[];
     experienciaPrevia: string;
