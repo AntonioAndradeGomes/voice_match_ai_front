@@ -15,6 +15,7 @@ import {
 import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { TermosDeUsoDialog } from "@/_components/candidatura/termos-de-uso-dialog";
 import { Button } from "@/_components/ui/button";
 import { Checkbox } from "@/_components/ui/checkbox";
 import { Input } from "@/_components/ui/input";
@@ -41,6 +42,7 @@ const CAMPOS_INICIAIS: CamposCandidatura = {
     telefone: "",
     linkedin: "",
     curriculo: null,
+    aceitouTermos: false,
 };
 
 const PERFIL_LINKEDIN = "https://www.linkedin.com/in/";
@@ -133,6 +135,11 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
     const [enviado, setEnviado] = useState(false);
     const [candidatoSalvo, setCandidatoSalvo] = useState<Candidato | null>(null);
     const [triagem, setTriagem] = useState<ResultadoTriagemCandidatura | null>(null);
+    const [termosAbertos, setTermosAbertos] = useState(false);
+    // Separado de `campos.aceitouTermos`: registra que a pessoa já leu o
+    // documento até o fim. É o que permite desmarcar e voltar a marcar a caixa
+    // sem ter de reabrir e rolar tudo de novo.
+    const [leuTermos, setLeuTermos] = useState(false);
     const inputArquivo = useRef<HTMLInputElement>(null);
 
     function alterar<C extends keyof CamposCandidatura>(
@@ -546,9 +553,75 @@ export function FormularioCandidatura({ vaga }: { vaga: Vaga }) {
                 )}
             </Campo>
 
-            <Button type="submit" size="lg" className="h-11 rounded-xl">
-                Enviar candidatura
+            <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/20 p-3.5">
+                <div className="flex items-start gap-2.5">
+                    <Checkbox
+                        id="termos"
+                        checked={campos.aceitouTermos}
+                        // Enquanto não leu, a caixa não é marcável — é essa a
+                        // trava do fluxo. O texto abaixo diz o porquê, para o
+                        // controle desabilitado não virar um beco sem saída.
+                        disabled={!leuTermos}
+                        onCheckedChange={(marcado) =>
+                            alterar("aceitouTermos", marcado === true)
+                        }
+                        aria-describedby="termos-dica"
+                        className="mt-0.5"
+                    />
+
+                    {/* O link fica fora do <label> de propósito: dentro dele,
+                        clicar em "Termos de Uso" também alternaria a caixa. */}
+                    <div className="flex flex-wrap items-center gap-1 text-sm">
+                        <Label htmlFor="termos" className="font-normal">
+                            Li e aceito os
+                        </Label>
+                        <button
+                            type="button"
+                            onClick={() => setTermosAbertos(true)}
+                            className="rounded-sm text-primary underline underline-offset-4 outline-none hover:text-primary/80 focus-visible:ring-3 focus-visible:ring-ring/30"
+                        >
+                            Termos de Uso
+                        </button>
+                        <span className="text-primary" aria-hidden>
+                            *
+                        </span>
+                    </div>
+                </div>
+
+                {/* A dica fala de leitura, não de rolagem. Rolar é só como a
+                    tela mede que o documento foi percorrido — pedir "role até
+                    o fim" convidaria a rolar sem ler, que é o oposto do que o
+                    aceite deveria significar. */}
+                <p id="termos-dica" className="text-xs text-muted-foreground">
+                    {leuTermos
+                        ? "Você já leu os termos. Marque a caixa para concluir a inscrição."
+                        : "Leia os Termos de Uso para liberar o aceite."}
+                </p>
+
+                {erros.aceitouTermos && (
+                    <p role="alert" className="text-xs text-destructive">
+                        {erros.aceitouTermos}
+                    </p>
+                )}
+            </div>
+
+            <Button
+                type="submit"
+                size="lg"
+                className="h-11 rounded-xl"
+                disabled={!campos.aceitouTermos || enviando}
+            >
+                {enviando ? "Enviando..." : "Enviar candidatura"}
             </Button>
+
+            <TermosDeUsoDialog
+                open={termosAbertos}
+                onOpenChange={setTermosAbertos}
+                onAceitar={() => {
+                    setLeuTermos(true);
+                    alterar("aceitouTermos", true);
+                }}
+            />
         </form>
     );
 }
