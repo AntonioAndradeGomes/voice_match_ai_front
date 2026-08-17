@@ -301,6 +301,35 @@
     --chart-5: oklch(0.45 0.02 260);
 }
 
+/* ---------------------------------------------------------------------------
+   Movimento
+
+   Não há token novo aqui — o que existe é uma regra, e ela é o que mantém as
+   micro-animações do app parecendo o mesmo produto:
+
+   1. Duração. 75ms para o afundar de um clique, 150ms para hover e para o
+      diálogo sair, 200ms para o cartão levantar e para o diálogo entrar. Nada
+      passa de 200ms: acima disso a interface deixa de responder e passa a se
+      exibir. A saída é sempre mais curta que a entrada — fechar é confirmar
+      algo já decidido.
+
+   2. Curva. `ease-out` em tudo que responde a um gesto. O padrão do CSS
+      (`ease`, que é in-out) arranca devagar e faz a interface parecer pesada;
+      `ease-out` entrega quase todo o movimento no primeiro terço.
+
+   3. Movimento reduzido. O corte é por origem, não por propriedade:
+      - o que acontece *sob o gesto* — hover do cartão, clique do botão,
+        seta que desliza no item da lista — não usa `motion-safe`. Quem liga a
+        preferência está evitando coisa que se mexe sozinha na tela, não a
+        resposta ao próprio ponteiro, e cortá-la deixaria o app sem retorno.
+      - o que aparece *por conta própria* — escala do diálogo, pílula da
+        navegação, entrada em cascata dos itens do menu — respeita a
+        preferência, via `motion-safe:` no CSS ou `useReducedMotion()` no
+        motion.
+      - opacidade nunca é cortada: fade não desloca nada, e é o que garante
+        que quem desligou o movimento ainda perceba um diálogo surgindo.
+   --------------------------------------------------------------------------- */
+
 @layer base {
     * {
         @apply border-border outline-ring/50;
