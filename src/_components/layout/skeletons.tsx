@@ -56,6 +56,30 @@ export function DashboardSkeleton() {
         <div className="flex flex-col gap-8">
             <FaixaMetricas />
 
+            {/* Painel de atenção (mais largo) + destaques, na mesma proporção
+                3fr/2fr do layout real, para a página não pular ao carregar. */}
+            <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+                {[4, 5].map((linhas, indice) => (
+                    <Card key={indice}>
+                        <CardContent className="flex flex-col gap-3">
+                            <Skeleton className="h-5 w-40" />
+                            {Array.from({ length: linhas }, (_, i) => (
+                                <div
+                                    key={i}
+                                    className="flex items-center gap-3"
+                                >
+                                    <Skeleton className="size-9 shrink-0 rounded-xl" />
+                                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                                        <Skeleton className="h-3.5 w-40 max-w-full" />
+                                        <Skeleton className="h-3 w-28 max-w-full" />
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
             <section className="flex flex-col gap-4">
                 <Skeleton className="h-6 w-40" />
                 <div className="flex flex-col gap-3">
