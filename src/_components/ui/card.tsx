@@ -2,17 +2,47 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * `interactive` marca o cartão que leva a algum lugar — o de vaga na listagem,
+ * o do pódio, o do dashboard. Não é decoração: é a diferença visível entre um
+ * bloco de leitura e um alvo de clique, que até aqui cada tela resolvia por
+ * conta própria com uma combinação diferente de `hover:shadow-*`.
+ *
+ * O movimento é de 2px e só acontece sob o ponteiro. Fica fora de
+ * `motion-safe` de propósito: quem liga "reduzir movimento" está evitando
+ * deslocamento espontâneo na tela, não a resposta ao próprio gesto — e a
+ * sombra, o anel e o `active:` continuam valendo mesmo para quem desligou
+ * todo o resto. Movimento que aparece sozinho (entrada de diálogo, pílula da
+ * navegação) é que respeita a preferência.
+ *
+ * `has-[:focus-visible]` traz a mesma resposta para o teclado: nas telas onde
+ * o link cobre o cartão em overlay, quem chega por Tab foca o link — sem isso
+ * o cartão inteiro ficaria parado enquanto só o mouse tem retorno visual.
+ *
+ * O anel de contorno fica de fora de propósito. Ele é o canal que algumas
+ * telas usam para identidade — o dourado do primeiro lugar no pódio das vagas
+ * —, e um `hover:ring-*` genérico aqui apagaria essa cor justamente na hora em
+ * que a pessoa aponta para ela.
+ */
+const CARD_INTERATIVO =
+    "cursor-pointer transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md has-[:focus-visible]:shadow-md active:translate-y-0 active:shadow-sm active:duration-75";
+
 function Card({
     className,
     size = "default",
+    interactive = false,
     ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: React.ComponentProps<"div"> & {
+    size?: "default" | "sm";
+    interactive?: boolean;
+}) {
     return (
         <div
             data-slot="card"
             data-size={size}
             className={cn(
                 "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-[min(var(--radius-4xl),24px)] bg-card py-(--card-spacing) text-sm text-card-foreground shadow-sm ring-1 ring-foreground/5 [--card-spacing:--spacing(5)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] dark:ring-foreground/10 *:[img:first-child]:rounded-t-[min(var(--radius-4xl),24px)] *:[img:last-child]:rounded-b-[min(var(--radius-4xl),24px)]",
+                interactive && CARD_INTERATIVO,
                 className,
             )}
             {...props}
