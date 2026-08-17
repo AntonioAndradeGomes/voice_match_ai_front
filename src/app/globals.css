@@ -235,6 +235,13 @@
     outline-offset: 2px;
 }
 
+/* As linhas decorativas do hero e da navbar são traços de 5% a 12% de
+   opacidade: no alto contraste elas só sujam o fundo de quem ligou o modo
+   justamente para separar figura e fundo. */
+.alto-contraste [data-slot="linhas-animadas"] {
+    display: none;
+}
+
 /* Modo daltonismo.
  *
  * O app comunica estado por cor em três lugares: verde = aprovado, âmbar =
