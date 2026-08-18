@@ -1,12 +1,9 @@
 // Grupos de habilidades: templates de perfil de competências que o recrutador
 // monta uma vez e aplica na criação de vaga, em vez de escolher skill por skill
 // e reajustar peso por peso toda vez.
-//
-// Persiste em localStorage pelo mesmo motivo de lib/habilidades.ts: o backend
-// tem o router /habilidades, mas nenhuma migration cria as tabelas — a chamada
-// responde 500. Quando isso for resolvido, troque o corpo destas funções
-// mantendo as assinaturas.
 
+import { apiFetch, API_BASE_URL } from "@/lib/api";
+import { fetchCatalogoAPI, getCatalogo } from "@/lib/habilidades";
 import type { SkillComPeso } from "@/types";
 
 const CHAVE = "voicematch:grupos-habilidades";
@@ -24,7 +21,6 @@ export interface GrupoHabilidades {
     createdAt: string;
 }
 
-/** O que a tela entrega para salvar. Sem `id` é criação; com `id`, edição. */
 export interface EntradaGrupo {
     id?: string;
     nome: string;
@@ -33,11 +29,32 @@ export interface EntradaGrupo {
     softSkills: SkillComPeso[];
 }
 
+interface GrupoHabilidadeItemBackend {
+    habilidade_id: string;
+    peso: number;
+    obrigatoriedade: "OBRIGATORIA" | "DESEJAVEL";
+    habilidade?: {
+        id: string;
+        nome: string;
+        tipo: "HARD" | "SOFT";
+        categoria: string;
+    };
+}
+
+interface GrupoHabilidadeBackend {
+    id: string;
+    nome: string;
+    tipo: "HARD" | "SOFT";
+    descricao: string | null;
+    empresa_id: string | null;
+    data_criacao: string;
+    itens: GrupoHabilidadeItemBackend[];
+}
+
 function isBrowser() {
     return typeof window !== "undefined";
 }
 
-/** Comparação contra duplicata: ignora caixa e acento, como no catálogo. */
 function chaveComparacao(nome: string) {
     return nome
         .trim()
@@ -46,12 +63,6 @@ function chaveComparacao(nome: string) {
         .replace(/\p{Diacritic}/gu, "");
 }
 
-/**
- * Saneia uma lista vinda do storage. Um grupo com peso fora da faixa ou com
- * skill sem nome quebraria os sliders da criação de vaga, e o dado veio de uma
- * versão anterior ou de edição manual — descartar o inválido é mais seguro do
- * que confiar.
- */
 function sanearSkills(valor: unknown): SkillComPeso[] {
     if (!Array.isArray(valor)) return [];
 
@@ -114,6 +125,54 @@ function salvarLista(grupos: GrupoHabilidades[]) {
     window.localStorage.setItem(CHAVE, JSON.stringify(grupos));
 }
 
+function mapearBackendParaFrontend(b: GrupoHabilidadeBackend): GrupoHabilidades {
+    const hard: SkillComPeso[] = [];
+    const soft: SkillComPeso[] = [];
+
+    for (const item of b.itens || []) {
+        const skillNome = item.habilidade?.nome;
+        if (!skillNome) continue;
+
+        const skillObj: SkillComPeso = {
+            nome: skillNome,
+            peso: item.peso,
+        };
+
+        if (item.habilidade?.tipo === "SOFT" || (b.tipo === "SOFT" && item.habilidade?.tipo !== "HARD")) {
+            soft.push(skillObj);
+        } else {
+            hard.push(skillObj);
+        }
+    }
+
+    return {
+        id: b.id,
+        nome: b.nome,
+        descricao: b.descricao ?? "",
+        hardSkills: hard,
+        softSkills: soft,
+        createdAt: b.data_criacao || new Date().toISOString(),
+    };
+}
+
+/**
+ * Busca grupos de habilidades diretamente da API do Backend e atualiza o cache local.
+ */
+export async function fetchGruposAPI(): Promise<GrupoHabilidades[]> {
+    try {
+        const res = await apiFetch(`${API_BASE_URL}/grupos-habilidades/?limit=100`);
+        if (res.ok) {
+            const data: GrupoHabilidadeBackend[] = await res.json();
+            const gruposFormatados = data.map(mapearBackendParaFrontend);
+            salvarLista(gruposFormatados);
+            return gruposFormatados.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+        }
+    } catch (e) {
+        console.warn("Falha ao buscar grupos de habilidades da API. Usando cache local:", e);
+    }
+    return getGrupos();
+}
+
 /** Ordenado por nome: a lista é um catálogo para procurar, não um histórico. */
 export function getGrupos(): GrupoHabilidades[] {
     return lerLista().sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
@@ -123,10 +182,6 @@ export function getGrupoById(id: string): GrupoHabilidades | null {
     return lerLista().find((grupo) => grupo.id === id) ?? null;
 }
 
-/**
- * Já existe grupo com este nome? `ignorarId` deixa a edição manter o próprio
- * nome sem se acusar de duplicata.
- */
 export function existeNome(nome: string, ignorarId?: string): boolean {
     const alvo = chaveComparacao(nome);
     return lerLista().some(
@@ -140,9 +195,88 @@ export function totalSkills(grupo: GrupoHabilidades): number {
 }
 
 /**
- * Cria ou atualiza. Devolve `null` quando o nome está vazio ou repetido, para
- * a tela distinguir "não salvei" de "salvei" sem reler a lista.
+ * Cria ou atualiza grupo de habilidades com persistência na API do Backend.
  */
+export async function salvarGrupoAPI(entrada: EntradaGrupo): Promise<GrupoHabilidades | null> {
+    const nome = entrada.nome.trim();
+    if (!nome) return null;
+    if (existeNome(nome, entrada.id)) return null;
+
+    // Garante que o catálogo com IDs de habilidades esteja carregado
+    let catalogo = getCatalogo();
+    if (!catalogo.itensDetalhados || catalogo.itensDetalhados.length === 0) {
+        catalogo = await fetchCatalogoAPI();
+    }
+
+    const habsMap = new Map<string, string>();
+    for (const h of catalogo.itensDetalhados || []) {
+        habsMap.set(chaveComparacao(h.nome), h.id);
+    }
+
+    const itensBackend: { habilidade_id: string; peso: number; obrigatoriedade: string }[] = [];
+
+    for (const hs of entrada.hardSkills) {
+        const habId = habsMap.get(chaveComparacao(hs.nome));
+        if (habId) {
+            itensBackend.push({
+                habilidade_id: habId,
+                peso: hs.peso,
+                obrigatoriedade: "OBRIGATORIA",
+            });
+        }
+    }
+
+    for (const ss of entrada.softSkills) {
+        const habId = habsMap.get(chaveComparacao(ss.nome));
+        if (habId) {
+            itensBackend.push({
+                habilidade_id: habId,
+                peso: ss.peso,
+                obrigatoriedade: "DESEJAVEL",
+            });
+        }
+    }
+
+    const payload = {
+        nome,
+        tipo: entrada.hardSkills.length >= entrada.softSkills.length ? "HARD" : "SOFT",
+        descricao: entrada.descricao.trim() || null,
+        empresa_id: null,
+        itens: itensBackend,
+    };
+
+    try {
+        const url = entrada.id
+            ? `${API_BASE_URL}/grupos-habilidades/${entrada.id}`
+            : `${API_BASE_URL}/grupos-habilidades/`;
+        const method = entrada.id ? "PUT" : "POST";
+
+        const res = await apiFetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+            const dataBackend: GrupoHabilidadeBackend = await res.json();
+            const grupoFront = mapearBackendParaFrontend(dataBackend);
+            
+            const lista = lerLista();
+            salvarLista(
+                entrada.id
+                    ? lista.map((item) => (item.id === grupoFront.id ? grupoFront : item))
+                    : [...lista, grupoFront]
+            );
+            return grupoFront;
+        }
+    } catch (e) {
+        console.warn("Falha ao salvar grupo de habilidades na API:", e);
+    }
+
+    // Fallback local caso a API esteja inacessível
+    return salvarGrupo(entrada);
+}
+
 export function salvarGrupo(entrada: EntradaGrupo): GrupoHabilidades | null {
     const nome = entrada.nome.trim();
     if (!nome) return null;
@@ -171,21 +305,23 @@ export function salvarGrupo(entrada: EntradaGrupo): GrupoHabilidades | null {
     return grupo;
 }
 
+export async function removerGrupoAPI(id: string): Promise<GrupoHabilidades[]> {
+    try {
+        await apiFetch(`${API_BASE_URL}/grupos-habilidades/${id}`, {
+            method: "DELETE",
+        });
+    } catch (e) {
+        console.warn("Falha ao excluir grupo de habilidades na API:", e);
+    }
+    return removerGrupo(id);
+}
+
 export function removerGrupo(id: string): GrupoHabilidades[] {
     const restante = lerLista().filter((grupo) => grupo.id !== id);
     salvarLista(restante);
     return restante.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 }
 
-/**
- * Aplica as skills de um grupo sobre as que já estão no formulário.
- *
- * Mescla em vez de substituir: o peso do grupo vence, porque é ele que
- * padroniza o requisito, mas skill que o recrutador escolheu à mão e não está
- * no grupo continua ali. No caso comum — formulário vazio — o resultado é
- * idêntico a preencher do zero, e no caso em que já havia trabalho feito nada
- * é perdido em silêncio.
- */
 export function mesclarSkills(
     atuais: SkillComPeso[],
     doGrupo: SkillComPeso[],

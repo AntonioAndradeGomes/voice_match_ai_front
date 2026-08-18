@@ -18,8 +18,9 @@ import {
     DialogTitle,
 } from "@/_components/ui/dialog";
 import {
+    fetchGruposAPI,
     getGrupos,
-    removerGrupo,
+    removerGrupoAPI,
     totalSkills,
     type GrupoHabilidades,
 } from "@/lib/grupos-habilidades";
@@ -61,10 +62,8 @@ function ChipsSkills({
 }
 
 export function GruposHabilidadesSection() {
-    // `null` = ainda não li o storage. A leitura sai do primeiro render de
-    // propósito: no servidor não há localStorage, e devolver a lista cheia já
-    // na montagem faria o HTML do servidor divergir do cliente.
-    const [grupos, setGrupos] = useState<GrupoHabilidades[] | null>(null);
+    // Carrega cache local e sincroniza com a API do backend
+    const [grupos, setGrupos] = useState<GrupoHabilidades[] | null>(getGrupos);
     const [editando, setEditando] = useState<GrupoHabilidades | null>(null);
     const [dialogAberto, setDialogAberto] = useState(false);
     const [paraExcluir, setParaExcluir] = useState<GrupoHabilidades | null>(
@@ -72,7 +71,9 @@ export function GruposHabilidadesSection() {
     );
 
     useEffect(() => {
-        Promise.resolve(getGrupos()).then(setGrupos);
+        fetchGruposAPI().then((dados) => {
+            if (dados) setGrupos(dados);
+        });
     }, []);
 
     function abrirNovo() {
@@ -85,9 +86,10 @@ export function GruposHabilidadesSection() {
         setDialogAberto(true);
     }
 
-    function confirmarExclusao() {
+    async function confirmarExclusao() {
         if (!paraExcluir) return;
-        setGrupos(removerGrupo(paraExcluir.id));
+        const restantes = await removerGrupoAPI(paraExcluir.id);
+        setGrupos(restantes);
         toast.success(`Grupo "${paraExcluir.nome}" excluído.`);
         setParaExcluir(null);
     }
@@ -206,7 +208,7 @@ export function GruposHabilidadesSection() {
                 open={dialogAberto}
                 onOpenChange={setDialogAberto}
                 grupo={editando}
-                onSalvo={() => setGrupos(getGrupos())}
+                onSalvo={() => fetchGruposAPI().then(setGrupos)}
             />
 
             <Dialog

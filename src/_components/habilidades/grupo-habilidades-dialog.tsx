@@ -19,7 +19,7 @@ import { Label } from "@/_components/ui/label";
 import { Textarea } from "@/_components/ui/textarea";
 import { getCatalogo } from "@/lib/habilidades";
 import {
-    salvarGrupo,
+    salvarGrupoAPI,
     type GrupoHabilidades,
 } from "@/lib/grupos-habilidades";
 import type { SkillComPeso } from "@/types";
@@ -53,6 +53,7 @@ export function GrupoHabilidadesDialog({
     const [softSkills, setSoftSkills] = useState<SkillComPeso[]>(
         grupo?.softSkills ?? [],
     );
+    const [salvando, setSalvando] = useState(false);
 
     // Relê o catálogo a cada abertura, como o diálogo de nova vaga: editar as
     // listas logo acima nesta mesma página reflete aqui sem recarregar.
@@ -62,27 +63,32 @@ export function GrupoHabilidadesDialog({
     );
 
     const temSkill = hardSkills.length + softSkills.length > 0;
-    const valido = nome.trim() !== "" && temSkill;
+    const valido = nome.trim() !== "" && temSkill && !salvando;
 
-    function handleSalvar() {
-        const salvo = salvarGrupo({
-            id: grupo?.id,
-            nome,
-            descricao,
-            hardSkills,
-            softSkills,
-        });
+    async function handleSalvar() {
+        setSalvando(true);
+        try {
+            const salvo = await salvarGrupoAPI({
+                id: grupo?.id,
+                nome,
+                descricao,
+                hardSkills,
+                softSkills,
+            });
 
-        if (!salvo) {
-            toast.error("Já existe um grupo com esse nome.");
-            return;
+            if (!salvo) {
+                toast.error("Já existe um grupo com esse nome.");
+                return;
+            }
+
+            toast.success(
+                grupo ? "Grupo atualizado." : `Grupo "${salvo.nome}" criado.`,
+            );
+            onOpenChange(false);
+            onSalvo();
+        } finally {
+            setSalvando(false);
         }
-
-        toast.success(
-            grupo ? "Grupo atualizado." : `Grupo "${salvo.nome}" criado.`,
-        );
-        onOpenChange(false);
-        onSalvo();
     }
 
     return (
