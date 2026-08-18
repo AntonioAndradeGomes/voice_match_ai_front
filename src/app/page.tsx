@@ -3,7 +3,9 @@
 import { Briefcase, CheckCircle2, MessageSquare, Users } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { type ComponentType, type ReactNode } from "react";
+
+import { useDadosEmCache } from "@/lib/cache-swr";
 
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
@@ -177,16 +179,13 @@ function Metrica({
 }
 
 export default function DashboardPage() {
-    const [dados, setDados] = useState<DadosDashboard | null>(null);
     const { usuario } = useAuth();
-
-    useEffect(() => {
-        carregarDashboard().then(setDados);
-    }, []);
-
-    // `null` enquanto não montou: evita renderizar o estado vazio antes de saber
-    // se existem vagas salvas.
-    const carregando = dados === null;
+    // `carregando` só na primeira visita: sem isso o dashboard renderizava o
+    // estado vazio a cada volta, antes de saber se existem vagas salvas.
+    const { dados, carregando } = useDadosEmCache(
+        "dashboard",
+        carregarDashboard,
+    );
     const { vagas, totalPessoas, candidaturas, candidatosPorVaga } = dados ?? {
         vagas: [],
         totalPessoas: 0,

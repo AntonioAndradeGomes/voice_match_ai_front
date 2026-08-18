@@ -1,7 +1,7 @@
 "use client";
 
 import { WifiOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useDadosEmCache } from "@/lib/cache-swr";
 
 import {
     Alert,
@@ -186,14 +186,13 @@ const RELATORIO_VAZIO: DadosRelatorio = {
 };
 
 export default function RelatoriosPage() {
-    const [dados, setDados] = useState<DadosRelatorio | null>(null);
-
-    useEffect(() => {
-        carregarRelatorios().then(setDados);
-    }, []);
-
-    // `null` enquanto não montou: evita piscar "0 vagas" antes de ler o storage.
-    const carregando = dados === null;
+    // `carregando` só na primeira visita: voltando para cá, os números
+    // anteriores ficam na tela enquanto a busca refaz em segundo plano, em vez
+    // de piscar "0 vagas" antes de os dados chegarem.
+    const { dados, carregando } = useDadosEmCache(
+        "relatorios",
+        carregarRelatorios,
+    );
     const { resumo, funil, porVaga, faixas, semNota, notaMaxima, fonte } =
         dados ?? RELATORIO_VAZIO;
 
