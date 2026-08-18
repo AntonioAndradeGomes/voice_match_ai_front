@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { useServidorInacessivel } from "@/_components/layout/aviso-sem-conexao";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
@@ -468,6 +469,9 @@ export default function TalentosPage() {
     }, []);
 
     const carregando = talentos === null;
+    // Mesmo motivo do detalhe da vaga: sem servidor a lista volta vazia, e
+    // dizer "nenhum candidato ainda" seria afirmar algo que não se sabe.
+    const servidorInacessivel = useServidorInacessivel();
     // `useMemo` e não `talentos ?? []` direto: o array novo a cada render
     // invalidaria os memos de contagem e filtro abaixo sem necessidade.
     const lista = useMemo(() => talentos ?? [], [talentos]);
@@ -538,11 +542,14 @@ export default function TalentosPage() {
                         <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
                             <UsersRound className="size-8 text-muted-foreground" />
                             <span className="font-medium">
-                                Nenhum candidato ainda
+                                {servidorInacessivel
+                                    ? "Não foi possível carregar os talentos"
+                                    : "Nenhum candidato ainda"}
                             </span>
                             <span className="max-w-sm text-sm text-muted-foreground">
-                                Assim que alguém se inscrever por uma vaga
-                                publicada, aparece aqui.
+                                {servidorInacessivel
+                                    ? "O servidor está inacessível. Já pode haver candidatos cadastrados que não aparecem nesta lista."
+                                    : "Assim que alguém se inscrever por uma vaga publicada, aparece aqui."}
                             </span>
                         </CardContent>
                     </Card>

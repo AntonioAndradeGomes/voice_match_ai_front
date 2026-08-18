@@ -25,6 +25,7 @@ import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
 import { DivulgarVaga } from "@/_components/vagas/divulgar-vaga";
+import { useServidorInacessivel } from "@/_components/layout/aviso-sem-conexao";
 import { getCandidatosByVaga, getVagaById } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { VagaDetalheSkeleton } from "@/_components/layout/skeletons";
@@ -339,6 +340,10 @@ export default function VagaDetalhePage({
     const [candidatoNoChat, setCandidatoNoChat] = useState<Candidato | null>(
         null,
     );
+    // Com o servidor fora, `getCandidatosByVaga` cai no localStorage, que só
+    // conhece candidatos criados pelo próprio front — a lista volta vazia mesmo
+    // com a vaga cheia de inscritos no banco.
+    const servidorInacessivel = useServidorInacessivel();
 
     useEffect(() => {
         Promise.all([getVagaById(id), getCandidatosByVaga(id)]).then(
@@ -613,9 +618,29 @@ export default function VagaDetalhePage({
 
                     {candidatos.length === 0 ? (
                         <div className="flex flex-col items-center gap-2 rounded-3xl border border-dashed border-border py-16 text-center">
-                            <p className="text-sm text-muted-foreground">
-                                Nenhum candidato cadastrado nesta vaga ainda.
-                            </p>
+                            {/* Duas mensagens, porque são dois fatos
+                                diferentes: uma vaga sem inscritos e uma lista
+                                que não pôde ser carregada. Afirmar a primeira
+                                quando é a segunda faz o recrutador descartar
+                                uma vaga que na verdade tem gente esperando. */}
+                            {servidorInacessivel ? (
+                                <>
+                                    <p className="text-sm text-muted-foreground">
+                                        Não foi possível carregar os candidatos
+                                        desta vaga.
+                                    </p>
+                                    <p className="max-w-xs text-xs text-muted-foreground">
+                                        O servidor está inacessível — esta vaga
+                                        pode ter inscritos que não aparecem
+                                        aqui.
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">
+                                    Nenhum candidato cadastrado nesta vaga
+                                    ainda.
+                                </p>
+                            )}
                         </div>
                     ) : modoVisualizacao === "grade" ? (
                         <div className="grid gap-3 sm:grid-cols-2">
