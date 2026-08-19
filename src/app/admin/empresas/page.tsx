@@ -56,27 +56,35 @@ function LinhaEmpresa({ empresa }: { empresa: Empresa }) {
     const router = useRouter();
     const [entrando, setEntrando] = useState(false);
 
-    const handleEntrar = async (e: React.MouseEvent) => {
-        e.preventDefault();
+    const handleEntrar = async () => {
         setEntrando(true);
         try {
             await impersonar(empresa.id);
             router.push("/");
-        } catch (erro: any) {
+        } catch (erro) {
+            // `unknown` e não `any`: um throw que não seja Error (string, ou
+            // uma rejeição do fetch) quebraria em `erro.message`.
             toast.error("Não foi possível entrar", {
-                description: erro.message,
+                description:
+                    erro instanceof Error
+                        ? erro.message
+                        : "Tente novamente em instantes.",
             });
             setEntrando(false);
         }
     };
 
     return (
-        <Link
-            href={`/admin/empresas/${empresa.id}`}
-            className="rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
-            <Card className="transition-colors hover:border-sidebar-primary/40">
-                <CardContent className="flex flex-wrap items-center gap-4 p-4">
+        // O link envolve só a parte informativa, e o botão fica fora dele.
+        // Botão dentro de <a> é HTML inválido: o clique dependia de um
+        // preventDefault para não navegar junto, e no teclado a linha virava
+        // dois destinos empilhados no mesmo elemento.
+        <Card className="transition-colors hover:border-sidebar-primary/40">
+            <CardContent className="flex flex-wrap items-center gap-4 p-4">
+                <Link
+                    href={`/admin/empresas/${empresa.id}`}
+                    className="flex flex-1 flex-wrap items-center gap-4 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary/10 text-sidebar-primary">
                         <Building2 className="size-5" />
                     </span>
@@ -129,19 +137,22 @@ function LinhaEmpresa({ empresa }: { empresa: Empresa }) {
                         {STATUS_EMPRESA_LABEL[empresa.status]}
                     </Badge>
 
-                    <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        onClick={handleEntrar}
-                        disabled={entrando}
-                    >
-                        {entrando ? "Entrando..." : "Entrar"}
-                    </Button>
-
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                </CardContent>
-            </Card>
-        </Link>
+                </Link>
+
+                {/* Empresa suspensa não tem em que entrar: os usuários dela
+                    estão sem acesso, e o backend recusaria. Oferecer o botão
+                    seria prometer algo que não acontece. */}
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleEntrar}
+                    disabled={entrando || empresa.status === "suspensa"}
+                >
+                    {entrando ? "Entrando..." : "Entrar"}
+                </Button>
+            </CardContent>
+        </Card>
     );
 }
 
