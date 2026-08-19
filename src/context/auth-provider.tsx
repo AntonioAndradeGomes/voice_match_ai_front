@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import {
     buscarUsuarioLogado,
     entrar as autenticar,
+    impersonar as apiImpersonar,
     sair as encerrarSessao,
     type UsuarioAutenticado,
 } from "@/lib/usuarios";
@@ -22,6 +23,7 @@ interface AuthContextValue {
         senha: string,
         lembrar: boolean,
     ) => Promise<UsuarioAutenticado>;
+    impersonar: (empresaId: string) => Promise<UsuarioAutenticado>;
     sair: () => void;
 }
 
@@ -65,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return comPapel;
     }
 
+    async function impersonar(empresaId: string) {
+        const usuarioLogado = await apiImpersonar(empresaId);
+        setUsuario(usuarioLogado);
+        return usuarioLogado;
+    }
+
     function sair() {
         encerrarSessao();
         setUsuario(null);
@@ -77,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 carregando,
                 autenticado: usuario !== null,
                 entrar,
+                impersonar,
                 sair,
             }}
         >

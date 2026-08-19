@@ -248,6 +248,29 @@ export async function entrar(
     return user;
 }
 
+export async function impersonar(empresaId: string): Promise<UsuarioAutenticado> {
+    const resposta = await apiFetch(`${API_BASE_URL}/admin/empresas/${empresaId}/impersonar`, {
+        method: "POST",
+    });
+
+    const corpo = await resposta.json().catch(() => null);
+
+    if (!resposta.ok) {
+        throw new Error(
+            mensagemDoErro(corpo) ??
+                `Não foi possível entrar na empresa (erro ${resposta.status}).`,
+        );
+    }
+
+    const { access_token, user } = corpo as RespostaLogin;
+    
+    // Para manter a segurança da sessão e evitar que se confunda com o login
+    // regular e permaneça em cache, não usamos o 'lembrar: true'.
+    guardarToken(access_token, false);
+    guardarUsuario(user);
+    return user;
+}
+
 /** Encerra a sessão local. Não existe endpoint de logout — o JWT é stateless. */
 export function sair(): void {
     limparToken();

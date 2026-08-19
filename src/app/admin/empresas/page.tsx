@@ -14,6 +14,9 @@ import { NovaEmpresaDialog } from "@/_components/admin/nova-empresa-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/_components/ui/alert";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
+import { useAuth } from "@/context/auth-provider";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/_components/ui/card";
 import { Input } from "@/_components/ui/input";
 import { Skeleton } from "@/_components/ui/skeleton";
@@ -49,6 +52,24 @@ function Indicador({ label, valor }: { label: string; valor: string }) {
 }
 
 function LinhaEmpresa({ empresa }: { empresa: Empresa }) {
+    const { impersonar } = useAuth();
+    const router = useRouter();
+    const [entrando, setEntrando] = useState(false);
+
+    const handleEntrar = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        setEntrando(true);
+        try {
+            await impersonar(empresa.id);
+            router.push("/");
+        } catch (erro: any) {
+            toast.error("Não foi possível entrar", {
+                description: erro.message,
+            });
+            setEntrando(false);
+        }
+    };
+
     return (
         <Link
             href={`/admin/empresas/${empresa.id}`}
@@ -107,6 +128,15 @@ function LinhaEmpresa({ empresa }: { empresa: Empresa }) {
                     >
                         {STATUS_EMPRESA_LABEL[empresa.status]}
                     </Badge>
+
+                    <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={handleEntrar}
+                        disabled={entrando}
+                    >
+                        {entrando ? "Entrando..." : "Entrar"}
+                    </Button>
 
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                 </CardContent>
