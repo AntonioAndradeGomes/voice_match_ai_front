@@ -2,6 +2,7 @@
 
 import {
     Briefcase,
+    Building2,
     ChartColumn,
     LayoutDashboard,
     Menu,
@@ -37,6 +38,8 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from "@/_components/ui/tooltip";
+import { useAuth } from "@/context/auth-provider";
+import { ehAdminSistema } from "@/lib/usuarios";
 import { cn } from "@/lib/utils";
 
 // Itens do dia a dia do recrutador, na ordem em que ele trabalha: abre a vaga,
@@ -60,6 +63,16 @@ const NAV_FINAL = [
 ];
 
 const NAV = [...NAV_PRINCIPAL, ...NAV_FINAL];
+
+// Navegação do admin do sistema — quem opera a plataforma, não uma empresa
+// cliente. É uma lista separada, e não um item a mais na de cima, porque ele
+// não deve ver vaga, candidato nem relatório de cliente nenhum: operar a
+// plataforma não é motivo para acessar currículo e nota de entrevista de
+// candidato alheio. Ver docs/multi-tenant-contrato-backend.md, seção 3.
+const NAV_ADMIN_SISTEMA = [
+    { href: "/admin", label: "Empresas", icone: Building2 },
+    ...NAV_FINAL,
+];
 
 // Mesmas linhas diagonais do hero do login, em azul da marca, porém mais
 // grossas (2px a 4px, contra o traço de 1px de lá) e em maior número.
@@ -210,6 +223,8 @@ function NavLink({
 
 export function Sidebar() {
     const pathname = usePathname();
+    const { usuario } = useAuth();
+    const nav = ehAdminSistema(usuario) ? NAV_ADMIN_SISTEMA : NAV;
     const [colapsado, setColapsado] = useState(false);
     const [menuAberto, setMenuAberto] = useState(false);
 
@@ -286,7 +301,7 @@ export function Sidebar() {
                         </SheetHeader>
 
                         <nav className="flex flex-col gap-1 p-4">
-                            {NAV.map(({ href, label, icone }, indice) => (
+                            {nav.map(({ href, label, icone }, indice) => (
                                 <motion.div
                                     key={href}
                                     // Só opacidade: qualquer transform aqui
@@ -407,7 +422,7 @@ export function Sidebar() {
                     </div>
 
                     <nav className="flex flex-col gap-1">
-                        {NAV.map(({ href, label, icone }, indice) => (
+                        {nav.map(({ href, label, icone }, indice) => (
                             <motion.div
                                 key={href}
                                 // Só opacidade: qualquer transform aqui vira um

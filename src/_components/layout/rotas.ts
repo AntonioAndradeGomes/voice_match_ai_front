@@ -12,6 +12,7 @@ const PREFIXOS_SEM_NAV = ["/chat", "/candidatura"];
 // dessa lista é uma 404 (ou uma rota futura ainda não cadastrada aqui).
 const ROUTE_PREFIXES = [
     "/",
+    "/admin",
     "/vagas",
     "/talentos",
     "/relatorios",
@@ -57,4 +58,13 @@ const PREFIXOS_PUBLICOS = ["/login", "/cadastro", "/candidatura", "/chat"];
 
 export function rotaPublica(pathname: string) {
     return PREFIXOS_PUBLICOS.some((prefixo) => rotaCasa(pathname, prefixo));
+}
+
+// Área do admin do sistema (quem opera a plataforma e cadastra as empresas
+// clientes) — não confundir com o admin de uma empresa, que usa o app normal.
+//
+// A checagem de papel fica no RouteGuard, e não aqui: este módulo responde
+// "que rota é essa", não "quem pode entrar".
+export function rotaEhAdminSistema(pathname: string) {
+    return rotaCasa(pathname, "/admin");
 }
