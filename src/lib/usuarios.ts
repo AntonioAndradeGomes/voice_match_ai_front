@@ -11,6 +11,13 @@ import type { TipoUsuario } from "@/types";
 const CHAVE_TOKEN = "voicematch:token";
 const CHAVE_USUARIO = "voicematch:user";
 
+// Backup da sessão do admin do sistema durante uma impersonation. Sem isto ela
+// se perderia: `impersonar` grava o token da empresa com `lembrar: false`, e
+// `guardarToken` limpa os dois storages antes de escrever — ou seja, o token
+// original do admin some, e voltar exigiria login de novo.
+const CHAVE_TOKEN_ORIGINAL = "voicematch:token-original";
+const CHAVE_USUARIO_ORIGINAL = "voicematch:user-original";
+
 export interface NovoUsuario {
     nome_completo: string;
     email: string;
@@ -248,6 +255,81 @@ export async function entrar(
     return user;
 }
 
+/**
+ * Onde o backup foi parar. O storage importa: guardamos a sessão original no
+ * mesmo lugar em que ela vivia, e é isso que preserva a escolha de "manter
+ * conectado" do admin na hora de voltar.
+ */
+function storageDoBackup(): Storage | null {
+    if (typeof window === "undefined") return null;
+    if (window.localStorage.getItem(CHAVE_TOKEN_ORIGINAL))
+        return window.localStorage;
+    if (window.sessionStorage.getItem(CHAVE_TOKEN_ORIGINAL))
+        return window.sessionStorage;
+    return null;
+}
+
+/** Há uma sessão de admin guardada esperando para ser retomada. */
+export function estaImpersonando(): boolean {
+    return storageDoBackup() !== null;
+}
+
+function guardarSessaoOriginal(): void {
+    if (typeof window === "undefined") return;
+
+    // Já existe backup: impersonar de dentro de uma impersonation não pode
+    // sobrescrevê-lo, senão o caminho de volta para o admin de verdade some e
+    // a pessoa fica presa na conta do cliente.
+    if (estaImpersonando()) return;
+
+    const token = lerToken();
+    const usuario = lerUsuarioSalvo();
+    if (!token || !usuario) return;
+
+    const destino = storageDaSessao() ?? window.localStorage;
+    destino.setItem(CHAVE_TOKEN_ORIGINAL, token);
+    destino.setItem(CHAVE_USUARIO_ORIGINAL, JSON.stringify(usuario));
+}
+
+function limparSessaoOriginal(): void {
+    if (typeof window === "undefined") return;
+    for (const storage of [window.localStorage, window.sessionStorage]) {
+        storage.removeItem(CHAVE_TOKEN_ORIGINAL);
+        storage.removeItem(CHAVE_USUARIO_ORIGINAL);
+    }
+}
+
+/**
+ * Volta para a conta do admin do sistema, sem novo login.
+ *
+ * Revalida contra o backend em vez de confiar no que estava guardado: o cache
+ * local existe só para a UI ter o que mostrar, e o token pode ter vencido
+ * enquanto a pessoa navegava dentro da empresa.
+ */
+export async function desimpersonar(): Promise<UsuarioAutenticado | null> {
+    const origem = storageDoBackup();
+    if (!origem) return null;
+
+    const token = origem.getItem(CHAVE_TOKEN_ORIGINAL);
+    const bruto = origem.getItem(CHAVE_USUARIO_ORIGINAL);
+
+    // De volta para o mesmo tipo de storage de onde veio: se o admin tinha
+    // marcado "manter conectado", continua conectado depois de voltar.
+    if (token) guardarToken(token, origem === window.localStorage);
+
+    if (bruto) {
+        try {
+            guardarUsuario(JSON.parse(bruto) as UsuarioAutenticado);
+        } catch {
+            // Backup corrompido não pode impedir a volta: o token já foi
+            // restaurado, e `buscarUsuarioLogado` refaz o cache do usuário.
+        }
+    }
+
+    limparSessaoOriginal();
+    return buscarUsuarioLogado();
+}
+
 export async function impersonar(empresaId: string): Promise<UsuarioAutenticado> {
     const resposta = await apiFetch(`${API_BASE_URL}/admin/empresas/${empresaId}/impersonar`, {
         method: "POST",
@@ -263,7 +345,12 @@ export async function impersonar(empresaId: string): Promise<UsuarioAutenticado>
     }
 
     const { access_token, user } = corpo as RespostaLogin;
-    
+
+    // Guarda a sessão do admin antes de sobrescrever — só aqui, depois de a
+    // resposta ter chegado, para uma impersonation que falhou não deixar
+    // backup órfão para trás.
+    guardarSessaoOriginal();
+
     // Para manter a segurança da sessão e evitar que se confunda com o login
     // regular e permaneça em cache, não usamos o 'lembrar: true'.
     guardarToken(access_token, false);
@@ -275,6 +362,10 @@ export async function impersonar(empresaId: string): Promise<UsuarioAutenticado>
 export function sair(): void {
     limparToken();
     limparUsuario();
+    // Também o backup: sair no meio de uma impersonation deixaria a sessão do
+    // admin guardada, e o próximo login apareceria como se estivesse
+    // impersonando alguém.
+    limparSessaoOriginal();
 }
 
 /**
