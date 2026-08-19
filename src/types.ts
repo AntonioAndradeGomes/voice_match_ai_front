@@ -223,3 +223,18 @@ export const STATUS_EMPRESA_LABEL: Record<StatusEmpresa, string> = {
     ativa: "Ativa",
     suspensa: "Suspensa",
 };
+
+/** Usuário pertencente a uma empresa cliente, na visão do admin do sistema. */
+export interface UsuarioDaEmpresa {
+    id: string;
+    nomeCompleto: string;
+    email: string;
+    tipoUsuario: TipoUsuario;
+    dataCriacao: string;
+}
+
+export const TIPO_USUARIO_LABEL: Record<TipoUsuario, string> = {
+    recrutador: "Recrutador",
+    admin_empresa: "Admin da empresa",
+    admin_sistema: "Admin do sistema",
+};

@@ -1,5 +1,9 @@
 import { API_BASE_URL, apiFetch } from "@/lib/api";
-import type { Empresa, StatusEmpresa } from "@/types";
+import type {
+    Empresa,
+    StatusEmpresa,
+    UsuarioDaEmpresa,
+} from "@/types";
 
 /**
  * Camada de dados das empresas (multi-tenant).
@@ -173,4 +177,143 @@ export async function alterarStatusEmpresa(
     }
 
     return normalizar((await resposta.json()) as EmpresaApi);
+}
+
+// --- Detalhe da empresa -------------------------------------------------
+
+export interface RespostaEmpresa {
+    empresa: Empresa | null;
+    usuarios: UsuarioDaEmpresa[];
+    demonstracao: boolean;
+}
+
+interface UsuarioApi {
+    id: string;
+    nome_completo: string;
+    email: string;
+    tipo_usuario: UsuarioDaEmpresa["tipoUsuario"];
+    data_criacao: string;
+}
+
+function normalizarUsuario(api: UsuarioApi): UsuarioDaEmpresa {
+    return {
+        id: api.id,
+        nomeCompleto: api.nome_completo,
+        email: api.email,
+        tipoUsuario: api.tipo_usuario,
+        dataCriacao: api.data_criacao,
+    };
+}
+
+const USUARIOS_DE_EXEMPLO: Record<string, UsuarioDaEmpresa[]> = {
+    "exemplo-1": [
+        {
+            id: "u1",
+            nomeCompleto: "Ana Souza (exemplo)",
+            email: "ana@exemplo.com",
+            tipoUsuario: "admin_empresa",
+            dataCriacao: "2026-08-01T12:00:00Z",
+        },
+        {
+            id: "u2",
+            nomeCompleto: "Bruno Lima (exemplo)",
+            email: "bruno@exemplo.com",
+            tipoUsuario: "recrutador",
+            dataCriacao: "2026-08-03T12:00:00Z",
+        },
+        {
+            id: "u3",
+            nomeCompleto: "Carla Dias (exemplo)",
+            email: "carla@exemplo.com",
+            tipoUsuario: "recrutador",
+            dataCriacao: "2026-08-05T12:00:00Z",
+        },
+    ],
+    "exemplo-2": [
+        {
+            id: "u4",
+            nomeCompleto: "Diego Alves (exemplo)",
+            email: "diego@exemplo.com",
+            tipoUsuario: "admin_empresa",
+            dataCriacao: "2026-08-10T12:00:00Z",
+        },
+    ],
+    // "exemplo-3" fica sem ninguém de propósito: é o caso de empresa
+    // cadastrada e sem primeiro acesso liberado, que a tela precisa saber
+    // mostrar.
+    "exemplo-3": [],
+};
+
+export async function buscarEmpresa(id: string): Promise<RespostaEmpresa> {
+    const [resEmpresa, resUsuarios] = await Promise.all([
+        apiFetch(`${API_BASE_URL}/empresas/${id}`),
+        apiFetch(`${API_BASE_URL}/empresas/${id}/usuarios`),
+    ]);
+
+    if (rotaAindaNaoExiste(resEmpresa.status)) {
+        return {
+            empresa: EMPRESAS_DE_EXEMPLO.find((e) => e.id === id) ?? null,
+            usuarios: USUARIOS_DE_EXEMPLO[id] ?? [],
+            demonstracao: true,
+        };
+    }
+
+    if (!resEmpresa.ok) {
+        throw new Error(
+            resEmpresa.status === 404
+                ? "Empresa não encontrada."
+                : `Não foi possível carregar a empresa (erro ${resEmpresa.status}).`,
+        );
+    }
+
+    const empresa = normalizar((await resEmpresa.json()) as EmpresaApi);
+    // A lista de usuários é secundária: se ela falhar, a tela ainda mostra a
+    // empresa em vez de virar uma página de erro inteira.
+    const usuarios = resUsuarios.ok
+        ? ((await resUsuarios.json()) as UsuarioApi[]).map(normalizarUsuario)
+        : [];
+
+    return { empresa, usuarios, demonstracao: false };
+}
+
+export interface NovoAdminEmpresa {
+    nome_completo: string;
+    email: string;
+    senha: string;
+}
+
+/**
+ * Cria o admin da empresa — o primeiro acesso do cliente. Sem isto, a empresa
+ * fica cadastrada e ninguém consegue entrar nela.
+ */
+export async function criarAdminDaEmpresa(
+    empresaId: string,
+    dados: NovoAdminEmpresa,
+): Promise<UsuarioDaEmpresa> {
+    const resposta = await apiFetch(
+        `${API_BASE_URL}/empresas/${empresaId}/usuarios`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dados),
+        },
+    );
+
+    if (rotaAindaNaoExiste(resposta.status)) {
+        throw new Error(
+            "O cadastro de usuários da empresa ainda não existe no servidor. Esta tela está em modo de demonstração.",
+        );
+    }
+
+    if (resposta.status === 409) {
+        throw new Error("Já existe um usuário com esse e-mail.");
+    }
+
+    if (!resposta.ok) {
+        throw new Error(
+            `Não foi possível cadastrar o administrador (erro ${resposta.status}).`,
+        );
+    }
+
+    return normalizarUsuario((await resposta.json()) as UsuarioApi);
 }

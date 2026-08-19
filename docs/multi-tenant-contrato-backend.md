@@ -151,6 +151,25 @@ sistema cadastra a empresa e ninguém consegue entrar nela.
 Cria `Usuario` com `tipo_usuario = admin_empresa` e `empresa_id` da rota.
 **409** se o e-mail já existir.
 
+### `GET /empresas/{id}/usuarios`
+
+Lista quem pertence à empresa, para o detalhe no painel do admin do sistema.
+
+```json
+[
+  {
+    "id": "uuid",
+    "nome_completo": "Ana Souza",
+    "email": "ana@acme.com",
+    "tipo_usuario": "admin_empresa",
+    "data_criacao": "2026-08-01T12:00:00Z"
+  }
+]
+```
+
+Só identificação e papel — nada de dado de candidato, pelo mesmo motivo da
+seção 3.
+
 ### `GET /auth/me` — dois campos novos
 
 ```json
