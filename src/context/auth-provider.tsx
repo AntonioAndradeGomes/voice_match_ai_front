@@ -8,6 +8,10 @@ import {
     sair as encerrarSessao,
     type UsuarioAutenticado,
 } from "@/lib/usuarios";
+import {
+    aplicarPapelDaUrl,
+    lerPapelSimulado,
+} from "@/lib/papel-simulado";
 
 interface AuthContextValue {
     usuario: UsuarioAutenticado | null;
@@ -28,20 +32,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [carregando, setCarregando] = useState(true);
 
     useEffect(() => {
+        // Fora de produção, `?papel=` permite percorrer as telas do admin do
+        // sistema antes de o backend ter papéis. Some da URL depois de lido:
+        // um endereço com `?papel=admin_sistema` convida a ser compartilhado
+        // como se fosse rota de verdade. Ver lib/papel-simulado.ts.
+        if (aplicarPapelDaUrl()) {
+            const limpa = new URL(window.location.href);
+            limpa.searchParams.delete("papel");
+            window.history.replaceState(null, "", limpa.toString());
+        }
+
         // Confirma a sessão salva contra o backend antes de liberar qualquer
         // rota — o RouteGuard segura `children` enquanto `carregando` for
         // true, então não há necessidade (nem como, sem mismatch de
         // hidratação) de adiantar `usuario` com o valor de localStorage aqui.
         buscarUsuarioLogado().then((atual) => {
-            setUsuario(atual);
+            const papel = lerPapelSimulado();
+            setUsuario(
+                atual && papel ? { ...atual, tipo_usuario: papel } : atual,
+            );
             setCarregando(false);
         });
     }, []);
 
     async function entrar(email: string, senha: string, lembrar: boolean) {
         const usuarioLogado = await autenticar(email, senha, lembrar);
-        setUsuario(usuarioLogado);
-        return usuarioLogado;
+        const papel = lerPapelSimulado();
+        const comPapel = papel
+            ? { ...usuarioLogado, tipo_usuario: papel }
+            : usuarioLogado;
+        setUsuario(comPapel);
+        return comPapel;
     }
 
     function sair() {
