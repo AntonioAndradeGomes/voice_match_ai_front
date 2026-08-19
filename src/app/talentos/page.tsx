@@ -13,8 +13,9 @@ import {
     X,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
+import { useServidorInacessivel } from "@/_components/layout/aviso-sem-conexao";
 import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
@@ -22,6 +23,7 @@ import { Input } from "@/_components/ui/input";
 import { ScrollArea } from "@/_components/ui/scroll-area";
 import { Skeleton } from "@/_components/ui/skeleton";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
+import { useDadosEmCache } from "@/lib/cache-swr";
 import { getCandidatos, getVagas } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import type { Candidato, Vaga } from "@/types";
@@ -449,25 +451,29 @@ function filtroInicial(): CategoriaFiltro {
 }
 
 export default function TalentosPage() {
-    const [talentos, setTalentos] = useState<Talento[] | null>(null);
+    // Carregador fora do componente não dá, porque depende de `montarTalentos`
+    // definido no módulo — mas a identidade da arrow não importa: o hook prende
+    // o efeito à chave, não à função.
+    const { dados: talentos, carregando } = useDadosEmCache<Talento[]>(
+        "talentos",
+        async () => {
+            const [candidatos, vagas, candidaturas] = await Promise.all([
+                getCandidatos(),
+                getVagas(),
+                carregarCandidaturas(),
+            ]);
+            return montarTalentos(candidatos, vagas, candidaturas).sort(
+                (a, b) => b.ultimaAtividade - a.ultimaAtividade,
+            );
+        },
+    );
     const [busca, setBusca] = useState("");
     const [filtro, setFiltro] = useState<CategoriaFiltro>(filtroInicial);
 
-    useEffect(() => {
-        Promise.all([
-            getCandidatos(),
-            getVagas(),
-            carregarCandidaturas(),
-        ]).then(([candidatos, vagas, candidaturas]) => {
-            setTalentos(
-                montarTalentos(candidatos, vagas, candidaturas).sort(
-                    (a, b) => b.ultimaAtividade - a.ultimaAtividade,
-                ),
-            );
-        });
-    }, []);
 
-    const carregando = talentos === null;
+    // Mesmo motivo do detalhe da vaga: sem servidor a lista volta vazia, e
+    // dizer "nenhum candidato ainda" seria afirmar algo que não se sabe.
+    const servidorInacessivel = useServidorInacessivel();
     // `useMemo` e não `talentos ?? []` direto: o array novo a cada render
     // invalidaria os memos de contagem e filtro abaixo sem necessidade.
     const lista = useMemo(() => talentos ?? [], [talentos]);
@@ -538,11 +544,14 @@ export default function TalentosPage() {
                         <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
                             <UsersRound className="size-8 text-muted-foreground" />
                             <span className="font-medium">
-                                Nenhum candidato ainda
+                                {servidorInacessivel
+                                    ? "Não foi possível carregar os talentos"
+                                    : "Nenhum candidato ainda"}
                             </span>
                             <span className="max-w-sm text-sm text-muted-foreground">
-                                Assim que alguém se inscrever por uma vaga
-                                publicada, aparece aqui.
+                                {servidorInacessivel
+                                    ? "O servidor está inacessível. Já pode haver candidatos cadastrados que não aparecem nesta lista."
+                                    : "Assim que alguém se inscrever por uma vaga publicada, aparece aqui."}
                             </span>
                         </CardContent>
                     </Card>

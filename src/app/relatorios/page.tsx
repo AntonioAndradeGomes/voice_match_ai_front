@@ -1,7 +1,7 @@
 "use client";
 
 import { WifiOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useDadosEmCache } from "@/lib/cache-swr";
 
 import {
     Alert,
@@ -21,7 +21,6 @@ import {
     contarSemNota,
     distribuirNotas,
     montarFunil,
-    NOTA_MAXIMA,
     NOTA_MAXIMA_BACKEND,
     type CandidatoRelatorio,
     type EtapaFunil,
@@ -29,11 +28,7 @@ import {
     type ResumoRelatorio,
     type TotalPorVaga,
 } from "@/lib/relatorios";
-import {
-    getCandidatos,
-    getVagas,
-    mapearStatusCandidatura,
-} from "@/lib/storage";
+import { getVagas, mapearStatusCandidatura } from "@/lib/storage";
 
 // Acima disso a cauda vira uma linha "Outras vagas" — mais barras não contam
 // história melhor, só espremem as que importam.
@@ -45,9 +40,9 @@ interface DadosRelatorio {
     porVaga: TotalPorVaga[];
     faixas: FaixaDeNota[];
     semNota: number;
-    /** 10 quando as notas vêm das entrevistas do backend; 100 no modo local. */
+    /** 10: as notas vêm das entrevistas do backend. */
     notaMaxima: number;
-    fonte: "backend" | "local";
+    fonte: "backend" | "sem-conexao";
 }
 
 interface CandidaturaApi {
@@ -145,28 +140,16 @@ async function carregarDoBackend(): Promise<DadosRelatorio> {
     };
 }
 
-/** Queda para o que estiver no localStorage. Sem backend e sem nada salvo, a
- *  tela fica vazia — que é a verdade, e melhor do que número inventado. */
-async function carregarLocal(): Promise<DadosRelatorio> {
-    const vagas = await getVagas();
-    const candidatos = await getCandidatos();
-
-    return {
-        resumo: calcularResumo(vagas, candidatos),
-        funil: montarFunil(candidatos),
-        porVaga: contarCandidatosPorVaga(vagas, candidatos, VAGAS_NO_GRAFICO),
-        faixas: distribuirNotas(candidatos),
-        semNota: contarSemNota(candidatos),
-        notaMaxima: NOTA_MAXIMA,
-        fonte: "local",
-    };
-}
-
 async function carregarRelatorios(): Promise<DadosRelatorio> {
     try {
         return await carregarDoBackend();
     } catch {
-        return carregarLocal();
+        // Sem servidor, relatório vazio — e não o que houver no localStorage.
+        // Aqui havia um fallback local que remontava os gráficos com o cache do
+        // front: números plausíveis, com cara de fechamento real, calculados em
+        // outra escala de nota (0–100 contra 0–10 do backend). Um relatório é
+        // lido para decidir; número inventado nele é pior que número nenhum.
+        return { ...RELATORIO_VAZIO, fonte: "sem-conexao" };
     }
 }
 
@@ -203,14 +186,13 @@ const RELATORIO_VAZIO: DadosRelatorio = {
 };
 
 export default function RelatoriosPage() {
-    const [dados, setDados] = useState<DadosRelatorio | null>(null);
-
-    useEffect(() => {
-        carregarRelatorios().then(setDados);
-    }, []);
-
-    // `null` enquanto não montou: evita piscar "0 vagas" antes de ler o storage.
-    const carregando = dados === null;
+    // `carregando` só na primeira visita: voltando para cá, os números
+    // anteriores ficam na tela enquanto a busca refaz em segundo plano, em vez
+    // de piscar "0 vagas" antes de os dados chegarem.
+    const { dados, carregando } = useDadosEmCache(
+        "relatorios",
+        carregarRelatorios,
+    );
     const { resumo, funil, porVaga, faixas, semNota, notaMaxima, fonte } =
         dados ?? RELATORIO_VAZIO;
 
@@ -234,18 +216,15 @@ export default function RelatoriosPage() {
                     <RelatoriosSkeleton />
                 ) : (
                     <>
-                        {/* O fallback local existe para demonstração, mas não
-                            pode se passar por dado real — números inventados
-                            num relatório são piores que nenhum número. */}
-                        {fonte === "local" && (
+                        {fonte === "sem-conexao" && (
                             <Alert>
                                 <WifiOff />
                                 <AlertTitle>
                                     Sem conexão com o servidor
                                 </AlertTitle>
                                 <AlertDescription>
-                                    Exibindo dados locais de demonstração. Os
-                                    números abaixo não refletem o banco real —
+                                    Não foi possível carregar os relatórios. Os
+                                    quadros abaixo ficam zerados de propósito —
                                     recarregue quando o backend voltar.
                                 </AlertDescription>
                             </Alert>

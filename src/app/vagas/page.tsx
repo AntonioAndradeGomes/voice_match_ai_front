@@ -2,7 +2,7 @@
 
 import { Briefcase, ExternalLink, Plus, SearchX } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
     Avatar,
@@ -29,6 +29,7 @@ import {
     type FiltrosVagas,
 } from "@/_components/vagas/filtros-vagas";
 import { NovaVagaDialog } from "@/_components/vagas/nova-vaga-dialog";
+import { useDadosEmCache } from "@/lib/cache-swr";
 import { getCandidatosByVaga, getVagas } from "@/lib/storage";
 import { VagasSkeleton } from "@/_components/layout/skeletons";
 import { getResumoVagaBadge } from "@/lib/vaga-status";
@@ -50,27 +51,29 @@ async function carregarVagasComCandidatos(): Promise<{
     };
 }
 
+// Identidade estável para o caso vazio: com o objeto literal inline, cada
+// render cria um novo e o useMemo de `vagasVisiveis` recalcula sempre.
+const SEM_DADOS = {
+    vagas: [] as Vaga[],
+    candidatosPorVaga: {} as Record<string, Candidato[]>,
+};
+
 export default function VagasPage() {
-    // `null` inicial, e não uma lista vazia: com lista vazia não havia como
-    // distinguir "ainda carregando" de "não há vagas", e a tela piscava o
-    // estado vazio — "Nenhuma vaga criada ainda" — antes de os dados chegarem.
-    const [dados, setDados] = useState<{
-        vagas: Vaga[];
-        candidatosPorVaga: Record<string, Candidato[]>;
-    } | null>(null);
+    // `dados` continua podendo ser `null`, e não uma lista vazia: com lista
+    // vazia não havia como distinguir "ainda carregando" de "não há vagas", e a
+    // tela piscava o estado vazio — "Nenhuma vaga criada ainda" — antes de os
+    // dados chegarem.
+    //
+    // O cache guarda o resultado entre montagens: voltar para cá desenha na
+    // hora com o que já se sabe, enquanto a busca refaz em segundo plano.
+    const { dados, carregando, recarregar } = useDadosEmCache(
+        "vagas",
+        carregarVagasComCandidatos,
+    );
     const [novaVagaOpen, setNovaVagaOpen] = useState(false);
 
-    useEffect(() => {
-        carregarVagasComCandidatos().then(setDados);
-    }, []);
-
     const [filtros, setFiltros] = useState<FiltrosVagas>(FILTROS_INICIAIS);
-
-    const carregando = dados === null;
-    const { vagas, candidatosPorVaga } = dados ?? {
-        vagas: [],
-        candidatosPorVaga: {},
-    };
+    const { vagas, candidatosPorVaga } = dados ?? SEM_DADOS;
 
     const vagasVisiveis = useMemo(
         () => filtrarVagas(vagas, candidatosPorVaga, filtros),
@@ -285,7 +288,7 @@ export default function VagasPage() {
             <NovaVagaDialog
                 open={novaVagaOpen}
                 onOpenChange={setNovaVagaOpen}
-                onVagaCriada={() => carregarVagasComCandidatos().then(setDados)}
+                onVagaCriada={recarregar}
             />
         </>
     );

@@ -9,6 +9,7 @@ import { Toaster } from "@/_components/ui/sonner";
 import { BotaoAcessibilidade } from "@/_components/layout/botao-acessibilidade";
 import { FloatingThemeToggle } from "@/_components/layout/floating-theme-toggle";
 import { InlineScript } from "@/_components/layout/inline-script";
+import { AvisoSemConexao } from "@/_components/layout/aviso-sem-conexao";
 import { RouteGuard } from "@/_components/layout/route-guard";
 import { Sidebar } from "@/_components/layout/sidebar";
 import { SCRIPT_ACESSIBILIDADE } from "@/lib/acessibilidade";
@@ -80,9 +81,16 @@ export default function RootLayout({
                             <RouteGuard>
                                 <div className="flex h-svh flex-col lg:flex-row">
                                     <Sidebar />
-                                    <main className="flex-1 min-h-0 overflow-y-auto">
-                                        {children}
-                                    </main>
+                                    {/* Coluna própria para o aviso ficar fixo
+                                        acima do conteúdo: dentro do <main> ele
+                                        rolaria junto e sumiria de vista logo no
+                                        primeiro scroll. */}
+                                    <div className="flex min-h-0 flex-1 flex-col">
+                                        <AvisoSemConexao />
+                                        <main className="min-h-0 flex-1 overflow-y-auto">
+                                            {children}
+                                        </main>
+                                    </div>
                                 </div>
                             </RouteGuard>
                             <Toaster />

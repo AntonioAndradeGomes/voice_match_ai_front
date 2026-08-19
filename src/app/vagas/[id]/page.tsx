@@ -16,7 +16,7 @@ import {
     Trophy,
 } from "lucide-react";
 import Link from "next/link";
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useMemo, useState } from "react";
 
 import { CandidatoDetalheModal } from "@/_components/candidatos/candidato-detalhe-modal";
 import { CandidatoChatDialog } from "@/_components/chat/candidato-chat-dialog";
@@ -25,6 +25,8 @@ import { Badge } from "@/_components/ui/badge";
 import { Button } from "@/_components/ui/button";
 import { Card, CardContent } from "@/_components/ui/card";
 import { DivulgarVaga } from "@/_components/vagas/divulgar-vaga";
+import { useServidorInacessivel } from "@/_components/layout/aviso-sem-conexao";
+import { useDadosEmCache } from "@/lib/cache-swr";
 import { getCandidatosByVaga, getVagaById } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { VagaDetalheSkeleton } from "@/_components/layout/skeletons";
@@ -33,7 +35,6 @@ import {
     MODALIDADE_LABEL,
     type Candidato,
     type SkillComPeso,
-    type Vaga,
 } from "@/types";
 
 type ModoVisualizacao = "grade" | "lista";
@@ -320,6 +321,10 @@ function CandidatoLinhaRanking({
     );
 }
 
+// Identidade estável para o caso vazio. Com `?? []` inline, cada render cria
+// um array novo e os useMemo que dependem de `candidatos` recalculam sempre.
+const SEM_CANDIDATOS: Candidato[] = [];
+
 export default function VagaDetalhePage({
     params,
 }: {
@@ -327,11 +332,17 @@ export default function VagaDetalhePage({
 }) {
     const { id } = use(params);
 
-    const [estado, setEstado] = useState<{
-        vaga: Vaga | null;
-        candidatos: Candidato[];
-        carregado: boolean;
-    }>({ vaga: null, candidatos: [], carregado: false });
+    // Chave por vaga: navegar de uma vaga para outra troca a chave sem
+    // desmontar a página, e o hook devolve o cache da nova na hora.
+    const { dados, carregando } = useDadosEmCache(`vaga:${id}`, async () => {
+        const [vaga, candidatos] = await Promise.all([
+            getVagaById(id),
+            getCandidatosByVaga(id),
+        ]);
+        return { vaga, candidatos };
+    });
+    const vaga = dados?.vaga ?? null;
+    const candidatos = dados?.candidatos ?? SEM_CANDIDATOS;
     const [modoVisualizacao, setModoVisualizacao] =
         useState<ModoVisualizacao>("grade");
     const [candidatoSelecionado, setCandidatoSelecionado] =
@@ -339,22 +350,14 @@ export default function VagaDetalhePage({
     const [candidatoNoChat, setCandidatoNoChat] = useState<Candidato | null>(
         null,
     );
-
-    useEffect(() => {
-        Promise.all([getVagaById(id), getCandidatosByVaga(id)]).then(
-            ([vaga, candidatos]) => {
-                setEstado({
-                    vaga,
-                    candidatos,
-                    carregado: true,
-                });
-            },
-        );
-    }, [id]);
+    // Com o servidor fora, `getCandidatosByVaga` cai no localStorage, que só
+    // conhece candidatos criados pelo próprio front — a lista volta vazia mesmo
+    // com a vaga cheia de inscritos no banco.
+    const servidorInacessivel = useServidorInacessivel();
 
     const candidatosOrdenados = useMemo(
-        () => ordenarPorRanking(estado.candidatos),
-        [estado.candidatos],
+        () => ordenarPorRanking(candidatos),
+        [candidatos],
     );
 
     const topCandidato = useMemo(() => {
@@ -364,19 +367,19 @@ export default function VagaDetalhePage({
     }, [candidatosOrdenados]);
 
     const totalAvaliados = useMemo(
-        () => estado.candidatos.filter((c) => c.notaFinal !== null).length,
-        [estado.candidatos]
+        () => candidatos.filter((c) => c.notaFinal !== null).length,
+        [candidatos]
     );
 
     const mediaVaga = useMemo(() => {
-        const notas = estado.candidatos
+        const notas = candidatos
             .map((c) => c.notaFinal)
             .filter((n): n is number => n !== null && n !== undefined);
         if (notas.length === 0) return null;
         return (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(1);
-    }, [estado.candidatos]);
+    }, [candidatos]);
 
-    if (estado.carregado && !estado.vaga) {
+    if (!carregando && !vaga) {
         return (
             <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-6 py-20 text-center">
                 <p className="text-sm text-muted-foreground">
@@ -394,9 +397,7 @@ export default function VagaDetalhePage({
         );
     }
 
-    if (!estado.vaga) return <VagaDetalheSkeleton />;
-
-    const { vaga, candidatos } = estado;
+    if (!vaga) return <VagaDetalheSkeleton />;
 
     return (
         <>
@@ -613,9 +614,29 @@ export default function VagaDetalhePage({
 
                     {candidatos.length === 0 ? (
                         <div className="flex flex-col items-center gap-2 rounded-3xl border border-dashed border-border py-16 text-center">
-                            <p className="text-sm text-muted-foreground">
-                                Nenhum candidato cadastrado nesta vaga ainda.
-                            </p>
+                            {/* Duas mensagens, porque são dois fatos
+                                diferentes: uma vaga sem inscritos e uma lista
+                                que não pôde ser carregada. Afirmar a primeira
+                                quando é a segunda faz o recrutador descartar
+                                uma vaga que na verdade tem gente esperando. */}
+                            {servidorInacessivel ? (
+                                <>
+                                    <p className="text-sm text-muted-foreground">
+                                        Não foi possível carregar os candidatos
+                                        desta vaga.
+                                    </p>
+                                    <p className="max-w-xs text-xs text-muted-foreground">
+                                        O servidor está inacessível — esta vaga
+                                        pode ter inscritos que não aparecem
+                                        aqui.
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">
+                                    Nenhum candidato cadastrado nesta vaga
+                                    ainda.
+                                </p>
+                            )}
                         </div>
                     ) : modoVisualizacao === "grade" ? (
                         <div className="grid gap-3 sm:grid-cols-2">
