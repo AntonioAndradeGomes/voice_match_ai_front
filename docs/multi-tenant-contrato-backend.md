@@ -170,6 +170,19 @@ Lista quem pertence à empresa, para o detalhe no painel do admin do sistema.
 Só identificação e papel — nada de dado de candidato, pelo mesmo motivo da
 seção 3.
 
+### `GET /admin/usuarios` e `POST /admin/usuarios`
+
+Os administradores do sistema — quem opera a plataforma. População separada da
+de usuários de empresa: aqui não há `empresa_id`.
+
+O `POST` recebe `{ nome_completo, email, senha }` e cria `Usuario` com
+`tipo_usuario = admin_sistema` e `empresa_id` nulo. **409** se o e-mail já
+existir.
+
+Vale uma trava que o front não tem como garantir: **não deixar o sistema ficar
+sem nenhum admin_sistema**. Se um dia existir exclusão deste papel, recusar a
+remoção do último.
+
 ### `GET /auth/me` — dois campos novos
 
 ```json

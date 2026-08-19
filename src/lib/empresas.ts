@@ -317,3 +317,74 @@ export async function criarAdminDaEmpresa(
 
     return normalizarUsuario((await resposta.json()) as UsuarioApi);
 }
+
+// --- Administradores do sistema -----------------------------------------
+
+export interface RespostaAdmins {
+    admins: UsuarioDaEmpresa[];
+    demonstracao: boolean;
+}
+
+const ADMINS_DE_EXEMPLO: UsuarioDaEmpresa[] = [
+    {
+        id: "a1",
+        nomeCompleto: "Operador Demonstração (exemplo)",
+        email: "operador@exemplo.com",
+        tipoUsuario: "admin_sistema",
+        dataCriacao: "2026-07-01T12:00:00Z",
+    },
+];
+
+/**
+ * Quem opera a plataforma. Lista separada da de usuários de empresa porque
+ * são populações diferentes: aqui não há `empresa_id`.
+ */
+export async function listarAdminsDoSistema(): Promise<RespostaAdmins> {
+    const resposta = await apiFetch(`${API_BASE_URL}/admin/usuarios`);
+
+    if (rotaAindaNaoExiste(resposta.status)) {
+        return { admins: ADMINS_DE_EXEMPLO, demonstracao: true };
+    }
+
+    if (!resposta.ok) {
+        throw new Error(
+            resposta.status === 403
+                ? "Esta área é exclusiva do administrador do sistema."
+                : `Não foi possível carregar os administradores (erro ${resposta.status}).`,
+        );
+    }
+
+    const corpo = (await resposta.json()) as UsuarioApi[];
+    return {
+        admins: Array.isArray(corpo) ? corpo.map(normalizarUsuario) : [],
+        demonstracao: false,
+    };
+}
+
+export async function criarAdminDoSistema(
+    dados: NovoAdminEmpresa,
+): Promise<UsuarioDaEmpresa> {
+    const resposta = await apiFetch(`${API_BASE_URL}/admin/usuarios`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados),
+    });
+
+    if (rotaAindaNaoExiste(resposta.status)) {
+        throw new Error(
+            "O cadastro de administradores do sistema ainda não existe no servidor. Esta tela está em modo de demonstração.",
+        );
+    }
+
+    if (resposta.status === 409) {
+        throw new Error("Já existe um usuário com esse e-mail.");
+    }
+
+    if (!resposta.ok) {
+        throw new Error(
+            `Não foi possível cadastrar o administrador (erro ${resposta.status}).`,
+        );
+    }
+
+    return normalizarUsuario((await resposta.json()) as UsuarioApi);
+}

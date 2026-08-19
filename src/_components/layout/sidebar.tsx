@@ -4,11 +4,13 @@ import {
     Briefcase,
     Building2,
     ChartColumn,
+    LayoutPanelLeft,
     LayoutDashboard,
     Menu,
     PanelLeftClose,
     PanelLeftOpen,
     Settings,
+    ShieldCheck,
     UsersRound,
     type LucideIcon,
 } from "lucide-react";
@@ -69,8 +71,22 @@ const NAV = [...NAV_PRINCIPAL, ...NAV_FINAL];
 // não deve ver vaga, candidato nem relatório de cliente nenhum: operar a
 // plataforma não é motivo para acessar currículo e nota de entrevista de
 // candidato alheio. Ver docs/multi-tenant-contrato-backend.md, seção 3.
+// `exato` na visão geral porque `/admin` é prefixo de todas as outras: sem
+// isso ela e a seção aberta acendem juntas — e duas pílulas com o mesmo
+// `layoutId` vivas ao mesmo tempo disputam a animação.
 const NAV_ADMIN_SISTEMA = [
-    { href: "/admin", label: "Empresas", icone: Building2 },
+    {
+        href: "/admin",
+        label: "Visão geral",
+        icone: LayoutPanelLeft,
+        exato: true,
+    },
+    { href: "/admin/empresas", label: "Empresas", icone: Building2 },
+    {
+        href: "/admin/administradores",
+        label: "Administradores",
+        icone: ShieldCheck,
+    },
     ...NAV_FINAL,
 ];
 
@@ -301,7 +317,7 @@ export function Sidebar() {
                         </SheetHeader>
 
                         <nav className="flex flex-col gap-1 p-4">
-                            {nav.map(({ href, label, icone }, indice) => (
+                            {nav.map(({ href, label, icone, ...item }, indice) => (
                                 <motion.div
                                     key={href}
                                     // Só opacidade: qualquer transform aqui
@@ -321,7 +337,11 @@ export function Sidebar() {
                                         href={href}
                                         label={label}
                                         icone={icone}
-                                        ativo={rotaCasa(pathname, href)}
+                                        ativo={
+                                            "exato" in item && item.exato
+                                                ? pathname === href
+                                                : rotaCasa(pathname, href)
+                                        }
                                         onNavigate={() => setMenuAberto(false)}
                                         grupo="mobile"
                                     />
@@ -422,7 +442,7 @@ export function Sidebar() {
                     </div>
 
                     <nav className="flex flex-col gap-1">
-                        {nav.map(({ href, label, icone }, indice) => (
+                        {nav.map(({ href, label, icone, ...item }, indice) => (
                             <motion.div
                                 key={href}
                                 // Só opacidade: qualquer transform aqui vira um
@@ -442,7 +462,11 @@ export function Sidebar() {
                                     href={href}
                                     label={label}
                                     icone={icone}
-                                    ativo={rotaCasa(pathname, href)}
+                                    ativo={
+                                        "exato" in item && item.exato
+                                            ? pathname === href
+                                            : rotaCasa(pathname, href)
+                                    }
                                     colapsado={colapsado}
                                     grupo="desktop"
                                 />
