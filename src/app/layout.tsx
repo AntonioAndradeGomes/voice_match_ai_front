@@ -9,6 +9,7 @@ import { Toaster } from "@/_components/ui/sonner";
 import { BotaoAcessibilidade } from "@/_components/layout/botao-acessibilidade";
 import { FloatingThemeToggle } from "@/_components/layout/floating-theme-toggle";
 import { InlineScript } from "@/_components/layout/inline-script";
+import { AvisoImpersonation } from "@/_components/layout/aviso-impersonation";
 import { AvisoPapelSimulado } from "@/_components/layout/aviso-papel-simulado";
 import { AvisoSemConexao } from "@/_components/layout/aviso-sem-conexao";
 import { RouteGuard } from "@/_components/layout/route-guard";
@@ -87,6 +88,7 @@ export default function RootLayout({
                                         rolaria junto e sumiria de vista logo no
                                         primeiro scroll. */}
                                     <div className="flex min-h-0 flex-1 flex-col">
+                                        <AvisoImpersonation />
                                         <AvisoPapelSimulado />
                                         <AvisoSemConexao />
                                         <main className="min-h-0 flex-1 overflow-y-auto">
