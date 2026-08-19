@@ -188,3 +188,38 @@ export interface MensagemChat {
     isParecerConsolidado?: boolean;
 }
 
+
+// Multi-tenant. Ver docs/multi-tenant-contrato-backend.md para o contrato que
+// o backend precisa expor — nada disso existe na API ainda.
+
+/**
+ * Papéis do sistema. Hoje o backend só conhece `recrutador`; os outros dois
+ * fazem parte do contrato de multi-tenant.
+ *
+ * `admin_empresa` e `admin_sistema` são coisas diferentes, e o nome parecido
+ * já causou confusão: o primeiro administra UMA empresa cliente, o segundo
+ * opera a plataforma inteira e não pertence a empresa nenhuma.
+ */
+export type TipoUsuario = "recrutador" | "admin_empresa" | "admin_sistema";
+
+/** Empresa suspensa perde acesso, mas não perde dado — é corte, não exclusão. */
+export type StatusEmpresa = "ativa" | "suspensa";
+
+export interface Empresa {
+    id: string;
+    nome: string;
+    /** Só dígitos, como já é em `recrutador.cnpj`. */
+    cnpj: string | null;
+    status: StatusEmpresa;
+    dataCriacao: string;
+    /** Agregados vêm prontos do backend: calcular no front recriaria o N+1
+     *  que foi removido de /vagas. */
+    totalUsuarios: number;
+    totalVagas: number;
+    totalCandidaturas: number;
+}
+
+export const STATUS_EMPRESA_LABEL: Record<StatusEmpresa, string> = {
+    ativa: "Ativa",
+    suspensa: "Suspensa",
+};

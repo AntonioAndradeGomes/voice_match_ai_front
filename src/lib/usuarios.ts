@@ -6,6 +6,8 @@
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 
 // Mesmo prefixo das outras chaves do projeto (ver storage.ts).
+import type { TipoUsuario } from "@/types";
+
 const CHAVE_TOKEN = "voicematch:token";
 const CHAVE_USUARIO = "voicematch:user";
 
@@ -24,8 +26,16 @@ export interface UsuarioCriado {
     id: string;
     nome_completo: string;
     email: string;
-    tipo_usuario: string;
+    tipo_usuario: TipoUsuario;
     data_criacao: string;
+    /**
+     * Empresa à qual o usuário pertence. Nulo para `admin_sistema`, que opera a
+     * plataforma e não é de empresa nenhuma.
+     *
+     * Opcional porque o backend ainda não devolve este campo — ver
+     * `docs/multi-tenant-contrato-backend.md`.
+     */
+    empresa_id?: string | null;
 }
 
 /**
@@ -269,4 +279,20 @@ export async function buscarUsuarioLogado(): Promise<UsuarioAutenticado | null> 
     } catch {
         return lerUsuarioSalvo();
     }
+}
+
+// Papéis. Ver docs/multi-tenant-contrato-backend.md.
+//
+// Hoje o backend só emite `recrutador`, então estas funções devolvem false na
+// prática — existem para as telas já ficarem escritas do jeito certo, e
+// passarem a funcionar sozinhas quando a API entregar os papéis novos.
+
+/** Opera a plataforma VoiceMatch: cadastra e gerencia as empresas clientes. */
+export function ehAdminSistema(usuario: UsuarioAutenticado | null): boolean {
+    return usuario?.tipo_usuario === "admin_sistema";
+}
+
+/** Administra UMA empresa cliente. Não confundir com o admin do sistema. */
+export function ehAdminEmpresa(usuario: UsuarioAutenticado | null): boolean {
+    return usuario?.tipo_usuario === "admin_empresa";
 }
