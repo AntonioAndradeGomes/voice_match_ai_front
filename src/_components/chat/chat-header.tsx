@@ -24,7 +24,7 @@ export function ChatHeader({
     ];
 
     return (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-3.5 pr-6 pl-6 bg-card/50 backdrop-blur-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-3.5 pl-6 pr-16 bg-card/50 backdrop-blur-sm">
             <div className="flex items-center gap-3">
                 <Avatar>
                     {candidato.avatarUrl && (

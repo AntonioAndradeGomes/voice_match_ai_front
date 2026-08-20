@@ -60,7 +60,7 @@ export function PerfilRadarChart({
     return (
         <svg
             viewBox={`0 0 ${TAMANHO} ${TAMANHO}`}
-            className="mx-auto h-auto w-full max-w-[340px]"
+            className="mx-auto h-auto w-full max-w-[500px]"
             role="img"
             aria-label={descricao}
         >
@@ -88,7 +88,7 @@ export function PerfilRadarChart({
             })}
 
             {eixos.map((eixo, indice) => {
-                const ponto = pontoEixo(indice, total, RAIO + 16);
+                const ponto = pontoEixo(indice, total, RAIO + 20);
                 const angulo = (Math.PI * 2 * indice) / total - Math.PI / 2;
                 const cos = Math.cos(angulo);
                 const ancora =
@@ -101,7 +101,7 @@ export function PerfilRadarChart({
                         y={ponto.y}
                         textAnchor={ancora}
                         dominantBaseline="middle"
-                        className="fill-muted-foreground text-[9px]"
+                        className="fill-muted-foreground text-[11px]"
                     >
                         {eixo.label}
                     </text>
