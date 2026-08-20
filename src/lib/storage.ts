@@ -416,6 +416,7 @@ export async function saveCandidato(
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
+                    vaga_id_referencia: candidato.vagaId,
                     nome: candidato.nome,
                     email,
                     telefone,
